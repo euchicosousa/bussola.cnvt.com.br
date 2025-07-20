@@ -1422,145 +1422,145 @@ function formatTimer(time: number) {
   );
 }
 
-function PopoverTFM({
-  title,
-  models,
-  className,
-  onGenerate,
-}: {
-  title: string;
-  models: { title: string; value: string }[];
-  className?: string;
-  onGenerate?: ({
-    trigger,
-    framework,
-    model,
-  }: {
-    trigger: string;
-    framework: string;
-    model: string;
-  }) => void;
-}) {
-  const [trigger, setTrigger] = useState("Autoridade");
-  const [framework, setFramework] = useState("pas");
-  const [model, setModel] = useState(models[0]);
+// function PopoverTFM({
+//   title,
+//   models,
+//   className,
+//   onGenerate,
+// }: {
+//   title: string;
+//   models: { title: string; value: string }[];
+//   className?: string;
+//   onGenerate?: ({
+//     trigger,
+//     framework,
+//     model,
+//   }: {
+//     trigger: string;
+//     framework: string;
+//     model: string;
+//   }) => void;
+// }) {
+//   const [trigger, setTrigger] = useState("Autoridade");
+//   const [framework, setFramework] = useState("pas");
+//   const [model, setModel] = useState(models[0]);
 
-  return (
-    <Popover>
-      <PopoverTrigger className="button-trigger flex gap-2">
-        <Bia size="xs" /> <SparklesIcon className="size-4" />
-      </PopoverTrigger>
-      <PopoverContent
-        className={cn(
-          `bg-content mr-[5vw] flex max-h-[50vh] w-[90vw] flex-col overflow-hidden text-center md:mr-4 md:max-h-[80vh] md:w-lg`,
-          className,
-        )}
-      >
-        <div className="text-xl font-medium tracking-tighter">{title}</div>
+//   return (
+//     <Popover>
+//       <PopoverTrigger className="button-trigger flex gap-2">
+//         <Bia size="xs" /> <SparklesIcon className="size-4" />
+//       </PopoverTrigger>
+//       <PopoverContent
+//         className={cn(
+//           `bg-content mr-[5vw] flex max-h-[50vh] w-[90vw] flex-col overflow-hidden text-center md:mr-4 md:max-h-[80vh] md:w-lg`,
+//           className,
+//         )}
+//       >
+//         <div className="text-xl font-medium tracking-tighter">{title}</div>
 
-        <hr className="-mx-4 mt-4" />
-        <div className="scrollbars-v h-full py-4">
-          {/* Gatilhos */}
-          <div>
-            <h5 className="font-medium">Gatilho mental</h5>
+//         <hr className="-mx-4 mt-4" />
+//         <div className="scrollbars-v h-full py-4">
+//           {/* Gatilhos */}
+//           <div>
+//             <h5 className="font-medium">Gatilho mental</h5>
 
-            <RadioGroup
-              defaultValue={trigger}
-              onValueChange={(value) => setTrigger(value)}
-              className="mt-2 mb-8 grid grid-cols-2 justify-center gap-1 md:grid-cols-3"
-            >
-              {TRIGGERS.map((trigger, i) => (
-                <div key={i}>
-                  <RadioGroupItem
-                    value={trigger.value}
-                    id={`trigger_${trigger.value}`}
-                    className="hidden"
-                  />
+//             <RadioGroup
+//               defaultValue={trigger}
+//               onValueChange={(value) => setTrigger(value)}
+//               className="mt-2 mb-8 grid grid-cols-2 justify-center gap-1 md:grid-cols-3"
+//             >
+//               {TRIGGERS.map((trigger, i) => (
+//                 <div key={i}>
+//                   <RadioGroupItem
+//                     value={trigger.value}
+//                     id={`trigger_${trigger.value}`}
+//                     className="hidden"
+//                   />
 
-                  <Label
-                    htmlFor={`trigger_${trigger.value}`}
-                    className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
-                  >
-                    {trigger.value}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
+//                   <Label
+//                     htmlFor={`trigger_${trigger.value}`}
+//                     className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
+//                   >
+//                     {trigger.value}
+//                   </Label>
+//                 </div>
+//               ))}
+//             </RadioGroup>
+//           </div>
 
-          {/* Frameworks */}
-          <div>
-            <h5 className="font-medium">Framework</h5>
-            <RadioGroup
-              defaultValue={framework}
-              className="mt-2 mb-8 grid grid-cols-3 justify-center gap-1 md:grid-cols-4"
-              onValueChange={(value) => {
-                setFramework(value);
-              }}
-            >
-              {Object.entries(FRAMEWORKS).map(([key, value], i) => (
-                <div key={i}>
-                  <RadioGroupItem
-                    value={value.title}
-                    id={`framework_${i}`}
-                    className="hidden"
-                  />
+//           {/* Frameworks */}
+//           <div>
+//             <h5 className="font-medium">Framework</h5>
+//             <RadioGroup
+//               defaultValue={framework}
+//               className="mt-2 mb-8 grid grid-cols-3 justify-center gap-1 md:grid-cols-4"
+//               onValueChange={(value) => {
+//                 setFramework(value);
+//               }}
+//             >
+//               {Object.entries(FRAMEWORKS).map(([key, value], i) => (
+//                 <div key={i}>
+//                   <RadioGroupItem
+//                     value={value.title}
+//                     id={`framework_${i}`}
+//                     className="hidden"
+//                   />
 
-                  <Label
-                    htmlFor={`framework_${i}`}
-                    className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal uppercase transition-colors"
-                  >
-                    {value.title}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          {/* Modelos */}
-          {models && (
-            <div>
-              <h5 className="font-medium">Modelo</h5>
-              <RadioGroup
-                defaultValue={model.value}
-                onValueChange={(value) =>
-                  setModel(models.filter((model) => model.value === value)[0])
-                }
-                className="mt-2 mb-4 flex justify-center gap-1"
-              >
-                {models.map((model, i) => (
-                  <div key={i} className="">
-                    <RadioGroupItem
-                      value={model.value}
-                      id={`model_${i}`}
-                      className="hidden"
-                    />
+//                   <Label
+//                     htmlFor={`framework_${i}`}
+//                     className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal uppercase transition-colors"
+//                   >
+//                     {value.title}
+//                   </Label>
+//                 </div>
+//               ))}
+//             </RadioGroup>
+//           </div>
+//           {/* Modelos */}
+//           {models && (
+//             <div>
+//               <h5 className="font-medium">Modelo</h5>
+//               <RadioGroup
+//                 defaultValue={model.value}
+//                 onValueChange={(value) =>
+//                   setModel(models.filter((model) => model.value === value)[0])
+//                 }
+//                 className="mt-2 mb-4 flex justify-center gap-1"
+//               >
+//                 {models.map((model, i) => (
+//                   <div key={i} className="">
+//                     <RadioGroupItem
+//                       value={model.value}
+//                       id={`model_${i}`}
+//                       className="hidden"
+//                     />
 
-                    <Label
-                      htmlFor={`model_${i}`}
-                      className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
-                    >
-                      {model.title}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          )}
-        </div>
-        <hr className="-mx-4 mb-4" />
-        <div className="flex items-center justify-between">
-          <div className="pl-4 text-xs font-medium tracking-wider uppercase">{`${trigger} • ${framework} • ${model.title}`}</div>
-          <Button
-            onClick={() => {
-              if (onGenerate) {
-                onGenerate({ trigger, framework, model: model.value });
-              }
-            }}
-          >
-            Gerar <SparklesIcon />
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
+//                     <Label
+//                       htmlFor={`model_${i}`}
+//                       className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
+//                     >
+//                       {model.title}
+//                     </Label>
+//                   </div>
+//                 ))}
+//               </RadioGroup>
+//             </div>
+//           )}
+//         </div>
+//         <hr className="-mx-4 mb-4" />
+//         <div className="flex items-center justify-between">
+//           <div className="pl-4 text-xs font-medium tracking-wider uppercase">{`${trigger} • ${framework} • ${model.title}`}</div>
+//           <Button
+//             onClick={() => {
+//               if (onGenerate) {
+//                 onGenerate({ trigger, framework, model: model.value });
+//               }
+//             }}
+//           >
+//             Gerar <SparklesIcon />
+//           </Button>
+//         </div>
+//       </PopoverContent>
+//     </Popover>
+//   );
+// }

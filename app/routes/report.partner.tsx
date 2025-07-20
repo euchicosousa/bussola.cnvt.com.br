@@ -71,6 +71,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   if (action) {
     const [{ data: post }, { data: partner }] = await Promise.all([
+      // @ts-ignore
       supabase.from("actions").select("*").eq("id", action).single(),
       supabase.from("partners").select().match({ slug }).single(),
     ]);
@@ -110,8 +111,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .from("actions")
         .select("*")
         .is("archived", false)
+        // @ts-ignore
         .neq("state", "idea")
         .contains("partners", [slug])
+        // @ts-ignore
         .in("category", ["post", "reels", "carousel", "stories"])
         .gte("instagram_date", start)
         .lte("instagram_date", end)

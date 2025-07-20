@@ -563,7 +563,7 @@ function NextActions({ actions }: { actions: Action[] }) {
           </div>
           <ListOfActions
             actions={actions}
-            columns={person.admin ? 1 : 3}
+            columns={!person.admin ? 1 : 3}
             isFoldable={person.admin}
             orderBy="time"
             date={{ dateFormat: 2 }}

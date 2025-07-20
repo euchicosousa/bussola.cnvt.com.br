@@ -8,6 +8,7 @@ import {
   endOfYear,
   format,
   isAfter,
+  isBefore,
   isSameDay,
   isSameMonth,
   isSameYear,
@@ -20,6 +21,8 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+  CalendarDaysIcon,
+  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsDownUpIcon,
@@ -198,6 +201,9 @@ export default function Partner() {
   );
   const [selectMultiple, set_selectMultiple] = useState(
     !!searchParams.get("select_multiple"),
+  );
+  const [showAllActions, set_showAllActions] = useState(
+    !!searchParams.get("show_all_actions"),
   );
 
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
@@ -1005,20 +1011,46 @@ export default function Partner() {
           id="instagram-grid"
         >
           {/* Instagram Grid Header */}
-          <div className="flex items-center gap-2 border-b px-4 py-3 leading-none">
-            <div>
-              <Avatar
-                item={{
-                  short: partner.short,
-                  bg: partner.colors[0],
-                  fg: partner.colors[1],
-                }}
-                size="md"
-              />
+          <div className="flex items-center justify-between border-b px-4 py-3 leading-none">
+            <div className="flex items-center gap-2">
+              <div>
+                <Avatar
+                  item={{
+                    short: partner.short,
+                    bg: partner.colors[0],
+                    fg: partner.colors[1],
+                  }}
+                  size="md"
+                />
+              </div>
+              <div>
+                <div className="font-medium">{partner.title}</div>
+                <div className="text-xs">@{partner.slug}</div>
+              </div>
             </div>
             <div>
-              <div className="font-medium">{partner.title}</div>
-              <div className="text-xs">@{partner.slug}</div>
+              <Button
+                size={"sm"}
+                title={
+                  showAllActions
+                    ? "Mostrar apenas ações deste período"
+                    : "Mostrar todas as ações"
+                }
+                variant={showAllActions ? "default" : "ghost"}
+                onClick={() => {
+                  if (showAllActions) {
+                    params.delete("show_all_actions");
+                    set_showAllActions(false);
+                  } else {
+                    params.set("show_all_actions", "true");
+                    set_showAllActions(true);
+                  }
+
+                  setSearchParams(params);
+                }}
+              >
+                {showAllActions ? <CalendarDaysIcon /> : <CalendarIcon />}
+              </Button>
             </div>
           </div>
 
@@ -1026,7 +1058,21 @@ export default function Partner() {
           <div className="overflow-hidden border-l px-3 py-3">
             <GridOfActions
               partner={partner}
-              actions={instagramActions as Action[]}
+              actions={
+                showAllActions
+                  ? (instagramActions as Action[])
+                  : (instagramActions as Action[]).filter(
+                      (action) =>
+                        isAfter(
+                          action.date,
+                          startOfWeek(startOfMonth(currentDate)),
+                        ) &&
+                        isBefore(
+                          action.date,
+                          endOfWeek(endOfMonth(currentDate)),
+                        ),
+                    )
+              }
             />
           </div>
         </div>
