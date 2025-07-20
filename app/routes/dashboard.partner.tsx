@@ -1064,11 +1064,11 @@ export default function Partner() {
                   : (instagramActions as Action[]).filter(
                       (action) =>
                         isAfter(
-                          action.date,
+                          action.instagram_date,
                           startOfWeek(startOfMonth(currentDate)),
                         ) &&
                         isBefore(
-                          action.date,
+                          action.instagram_date,
                           endOfWeek(endOfMonth(currentDate)),
                         ),
                     )
