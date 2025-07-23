@@ -89,6 +89,7 @@ import {
   usePendingData,
 } from "~/lib/helpers";
 import { createClient } from "~/lib/supabase";
+import EditAction from "~/components/EditAction";
 
 export const config = { runtime: "edge" };
 
@@ -176,6 +177,13 @@ export default function Partner() {
   );
 
   const [categoryFilter, setCategoryFilter] = useState<Category[]>([]);
+  const [editingAction, setEditingAction] = useState<string | null>(
+    searchParams.get("editing_action"),
+  );
+
+  const fullEditingAction = (actions as Action[])?.find(
+    (action) => action.id === editingAction,
+  );
 
   const { stateFilter, setStateFilter, showFeed, set_showFeed } =
     useOutletContext() as ContextType;
@@ -996,6 +1004,7 @@ export default function Partner() {
                     index={i}
                     setSelectedActions={setSelectedActions}
                     selectMultiple={selectMultiple}
+                    setEditingAction={setEditingAction}
                   />
                 ))}
               </div>
@@ -1004,14 +1013,31 @@ export default function Partner() {
         </DndContext>
       </div>
 
+      {editingAction && !showFeed && (
+        <div
+          className="3xl:max-w-[720px] relative flex w-full min-w-96 flex-col xl:max-w-[480px]"
+          id="edit-action"
+        >
+          <EditAction
+            partner={partner}
+            action={fullEditingAction!}
+            setClose={() => {
+              setEditingAction(null);
+              params.delete("editing_action");
+              setSearchParams(params);
+            }}
+          />
+        </div>
+      )}
+
       {/* Instagram Grid */}
-      {showFeed && (
+      {showFeed && !editingAction && (
         <div
           className="relative flex w-full max-w-[480px] min-w-96 flex-col"
           id="instagram-grid"
         >
           {/* Instagram Grid Header */}
-          <div className="flex items-center justify-between border-b px-4 py-3 leading-none">
+          <div className="flex items-center justify-between border-b px-4 py-2.5 leading-none">
             <div className="flex items-center gap-2">
               <div>
                 <Avatar
@@ -1090,6 +1116,7 @@ export const CalendarDay = ({
   index,
   setSelectedActions,
   selectMultiple,
+  setEditingAction,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
   currentDate: Date | string;
@@ -1099,6 +1126,7 @@ export const CalendarDay = ({
   showContent?: boolean;
   index?: string | number;
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
   selectMultiple?: boolean;
 }) => {
   const matches = useMatches();
@@ -1146,10 +1174,10 @@ export const CalendarDay = ({
               {day.actions?.filter((action) => isInstagramFeed(action.category))
                 .length !== 0 && (
                 <>
-                  {/* <div className="mb-2 flex items-center gap-1 text-lg font-medium">
+                  <div className="mb-2 flex items-center gap-1 text-sm font-medium">
                     <Grid3x3Icon className="size-3" />
                     <div>Feed</div>
-                  </div> */}
+                  </div>
                   <div className="mb-4 flex flex-col gap-3">
                     {day.actions
                       ?.sort((a, b) =>
@@ -1158,6 +1186,7 @@ export const CalendarDay = ({
                       ?.filter((action) => isInstagramFeed(action.category))
                       .map((action) => (
                         <ActionLine
+                          setEditingAction={setEditingAction}
                           selectMultiple={selectMultiple}
                           showContent={showContent}
                           short={short}
@@ -1185,6 +1214,7 @@ export const CalendarDay = ({
                   }))
                   .map(({ category, actions }) => (
                     <CategoryActions
+                      setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
                       category={category}
@@ -1210,6 +1240,7 @@ export const CalendarDay = ({
                   actions &&
                   actions.length > 0 && (
                     <CategoryActions
+                      setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
                       category={category}
@@ -1245,6 +1276,7 @@ function CategoryActions({
   showResponsibles,
   setSelectedActions,
   selectMultiple = false,
+  setEditingAction,
 }: {
   category: Category;
   actions?: Action[];
@@ -1253,6 +1285,7 @@ function CategoryActions({
   showResponsibles?: boolean;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   actions = actions?.sort((a, b) =>
     isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
@@ -1273,6 +1306,7 @@ function CategoryActions({
       <div className={`flex flex-col gap-1`}>
         {actions?.map((action) => (
           <ActionLine
+            setEditingAction={setEditingAction}
             selectMultiple={selectMultiple}
             showContent={showContent}
             short={short}

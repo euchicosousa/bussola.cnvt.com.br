@@ -134,6 +134,7 @@ export default function Header({
                     params.delete("show_feed");
                     set_showFeed(false);
                   } else {
+                    params.delete("editing_action");
                     params.set("show_feed", "true");
                     set_showFeed(true);
                   }

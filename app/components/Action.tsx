@@ -28,6 +28,7 @@ import {
   ChevronRightIcon,
   CopyIcon,
   ExpandIcon,
+  Grid3X3Icon,
   HeartHandshakeIcon,
   PencilLineIcon,
   RabbitIcon,
@@ -87,6 +88,7 @@ export function ActionLine({
   isHair,
   selectMultiple,
   setSelectedActions,
+  setEditingAction,
 }: {
   action: Action;
   date?: dateTimeFormat;
@@ -100,11 +102,13 @@ export function ActionLine({
   isHair?: boolean;
   selectMultiple?: boolean;
   setSelectedActions?: React.Dispatch<React.SetStateAction<string[]>>;
+  setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const navigate = useNavigate();
   const submit = useSubmit();
   const matches = useMatches();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  let params = new URLSearchParams(searchParams);
   const isInstagramDate = searchParams.get("instagram_date");
 
   const [edit, setEdit] = useState(false);
@@ -206,8 +210,17 @@ export function ActionLine({
         ) : isInstagramFeed(action.category) && showContent ? (
           <div
             onClick={() => {
-              navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+              if (setEditingAction) {
+                setEditingAction(action.id);
+                params.set("editing_action", action.id);
+                setSearchParams(params);
+              } else {
+                navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+              }
             }}
+            // onClick={() => {
+            //   navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+            // }}
             ref={setNodeRef}
             {...listeners}
             {...attributes}
@@ -304,7 +317,15 @@ export function ActionLine({
               e.stopPropagation();
 
               if (!edit && !selectMultiple) {
-                navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                // navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+
+                if (setEditingAction) {
+                  setEditingAction(action.id);
+                  params.set("editing_action", action.id);
+                  setSearchParams(params);
+                } else {
+                  navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                }
               }
             }}
             onMouseEnter={() => {
@@ -1263,6 +1284,7 @@ export function ContextMenuItems({
         <span>Duplicar</span>
         <ContextMenuShortcut className="pl-2">⇧+D</ContextMenuShortcut>
       </ContextMenuItem>
+
       {/* Hora */}
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
@@ -1297,14 +1319,14 @@ export function ContextMenuItems({
         </ContextMenuPortal>
       </ContextMenuSub>
       {/* Adiar */}
-      <ContextMenuSub>
+      {/* <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
           <TimerIcon className="size-3" />
           <span>Adiar</span>
         </ContextMenuSubTrigger>
         <ContextMenuPortal>
           <ContextMenuSubContent className="bg-content font-medium">
-            {/* Adiar horas */}
+            
             <ContextMenuItem
               asChild
               onSelect={(event) => {
@@ -1345,7 +1367,7 @@ export function ContextMenuItems({
               </div>
             </ContextMenuItem>
             <ContextMenuSeparator className="bg-border" />
-            {/* Adiar Dias */}
+            
             <ContextMenuItem
               asChild
               onSelect={(event) => {
@@ -1386,7 +1408,7 @@ export function ContextMenuItems({
               </div>
             </ContextMenuItem>
             <ContextMenuSeparator className="bg-border" />
-            {/* Adiar semanas */}
+            
             <ContextMenuItem
               asChild
               onSelect={(event) => {
@@ -1467,7 +1489,7 @@ export function ContextMenuItems({
             </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuPortal>
-      </ContextMenuSub>
+      </ContextMenuSub> */}
       {/* Deletar */}
       <ContextMenuItem
         className="bg-item flex items-center gap-2"

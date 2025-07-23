@@ -1,12 +1,12 @@
+import Blockquote from "@tiptap/extension-blockquote";
 import BulletList from "@tiptap/extension-bullet-list";
 import Highlight from "@tiptap/extension-highlight";
 import Subscript from "@tiptap/extension-subscript";
 import Superscrit from "@tiptap/extension-superscript";
-import Blockquote from "@tiptap/extension-blockquote";
 import Table from "@tiptap/extension-table";
+import TableCell from "@tiptap/extension-table-cell";
 import TableHeader from "@tiptap/extension-table-header";
 import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
 
 import { EditorProvider, useCurrentEditor, type Content } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -36,10 +36,10 @@ export default function Tiptap({
   const extensions = [
     StarterKit,
     Highlight,
-    BulletList,
+    // BulletList,
     Superscrit,
     Subscript,
-    Blockquote,
+    // Blockquote,
     Table,
 
     TableRow,

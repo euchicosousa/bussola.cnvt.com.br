@@ -63,17 +63,19 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Label } from "~/components/ui/label";
 import { Popover, PopoverContent } from "~/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Slider } from "~/components/ui/slider";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
-import { FRAMEWORKS, INTENTS, TRIGGERS } from "~/lib/constants";
+import { INTENTS } from "~/lib/constants";
 import {
   Avatar,
   Bia,
@@ -89,7 +91,7 @@ import {
 } from "~/lib/helpers";
 import { createClient } from "~/lib/supabase";
 import { cn } from "~/lib/utils";
-import { storytellingModels } from "./handle-openai";
+import { SintagmaHooks, storytellingModels } from "./handle-openai";
 
 export const config = { runtime: "edge" };
 const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
@@ -265,12 +267,7 @@ export default function ActionPage() {
           <Header action={action} partner={partner} />
 
           {/* Título */}
-          <Title
-            action={action}
-            setAction={setAction}
-            isWorking={isWorking}
-            partner={partner}
-          />
+          <Title action={action} setAction={setAction} partner={partner} />
           {/* Descrição */}
           <Description
             action={action}
@@ -313,7 +310,13 @@ export default function ActionPage() {
 //
 //
 
-function Header({ action, partner }: { action: Action; partner: Partner }) {
+export function Header({
+  action,
+  partner,
+}: {
+  action: Action;
+  partner: Partner;
+}) {
   return (
     <div className="flex w-full shrink grow-0 items-center justify-between text-sm">
       <div className="flex items-center gap-2">
@@ -355,25 +358,47 @@ function Header({ action, partner }: { action: Action; partner: Partner }) {
   );
 }
 
-function Title({
+export function Title({
   action,
   setAction,
-  isWorking,
   partner,
+  isSideBar = false,
 }: {
   action: Action;
-  setAction: (action: Action) => void;
-  isWorking: boolean;
+  setAction: React.Dispatch<React.SetStateAction<Action>>;
   partner: Partner;
+  isSideBar?: boolean;
 }) {
+  const navigation = useNavigation();
+  const fetchers = useFetchers();
+
   const fetcher = useFetcher({ key: "action-page" });
+  const intent = fetcher.formData?.get("intent")?.toString();
+  const isWorking =
+    navigation.state !== "idle" ||
+    fetchers.filter((f) => f.formData).length > 0;
+
+  useEffect(() => {
+    if (intent === "title") {
+      setAction(() => ({
+        ...action,
+        title: getCleanTitle(action.title)
+          .concat(" | ")
+          .concat((fetcher.data as { message: string }).message),
+      }));
+    }
+  }, [fetcher.data]);
 
   return (
     <div className="flex items-start gap-4 pt-2">
       <textarea
         value={action.title}
         className={`field-sizing-content w-full resize-none overflow-hidden border-none bg-transparent p-0 py-2 text-3xl leading-[85%] font-bold tracking-tighter outline-hidden ${
-          action.title.length > 30 ? "md:text-5xl" : "md:text-6xl"
+          isSideBar
+            ? "text-2xl"
+            : action.title.length > 30
+              ? "md:text-5xl"
+              : "md:text-6xl"
         }`}
         rows={1}
         onChange={(event) =>
@@ -398,8 +423,72 @@ function Title({
               <SparklesIcon />
             </Button>
           </DropdownMenuTrigger>
+          <DropdownMenuContent className="bg-content">
+            {SintagmaHooks.map((tense) => (
+              <DropdownMenuSub key={tense.id}>
+                <DropdownMenuSubTrigger className="bg-item">
+                  {tense.title}
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuSubContent className="bg-content flex max-h-[50vh] flex-col overflow-hidden">
+                    <div className="border-b px-4 py-2 text-sm whitespace-break-spaces">
+                      {tense.description}
+                    </div>
+                    <div className="scrollbars-v overflow-y-auto">
+                      {tense.missions.map((mission) => (
+                        <DropdownMenuGroup key={mission.id}>
+                          <DropdownMenuLabel className="bg-label-small">
+                            {mission.title}
+                          </DropdownMenuLabel>
+                          {mission.tactics.map((tactic) => (
+                            <DropdownMenuItem
+                              key={tactic.id}
+                              className="bg-item"
+                              onClick={async () => {
+                                fetcher.submit(
+                                  {
+                                    title: action.title,
+                                    description: action.description,
+                                    context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
+                                    intent: "title",
+                                    tense: tense.id,
+                                    tactic: tactic.id,
+                                    mission: mission.id,
+                                  },
+                                  {
+                                    action: "/handle-openai",
+                                    method: "post",
+                                  },
+                                );
+                              }}
+                            >
+                              {tactic.title}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuGroup>
+                        // <DropdownMenuSub>
+                        //   <DropdownMenuSubTrigger className="bg-item">
+                        //     {mission.title}
+                        //   </DropdownMenuSubTrigger>
+                        //   <DropdownMenuPortal>
+                        //     <DropdownMenuContent className="bg-content">
+                        //       {mission.tactics.map((tactic) => (
+                        //         <DropdownMenuItem className="bg-item">
+                        //           {tactic.title}
+                        //         </DropdownMenuItem>
+                        //       ))}
+                        //     </DropdownMenuContent>
+                        //   </DropdownMenuPortal>
+                        // </DropdownMenuSub>
+                      ))}
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+              </DropdownMenuSub>
+            ))}
+          </DropdownMenuContent>
 
-          <DropdownMenuContent>
+          {/* <DropdownMenuContent>
             {Object.keys(storytellingModels.titulos).map((k, i) => {
               const model =
                 storytellingModels.titulos[
@@ -430,14 +519,14 @@ function Title({
                 </DropdownMenuItem>
               );
             })}
-          </DropdownMenuContent>
+          </DropdownMenuContent> */}
         </DropdownMenu>
       </div>
     </div>
   );
 }
 
-function Description({
+export function Description({
   action,
   setAction,
   isWorking,
@@ -1395,8 +1484,8 @@ function LowerBar({
               <div className="border-primary-foreground size-4 animate-spin rounded-full border-2 border-b-transparent"></div>
             ) : (
               <>
+                <span className="hidden lg:inline">Salvar</span>
                 <SaveIcon className="size-4" />
-                <span className="hidden lg:inline">Atualizar</span>
               </>
             )}
           </Button>
@@ -1421,146 +1510,3 @@ function formatTimer(time: number) {
     `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
   );
 }
-
-// function PopoverTFM({
-//   title,
-//   models,
-//   className,
-//   onGenerate,
-// }: {
-//   title: string;
-//   models: { title: string; value: string }[];
-//   className?: string;
-//   onGenerate?: ({
-//     trigger,
-//     framework,
-//     model,
-//   }: {
-//     trigger: string;
-//     framework: string;
-//     model: string;
-//   }) => void;
-// }) {
-//   const [trigger, setTrigger] = useState("Autoridade");
-//   const [framework, setFramework] = useState("pas");
-//   const [model, setModel] = useState(models[0]);
-
-//   return (
-//     <Popover>
-//       <PopoverTrigger className="button-trigger flex gap-2">
-//         <Bia size="xs" /> <SparklesIcon className="size-4" />
-//       </PopoverTrigger>
-//       <PopoverContent
-//         className={cn(
-//           `bg-content mr-[5vw] flex max-h-[50vh] w-[90vw] flex-col overflow-hidden text-center md:mr-4 md:max-h-[80vh] md:w-lg`,
-//           className,
-//         )}
-//       >
-//         <div className="text-xl font-medium tracking-tighter">{title}</div>
-
-//         <hr className="-mx-4 mt-4" />
-//         <div className="scrollbars-v h-full py-4">
-//           {/* Gatilhos */}
-//           <div>
-//             <h5 className="font-medium">Gatilho mental</h5>
-
-//             <RadioGroup
-//               defaultValue={trigger}
-//               onValueChange={(value) => setTrigger(value)}
-//               className="mt-2 mb-8 grid grid-cols-2 justify-center gap-1 md:grid-cols-3"
-//             >
-//               {TRIGGERS.map((trigger, i) => (
-//                 <div key={i}>
-//                   <RadioGroupItem
-//                     value={trigger.value}
-//                     id={`trigger_${trigger.value}`}
-//                     className="hidden"
-//                   />
-
-//                   <Label
-//                     htmlFor={`trigger_${trigger.value}`}
-//                     className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
-//                   >
-//                     {trigger.value}
-//                   </Label>
-//                 </div>
-//               ))}
-//             </RadioGroup>
-//           </div>
-
-//           {/* Frameworks */}
-//           <div>
-//             <h5 className="font-medium">Framework</h5>
-//             <RadioGroup
-//               defaultValue={framework}
-//               className="mt-2 mb-8 grid grid-cols-3 justify-center gap-1 md:grid-cols-4"
-//               onValueChange={(value) => {
-//                 setFramework(value);
-//               }}
-//             >
-//               {Object.entries(FRAMEWORKS).map(([key, value], i) => (
-//                 <div key={i}>
-//                   <RadioGroupItem
-//                     value={value.title}
-//                     id={`framework_${i}`}
-//                     className="hidden"
-//                   />
-
-//                   <Label
-//                     htmlFor={`framework_${i}`}
-//                     className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal uppercase transition-colors"
-//                   >
-//                     {value.title}
-//                   </Label>
-//                 </div>
-//               ))}
-//             </RadioGroup>
-//           </div>
-//           {/* Modelos */}
-//           {models && (
-//             <div>
-//               <h5 className="font-medium">Modelo</h5>
-//               <RadioGroup
-//                 defaultValue={model.value}
-//                 onValueChange={(value) =>
-//                   setModel(models.filter((model) => model.value === value)[0])
-//                 }
-//                 className="mt-2 mb-4 flex justify-center gap-1"
-//               >
-//                 {models.map((model, i) => (
-//                   <div key={i} className="">
-//                     <RadioGroupItem
-//                       value={model.value}
-//                       id={`model_${i}`}
-//                       className="hidden"
-//                     />
-
-//                     <Label
-//                       htmlFor={`model_${i}`}
-//                       className="peer-data-[state=checked]:bg-secondary peer-data-[state=checked]:text-secondary-foreground text-muted-foreground inline-block rounded px-3 py-2 text-center font-normal transition-colors"
-//                     >
-//                       {model.title}
-//                     </Label>
-//                   </div>
-//                 ))}
-//               </RadioGroup>
-//             </div>
-//           )}
-//         </div>
-//         <hr className="-mx-4 mb-4" />
-//         <div className="flex items-center justify-between">
-//           <div className="pl-4 text-xs font-medium tracking-wider uppercase">{`${trigger} • ${framework} • ${model.title}`}</div>
-//           <Button
-//             onClick={() => {
-//               if (onGenerate) {
-//                 onGenerate({ trigger, framework, model: model.value });
-//               }
-//             }}
-//           >
-//             Gerar <SparklesIcon />
-//           </Button>
-//         </div>
-//       </PopoverContent>
-//     </Popover>
-//   );
-// }

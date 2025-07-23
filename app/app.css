@@ -5,7 +5,7 @@
     --background: 200 5% 94%;
     --foreground: 200 10% 10%;
 
-    --card: 200 20% 97%;
+    --card: 220 20% 97%;
     --card-foreground: 200 10% 10%;
 
     --popover: 0 0% 100%;
@@ -121,6 +121,8 @@
   --radius-xl: calc(var(--radius) + 8px);
   /* 20 */
 
+  --breakpoint-3xl: 120rem;
+
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
@@ -163,6 +165,10 @@ body {
 
 .bg-label {
   @apply text-foreground flex gap-2 px-4 text-xl font-medium tracking-tighter;
+}
+
+.bg-label-small {
+  @apply text-muted flex gap-2 px-4 text-xs font-medium tracking-wider uppercase;
 }
 
 .bg-item {
@@ -214,7 +220,7 @@ body {
 }
 
 .action-sprint {
-  @apply bg-primary text-primary-foreground;
+  @apply bg-foreground text-background hover:bg-foreground/80;
 }
 
 .action-item.action-delayed {
@@ -419,6 +425,10 @@ input::-webkit-inner-spin-button {
   to {
     stroke-dashoffset: 0;
   }
+}
+
+.no-scrollbars::-webkit-scrollbar {
+  @apply w-0 appearance-none;
 }
 
 .dragover {
