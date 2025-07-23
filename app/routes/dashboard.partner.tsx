@@ -1005,6 +1005,7 @@ export default function Partner() {
                     setSelectedActions={setSelectedActions}
                     selectMultiple={selectMultiple}
                     setEditingAction={setEditingAction}
+                    editingAction={editingAction}
                   />
                 ))}
               </div>
@@ -1116,6 +1117,7 @@ export const CalendarDay = ({
   index,
   setSelectedActions,
   selectMultiple,
+  editingAction,
   setEditingAction,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
@@ -1125,9 +1127,10 @@ export const CalendarDay = ({
   showResponsibles?: boolean;
   showContent?: boolean;
   index?: string | number;
-  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
-  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
   selectMultiple?: boolean;
+  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  editingAction?: string | null;
+  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   const matches = useMatches();
   const { categories } = matches[1].data as DashboardRootType;
@@ -1186,6 +1189,7 @@ export const CalendarDay = ({
                       ?.filter((action) => isInstagramFeed(action.category))
                       .map((action) => (
                         <ActionLine
+                          editingAction={editingAction}
                           setEditingAction={setEditingAction}
                           selectMultiple={selectMultiple}
                           showContent={showContent}
@@ -1214,6 +1218,7 @@ export const CalendarDay = ({
                   }))
                   .map(({ category, actions }) => (
                     <CategoryActions
+                      editingAction={editingAction}
                       setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
@@ -1240,6 +1245,7 @@ export const CalendarDay = ({
                   actions &&
                   actions.length > 0 && (
                     <CategoryActions
+                      editingAction={editingAction}
                       setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
@@ -1276,6 +1282,7 @@ function CategoryActions({
   showResponsibles,
   setSelectedActions,
   selectMultiple = false,
+  editingAction,
   setEditingAction,
 }: {
   category: Category;
@@ -1285,6 +1292,7 @@ function CategoryActions({
   showResponsibles?: boolean;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   actions = actions?.sort((a, b) =>
@@ -1306,6 +1314,7 @@ function CategoryActions({
       <div className={`flex flex-col gap-1`}>
         {actions?.map((action) => (
           <ActionLine
+            editingAction={editingAction}
             setEditingAction={setEditingAction}
             selectMultiple={selectMultiple}
             showContent={showContent}

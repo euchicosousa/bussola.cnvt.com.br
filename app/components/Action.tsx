@@ -88,6 +88,7 @@ export function ActionLine({
   isHair,
   selectMultiple,
   setSelectedActions,
+  editingAction,
   setEditingAction,
 }: {
   action: Action;
@@ -102,6 +103,7 @@ export function ActionLine({
   isHair?: boolean;
   selectMultiple?: boolean;
   setSelectedActions?: React.Dispatch<React.SetStateAction<string[]>>;
+  editingAction?: string | null;
   setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const navigate = useNavigate();
@@ -211,9 +213,13 @@ export function ActionLine({
           <div
             onClick={() => {
               if (setEditingAction) {
-                setEditingAction(action.id);
-                params.set("editing_action", action.id);
-                setSearchParams(params);
+                if (editingAction === action.id) {
+                  navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                } else {
+                  setEditingAction(action.id);
+                  params.set("editing_action", action.id);
+                  setSearchParams(params);
+                }
               } else {
                 navigate(`/dashboard/action/${action.id}${getQueryString()}`);
               }
@@ -320,9 +326,15 @@ export function ActionLine({
                 // navigate(`/dashboard/action/${action.id}${getQueryString()}`);
 
                 if (setEditingAction) {
-                  setEditingAction(action.id);
-                  params.set("editing_action", action.id);
-                  setSearchParams(params);
+                  if (editingAction === action.id) {
+                    navigate(
+                      `/dashboard/action/${action.id}${getQueryString()}`,
+                    );
+                  } else {
+                    setEditingAction(action.id);
+                    params.set("editing_action", action.id);
+                    setSearchParams(params);
+                  }
                 } else {
                   navigate(`/dashboard/action/${action.id}${getQueryString()}`);
                 }

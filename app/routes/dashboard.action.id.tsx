@@ -466,20 +466,6 @@ export function Title({
                             </DropdownMenuItem>
                           ))}
                         </DropdownMenuGroup>
-                        // <DropdownMenuSub>
-                        //   <DropdownMenuSubTrigger className="bg-item">
-                        //     {mission.title}
-                        //   </DropdownMenuSubTrigger>
-                        //   <DropdownMenuPortal>
-                        //     <DropdownMenuContent className="bg-content">
-                        //       {mission.tactics.map((tactic) => (
-                        //         <DropdownMenuItem className="bg-item">
-                        //           {tactic.title}
-                        //         </DropdownMenuItem>
-                        //       ))}
-                        //     </DropdownMenuContent>
-                        //   </DropdownMenuPortal>
-                        // </DropdownMenuSub>
                       ))}
                     </div>
                   </DropdownMenuSubContent>
@@ -487,39 +473,6 @@ export function Title({
               </DropdownMenuSub>
             ))}
           </DropdownMenuContent>
-
-          {/* <DropdownMenuContent>
-            {Object.keys(storytellingModels.titulos).map((k, i) => {
-              const model =
-                storytellingModels.titulos[
-                  k as keyof typeof storytellingModels.titulos
-                ];
-
-              return (
-                <DropdownMenuItem
-                  key={i}
-                  className="bg-item"
-                  onSelect={async () => {
-                    fetcher.submit(
-                      {
-                        title: action.title,
-                        description: action.description,
-                        context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
-                        intent: "title",
-                        model: k,
-                      },
-                      {
-                        action: "/handle-openai",
-                        method: "post",
-                      },
-                    );
-                  }}
-                >
-                  {model.title}
-                </DropdownMenuItem>
-              );
-            })}
-          </DropdownMenuContent> */}
         </DropdownMenu>
       </div>
     </div>

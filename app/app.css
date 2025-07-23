@@ -168,7 +168,7 @@ body {
 }
 
 .bg-label-small {
-  @apply text-muted flex gap-2 px-4 text-xs font-medium tracking-wider uppercase;
+  @apply flex gap-2 px-4 text-xs font-medium tracking-wider uppercase opacity-50;
 }
 
 .bg-item {
