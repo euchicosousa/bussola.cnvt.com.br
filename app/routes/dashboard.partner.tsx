@@ -75,6 +75,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
+import EditAction from "~/components/EditAction";
 import { INTENTS } from "~/lib/constants";
 import {
   Avatar,
@@ -89,7 +90,6 @@ import {
   usePendingData,
 } from "~/lib/helpers";
 import { createClient } from "~/lib/supabase";
-import EditAction from "~/components/EditAction";
 
 export const config = { runtime: "edge" };
 
@@ -216,7 +216,7 @@ export default function Partner() {
 
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
 
-  const currentDate = date;
+  const [currentDate, setCurrentDate] = useState(date);
   const pendingActions = usePendingData().actions;
   const deletingIDsActions = useIDsToRemove().actions;
 
@@ -414,83 +414,81 @@ export default function Partner() {
       <div className={`flex h-full w-full flex-col overflow-hidden`}>
         {/* Calendário Header */}
 
-        <div className="flex items-center justify-between border-b px-4 py-2 md:px-8">
+        <div className="flex items-center justify-between border-b py-2 pr-4 md:px-8">
           {/* Mês */}
           <div className="flex items-center gap-1">
-            <div className="mr-1">
-              <DropdownMenu>
-                <DropdownMenuTrigger className="outline-hidden" asChild>
-                  <Button
-                    variant={"ghost"}
-                    className={`cursor-pointer text-xl font-medium ${!isSameYear(currentDate, new Date()) ? "md:w-56" : "md:w-40"}`}
-                  >
-                    <span className="shrink-0 capitalize">
-                      {format(currentDate, "MMMM", {
-                        locale: ptBR,
-                      })}
-                    </span>
-                    {!isSameYear(currentDate, new Date()) && (
-                      <span>
-                        {format(currentDate, " 'de' yyyy", { locale: ptBR })}
-                      </span>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-content">
-                  {eachMonthOfInterval({
-                    start: startOfYear(new Date()),
-                    end: endOfYear(new Date()),
-                  }).map((month) => (
-                    <DropdownMenuItem
-                      className="bg-item capitalize"
-                      key={month.getMonth()}
-                      onSelect={() => {
-                        params.set(
-                          "date",
-                          format(
-                            new Date().setMonth(month.getMonth()),
-                            "yyyy-MM-'01'",
-                          ),
-                        );
-
-                        setSearchParams(params);
-                      }}
-                    >
-                      {format(month, "MMMM", {
-                        locale: ptBR,
-                      })}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
             <Button
               size="icon"
               variant="ghost"
               onClick={() => {
-                params.set(
-                  "date",
-                  format(subMonths(currentDate, 1), "yyyy-MM-dd"),
-                );
+                const date = format(subMonths(currentDate, 1), "yyyy-MM-'15'");
+                setCurrentDate(date);
+                params.set("date", date);
 
                 setSearchParams(params);
               }}
             >
-              <ChevronLeftIcon className="h-4 w-4" />
+              <ChevronLeftIcon />
             </Button>
-            <Button size="icon" variant="ghost" asChild>
-              <button
-                onClick={() => {
-                  params.set(
-                    "date",
-                    format(addMonths(currentDate, 1), "yyyy-MM-dd"),
-                  );
 
-                  setSearchParams(params);
-                }}
-              >
-                <ChevronRightIcon className="h-4 w-4" />
-              </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="outline-hidden" asChild>
+                <Button
+                  variant={"ghost"}
+                  className={`cursor-pointer text-xl font-medium`}
+                >
+                  <span className="shrink-0 capitalize">
+                    {format(currentDate, "MMMM", {
+                      locale: ptBR,
+                    })}
+                  </span>
+                  {!isSameYear(currentDate, new Date()) && (
+                    <span>
+                      {format(currentDate, " 'de' yyyy", { locale: ptBR })}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-content">
+                {eachMonthOfInterval({
+                  start: startOfYear(new Date()),
+                  end: endOfYear(new Date()),
+                }).map((month) => (
+                  <DropdownMenuItem
+                    className="bg-item capitalize"
+                    key={month.getMonth()}
+                    onSelect={() => {
+                      const date = format(
+                        new Date().setMonth(month.getMonth()),
+                        "yyyy-MM-'15'",
+                      );
+                      setCurrentDate(date);
+                      console.log({ date });
+
+                      params.set("date", date);
+                      setSearchParams(params);
+                    }}
+                  >
+                    {format(month, "MMMM", {
+                      locale: ptBR,
+                    })}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                const date = format(addMonths(currentDate, 1), "yyyy-MM-'15'");
+                setCurrentDate(date);
+                params.set("date", date);
+
+                setSearchParams(params);
+              }}
+            >
+              <ChevronRightIcon />
             </Button>
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
