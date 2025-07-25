@@ -48,6 +48,17 @@ export default function EditAction({
         <h3 className="w-full px-4 py-3.5 text-xl font-medium tracking-tighter">
           Editar Ação
         </h3>
+        <div className="pr-4">
+          <Button
+            size={"icon"}
+            variant={"ghost"}
+            onClick={() => {
+              setClose();
+            }}
+          >
+            <XIcon />
+          </Button>
+        </div>
         {/* <div className="flex">
           <div
             className={`${
@@ -102,17 +113,7 @@ export default function EditAction({
         )}
 
         <div className="mt-4 flex justify-between px-4">
-          <div>
-            <Button
-              size={"icon"}
-              variant={"secondary"}
-              onClick={() => {
-                setClose();
-              }}
-            >
-              <XIcon />
-            </Button>
-          </div>
+          <div></div>
           <div className="flex justify-end gap-2">
             <Button
               variant={"ghost"}
