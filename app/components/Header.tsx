@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   ArchiveIcon,
+  CalendarPlusIcon,
   ChevronsUpDownIcon,
   Grid3x3Icon,
   HandshakeIcon,
@@ -261,6 +262,17 @@ export default function Header({
               </DropdownMenuItem>
               {person.admin && (
                 <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="bg-item"
+                    id="new-partner"
+                    onSelect={() =>
+                      navigate("/dashboard/admin/celebration/new")
+                    }
+                  >
+                    <CalendarPlusIcon className="size-4 opacity-50" />
+                    <div>Novo Data Comemorativa</div>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="bg-item"

@@ -674,6 +674,7 @@ export function DateTimeAndInstagramDate({
         <PopoverContent className="bg-content">
           <Calendar
             mode="single"
+            locale={ptBR}
             selected={action.date}
             onSelect={(date) => {
               if (date) {
@@ -684,13 +685,6 @@ export function DateTimeAndInstagramDate({
                   );
 
                   onChange({ date });
-                  // if(setRawAction){
-                  //   setRawAction({ ...action, date });
-
-                  // }
-
-                  // if(setAction)
-                  //   setAction({ ...action, date: format(date, "yyyy-MM") });
                 }
               }
             }}
@@ -804,6 +798,7 @@ export function DateTimeAndInstagramDate({
           </PopoverTrigger>
           <PopoverContent className="bg-content">
             <Calendar
+              locale={ptBR}
               mode="single"
               selected={action.instagram_date}
               onSelect={(instagram_date) => {

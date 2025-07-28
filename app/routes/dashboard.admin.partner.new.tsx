@@ -102,7 +102,6 @@ export default function NewPartners() {
               name="slug"
               value={slug}
               onChange={(event) => setSlug(event.target.value)}
-              className="border"
             />
           </div>
           <div className="w-full">

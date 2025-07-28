@@ -19,7 +19,9 @@ export default [
     route("admin/partners", "routes/dashboard.admin.partners.tsx"),
     route("admin/partner/:slug", "routes/dashboard.admin.partner.slug.tsx"),
     route("admin/partner/new", "routes/dashboard.admin.partner.new.tsx"),
-
+    
+    route("admin/celebration/new", "routes/dashboard.admin.celebration.new.tsx"),
+    
     route("me", "routes/dashboard.me.tsx"),
     route("help", "routes/dashboard.help.tsx"),
   ]),
