@@ -891,7 +891,7 @@ function RightSide({
           {
             <Slider
               defaultValue={[150]}
-              max={600}
+              max={300}
               min={30}
               step={30}
               className="w-20"

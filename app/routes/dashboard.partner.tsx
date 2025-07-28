@@ -463,7 +463,6 @@ export default function Partner() {
                         "yyyy-MM-'15'",
                       );
                       setCurrentDate(date);
-                      console.log({ date });
 
                       params.set("date", date);
                       setSearchParams(params);

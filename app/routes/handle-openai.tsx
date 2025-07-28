@@ -270,6 +270,8 @@ Importante:
 - Inclua pelo menos um emoji por parágrafo
 
 Tema a ser desenvolvido: ${title} - ${description}
+
+Siga as orientações de marca desse contexto: ${context}
 `;
 
         break;
