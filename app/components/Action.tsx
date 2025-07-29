@@ -1,8 +1,6 @@
 import {
-  addDays,
   addHours,
   addMinutes,
-  addWeeks,
   format,
   formatDistanceToNow,
   isAfter,
@@ -23,12 +21,10 @@ import { useDraggable } from "@dnd-kit/core";
 import { ptBR } from "date-fns/locale";
 import {
   ArchiveRestoreIcon,
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  CalendarClock,
   CopyIcon,
   ExpandIcon,
-  Grid3X3Icon,
+  Grid3x3Icon,
   HeartHandshakeIcon,
   PencilLineIcon,
   RabbitIcon,
@@ -70,10 +66,14 @@ import {
   isSprint,
   LikeFooter,
 } from "~/lib/helpers";
-import { Button } from "./ui/button";
+import { cn } from "~/lib/utils";
+import { Calendar } from "./ui/calendar";
 import { Checkbox } from "./ui/checkbox";
 import { Toggle } from "./ui/toggle";
 import { toast } from "./ui/use-toast";
+
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 
 export function ActionLine({
   action,
@@ -135,9 +135,7 @@ export function ActionLine({
 
   const responsibles = getResponsibles(people, action.responsibles);
 
-  function handleActions(data: {
-    [key: string]: string | number | null | string[] | boolean;
-  }) {
+  function handleActions(data: HandleActionsDataType) {
     submit(
       { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
       {
@@ -1037,8 +1035,127 @@ function ShortcutActions({ action }: { action: Action }) {
       const key = event.key.toLowerCase();
       const code = event.code;
 
+      // ATALHOS COM ALT E SHIFT
+      if (event.ctrlKey) {
+        if (key === "s")
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, true),
+          });
+      }
+      // ATALHOS SÓ COM SHIFT
+      else if (event.shiftKey) {
+        if (key === "e") {
+          navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+        } else if (key === "d") {
+          handleActions({
+            ...action,
+            newId: window.crypto.randomUUID(),
+            created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+            updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+            intent: INTENTS.duplicateAction,
+          });
+        } else if (key === "u") {
+          handleActions({
+            id: window.crypto.randomUUID(),
+            action_id: action.id,
+            user_id: person.user_id,
+            created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+            intent: isSprint(action.id, sprints)
+              ? INTENTS.unsetSprint
+              : INTENTS.setSprint,
+          });
+        } else if (key === "x") {
+          if (confirm("Deseja mesmo excluir essa ação?")) {
+            handleActions({
+              ...action,
+              intent: INTENTS.deleteAction,
+            });
+          }
+        }
+        //em uma hora
+        else if (code === "Digit1") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+
+            ...getNewDateValues(action, isInstagramDate, 60),
+          });
+        }
+        //em duas horas
+        else if (code === "Digit2") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 2 * 60), // Em minutos
+          });
+        }
+        //em três horas
+        else if (code === "Digit3") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 3 * 60), // Em minutos
+          });
+        }
+        //Hoje
+        else if (key === "h") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate),
+          });
+        }
+        // Amanhã
+        else if (key === "a") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 24 * 60),
+          });
+        }
+
+        // Adiciona uma semana além de hoje
+        else if (key === "s") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, false),
+          });
+        }
+        // Adiciona um mês
+        else if (key === "m") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 30 * 24 * 60, true),
+          });
+        }
+      } else if (event.altKey) {
+        //ATALHOS SÓ COM ALT
+        if (
+          categories.find(
+            (category) => category.shortcut === code.toLowerCase().substring(3),
+          ) &&
+          event.altKey
+        ) {
+          // Set Category
+          let category =
+            categories.find(
+              (category) =>
+                category.shortcut === code.toLowerCase().substring(3),
+            )?.slug || "post";
+
+          handleActions({
+            intent: INTENTS.updateAction,
+            ...action,
+            category,
+          });
+        }
+      }
       // Set States
-      if (states.find((state) => state.shortcut === key) && !event.shiftKey) {
+      else if (states.find((state) => state.shortcut === key)) {
         let state =
           states.find((state) => state.shortcut === key)?.slug || "do";
 
@@ -1047,24 +1164,9 @@ function ShortcutActions({ action }: { action: Action }) {
           ...action,
           state,
         });
-      } else if (
-        categories.find(
-          (category) => category.shortcut === code.toLowerCase().substring(3),
-        ) &&
-        event.altKey
-      ) {
-        // Set Category
-        let category =
-          categories.find(
-            (category) => category.shortcut === code.toLowerCase().substring(3),
-          )?.slug || "post";
-
-        handleActions({
-          intent: INTENTS.updateAction,
-          ...action,
-          category,
-        });
-      } else if (priorities.find((priority) => priority.shortcut === key)) {
+      }
+      // Set Priorities
+      else if (priorities.find((priority) => priority.shortcut === key)) {
         let priority =
           priorities.find((priority) => priority.shortcut === key)?.slug ||
           PRIORITIES.medium;
@@ -1072,91 +1174,6 @@ function ShortcutActions({ action }: { action: Action }) {
           ...action,
           intent: INTENTS.updateAction,
           priority,
-        });
-      } else if (key === "e" && event.shiftKey) {
-        navigate(`/dashboard/action/${action.id}${getQueryString()}`);
-      } else if (key === "d" && event.shiftKey) {
-        handleActions({
-          ...action,
-          newId: window.crypto.randomUUID(),
-          created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-          updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-          intent: INTENTS.duplicateAction,
-        });
-      } else if (key === "u" && event.shiftKey) {
-        handleActions({
-          id: window.crypto.randomUUID(),
-          action_id: action.id,
-          user_id: person.user_id,
-          created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-          intent: isSprint(action.id, sprints)
-            ? INTENTS.unsetSprint
-            : INTENTS.setSprint,
-        });
-      } else if (key === "x" && event.shiftKey) {
-        if (confirm("Deseja mesmo excluir essa ação?")) {
-          handleActions({
-            ...action,
-            intent: INTENTS.deleteAction,
-          });
-        }
-      }
-      //em uma hora
-      else if (code === "Digit1" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-
-          ...getNewDateValues(action, isInstagramDate, 60),
-        });
-      }
-      //em duas horas
-      else if (code === "Digit2" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate, 2 * 60), // Em minutos
-        });
-      }
-      //em três horas
-      else if (code === "Digit3" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate, 3 * 60), // Em minutos
-        });
-      }
-      //Hoje
-      else if (key === "h" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate),
-        });
-      }
-      // Amanhã
-      else if (key === "a" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate, 24 * 60),
-        });
-      }
-
-      // Adiciona uma semana
-      else if (key === "s" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, true),
-        });
-      }
-      // Adiciona um mês
-      else if (key === "m" && event.shiftKey) {
-        handleActions({
-          ...action,
-          intent: INTENTS.updateAction,
-          ...getNewDateValues(action, isInstagramDate, 30 * 24 * 60, true),
         });
       }
     };
@@ -1297,6 +1314,20 @@ export function ContextMenuItems({
         <ContextMenuShortcut className="pl-2">⇧+D</ContextMenuShortcut>
       </ContextMenuItem>
 
+      <ChangeDatePopover
+        action={action}
+        handleActions={handleActions}
+        isInstagramDate={false}
+      >
+        <CalendarClock className="size-3" />
+        <span>Mudar Data</span>
+      </ChangeDatePopover>
+
+      <ContextMenuItem className="bg-item flex items-center gap-2">
+        <Grid3x3Icon className="size-3" />
+        <span>Mudar Data do Instagram</span>
+      </ContextMenuItem>
+
       {/* Hora */}
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
@@ -1330,178 +1361,7 @@ export function ContextMenuItems({
           </ContextMenuSubContent>
         </ContextMenuPortal>
       </ContextMenuSub>
-      {/* Adiar */}
-      {/* <ContextMenuSub>
-        <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
-          <TimerIcon className="size-3" />
-          <span>Adiar</span>
-        </ContextMenuSubTrigger>
-        <ContextMenuPortal>
-          <ContextMenuSubContent className="bg-content font-medium">
-            
-            <ContextMenuItem
-              asChild
-              onSelect={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-            >
-              <div className="flex justify-between">
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.hour === 0}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      hour: d.hour > 0 ? d.hour - 1 : d.hour,
-                    }));
-                  }}
-                >
-                  <ChevronLeftIcon className="size-4" />
-                </Button>
-                <div className="inline-block w-20 text-center">
-                  {`${delay.hour} ${delay.hour === 1 ? "hora" : "horas"}`}
-                </div>
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.hour === 23}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      hour: d.hour + 1,
-                    }));
-                  }}
-                >
-                  <ChevronRightIcon className="size-4" />
-                </Button>
-              </div>
-            </ContextMenuItem>
-            <ContextMenuSeparator className="bg-border" />
-            
-            <ContextMenuItem
-              asChild
-              onSelect={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-            >
-              <div className="flex justify-between">
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.day === 0}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      day: d.day - 1,
-                    }));
-                  }}
-                >
-                  <ChevronLeftIcon className="size-4" />
-                </Button>
-                <div className="inline-block w-20 text-center">
-                  {`${delay.day} ${delay.day === 1 ? "dia" : "dias"}`}
-                </div>
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.day === 6}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      day: d.day + 1,
-                    }));
-                  }}
-                >
-                  <ChevronRightIcon className="size-4" />
-                </Button>
-              </div>
-            </ContextMenuItem>
-            <ContextMenuSeparator className="bg-border" />
-            
-            <ContextMenuItem
-              asChild
-              onSelect={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-            >
-              <div className="flex justify-between">
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.week === 0}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      week: d.week - 1,
-                    }));
-                  }}
-                >
-                  <ChevronLeftIcon className="size-4" />
-                </Button>
-                <div className="inline-block w-24 text-center">
-                  {`${delay.week} ${delay.week === 1 ? "semana" : "semanas"}`}
-                </div>
-                <Button
-                  size={"sm"}
-                  variant={"ghost"}
-                  disabled={delay.week === 8}
-                  onClick={() => {
-                    setDelay((d) => ({
-                      ...d,
-                      week: d.week + 1,
-                    }));
-                  }}
-                >
-                  <ChevronRightIcon className="size-4" />
-                </Button>
-              </div>
-            </ContextMenuItem>
 
-            <ContextMenuSeparator className="bg-border" />
-            <ContextMenuItem
-              disabled={delay.day + delay.hour + delay.week === 0}
-              className="justify-center"
-              asChild
-              onSelect={() => {
-                const date = format(
-                  addWeeks(
-                    addDays(addHours(action.date, delay.hour), delay.day),
-                    delay.week,
-                  ),
-                  "yyyy-MM-dd HH:mm:ss",
-                );
-                handleActions({
-                  intent: INTENTS.updateAction,
-                  ...action,
-                  date,
-                });
-              }}
-            >
-              <div className="flex flex-col">
-                <div className="text-[10px] tracking-wider uppercase">
-                  {delay.day + delay.hour + delay.week > 0
-                    ? "Data atual"
-                    : "Confirmar adiamento para"}
-                </div>
-                <div className="px-2 text-base">
-                  {formatActionDatetime({
-                    date: addWeeks(
-                      addDays(addHours(action.date, delay.hour), delay.day),
-                      delay.week,
-                    ),
-                    dateFormat: 4,
-                    timeFormat: 1,
-                  })}
-                </div>
-              </div>
-            </ContextMenuItem>
-          </ContextMenuSubContent>
-        </ContextMenuPortal>
-      </ContextMenuSub> */}
       {/* Deletar */}
       <ContextMenuItem
         className="bg-item flex items-center gap-2"
@@ -1869,6 +1729,17 @@ export function ContextMenuItems({
   );
 }
 
+/* 
+
+@params
+action: Action
+isInstagramDate?: boolean
+minutes = 30
+isRelative = false
+absoluteDate?: Date
+
+*/
+
 export function getNewDateValues(
   action: Action,
   isInstagramDate?: boolean,
@@ -1922,3 +1793,92 @@ export function getNewDateValues(
 
   return values;
 }
+
+const ChangeDatePopover = ({
+  action,
+  handleActions,
+  isInstagramDate,
+  children,
+  className,
+}: {
+  action: Action;
+  handleActions: (data: HandleActionsDataType) => void;
+  isInstagramDate: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState(new Date(action.date));
+
+  return (
+    <ContextMenuSub>
+      <ContextMenuSubTrigger
+        className={cn("bg-item flex items-center gap-2", className)}
+      >
+        {children}
+      </ContextMenuSubTrigger>
+      <ContextMenuPortal>
+        <ContextMenuSubContent className="bg-content">
+          <Calendar
+            locale={ptBR}
+            mode="single"
+            selected={selected}
+            onSelect={(date) => {
+              if (date) {
+                setSelected(date);
+              }
+            }}
+          />
+          <div className="flex w-full justify-between gap-2">
+            <div className="mx-auto flex w-full px-4 pb-4">
+              <Input
+                value={selected.getHours()}
+                className="border-border w-1/2 rounded-r-none border border-r-0 text-right focus:z-10"
+                type="number"
+                min={0}
+                max={23}
+                onChange={(event) => {
+                  let temp = selected;
+                  temp.setHours(Number(event.target.value));
+                  setSelected(temp);
+                }}
+              />
+              <Input
+                className="border-border w-1/2 rounded-l-none border border-l-0 text-left"
+                type="number"
+                min={0}
+                max={59}
+                value={selected.getMinutes()}
+                onChange={(event) => {
+                  let temp = selected;
+                  temp.setMinutes(Number(event.target.value));
+                  setSelected(temp);
+                }}
+              />
+            </div>
+            <div className="shrink-0">
+              <Button>Salvar</Button>
+            </div>
+          </div>
+          {/* <button
+            onClick={() => {
+              handleActions({
+                ...action,
+                date: isInstagramDate
+                  ? format(selected, "yyyy-MM-dd HH:mm:ss")
+                  : action.date,
+                instagram_date: isInstagramDate
+                  ? format(selected, "yyyy-MM-dd HH:mm:ss")
+                  : action.instagram_date,
+
+                intent: INTENTS.updateAction,
+              });
+            }}
+          >
+            Salvar
+          </button> */}
+        </ContextMenuSubContent>
+      </ContextMenuPortal>
+    </ContextMenuSub>
+  );
+};

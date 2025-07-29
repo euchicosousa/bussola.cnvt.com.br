@@ -4,8 +4,6 @@ import type { DateRange } from "react-day-picker";
 import type { Theme, ThemeColor } from "~/lib/theme-provider";
 
 declare global {
-
-
   type Partner = Database["public"]["Tables"]["partners"]["Row"];
   type Person = Database["public"]["Tables"]["people"]["Row"];
   type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -18,6 +16,10 @@ declare global {
   type Config = Database["public"]["Tables"]["config"]["Row"];
 
   type Sow = Database["public"]["Enums"]["sow"];
+
+  type HandleActionsDataType = {
+    [key: string]: string | number | null | string[] | boolean;
+  };
 
   type ActionFull = Action & {
     state: State;
