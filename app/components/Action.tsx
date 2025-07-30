@@ -216,6 +216,7 @@ export function ActionLine({
                 } else {
                   setEditingAction(action.id);
                   params.set("editing_action", action.id);
+                  params.delete("show_feed");
                   setSearchParams(params);
                 }
               } else {
@@ -331,6 +332,7 @@ export function ActionLine({
                   } else {
                     setEditingAction(action.id);
                     params.set("editing_action", action.id);
+                    params.delete("show_feed");
                     setSearchParams(params);
                   }
                 } else {

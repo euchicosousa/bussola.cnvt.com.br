@@ -32,6 +32,7 @@ export type Database = {
           state: string
           time: number
           title: string
+          topics: string[] | null
           updated_at: string
           user_id: string
         }
@@ -52,6 +53,7 @@ export type Database = {
           state: string
           time?: number
           title: string
+          topics?: string[] | null
           updated_at: string
           user_id?: string
         }
@@ -72,6 +74,7 @@ export type Database = {
           state?: string
           time?: number
           title?: string
+          topics?: string[] | null
           updated_at?: string
           user_id?: string
         }
@@ -386,6 +389,41 @@ export type Database = {
           title?: string
         }
         Relationships: []
+      }
+      topics: {
+        Row: {
+          color: string
+          created_at: string
+          foreground: string
+          id: number
+          partner_id: string
+          title: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          foreground: string
+          id?: number
+          partner_id: string
+          title: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          foreground?: string
+          id?: number
+          partner_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topics_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

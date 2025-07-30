@@ -508,6 +508,7 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           files: String(fetcher.formData?.get("files")).split(","),
           archived: Boolean(fetcher.formData?.get("archived")),
           partners: String(fetcher.formData?.get("partners")).split(","),
+          topics: String(fetcher.formData?.get("topics")).split(","),
         };
 
         return { ...action };

@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format, isSameMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   ArchiveIcon,
@@ -21,10 +21,12 @@ import { Fragment, useState } from "react";
 import {
   Link,
   useFetchers,
+  useLocation,
   useMatches,
   useNavigate,
   useNavigation,
   useOutletContext,
+  useParams,
   useSearchParams,
 } from "react-router";
 import { SOW } from "~/lib/constants";
@@ -348,6 +350,12 @@ function PartnerCombobox({
     title: sow.title,
     partners: partners.filter((partner) => partner.sow === sow.category),
   }));
+  const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
+  let params = new URLSearchParams(searchParams);
+
+  const date = params.get("date")
+    ? parseISO(params.get("date") as string)
+    : new Date();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -366,7 +374,7 @@ function PartnerCombobox({
                 />
 
                 <CircularProgress
-                  actions={getMonthsActions(actions)}
+                  actions={getMonthsActions(actions, date)}
                   title={format(new Date(), "MMMM 'de' yyyy", {
                     locale: ptBR,
                   })}
