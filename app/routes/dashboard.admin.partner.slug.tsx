@@ -138,6 +138,13 @@ export default function AdminPartners() {
     setPartner({ ...currentPartner, colors });
   }, [colors]);
 
+  useEffect(() => {
+    const topicTitles =
+      document.querySelectorAll<HTMLInputElement>(".topic-title")!;
+
+    topicTitles[topicTitles.length - 1].focus();
+  }, [currentTopics]);
+
   return (
     <div className="scrollbars-v px-4 md:px-8 lg:px-8">
       <div className="mx-auto max-w-xl">
@@ -356,7 +363,7 @@ export default function AdminPartners() {
                 >
                   <input
                     type="text"
-                    className="rounded-full px-3 py-1 text-sm font-medium outline-none"
+                    className="topic-title rounded-full px-3 py-1 text-sm font-medium outline-none"
                     style={{
                       color: topic.foreground,
                       backgroundColor: topic.color,
@@ -436,7 +443,7 @@ export default function AdminPartners() {
                       ...currentTopics,
                       {
                         id: Date.now(),
-                        title: "Novo tópico",
+                        title: "",
                         color: partner.colors[0],
                         foreground: partner.colors[1],
                         created_at: new Date().toISOString(),

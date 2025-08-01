@@ -186,7 +186,7 @@ export default function Header({
 
         {/* parceiros         */}
         <div className="flex items-center gap-4">
-          {partner ? (
+          {partner && (
             <Link to={`/dashboard/${partner.slug}`}>
               <div className="flex gap-4">
                 <div className="relative">
@@ -212,8 +212,6 @@ export default function Header({
                 </span>
               </div>
             </Link>
-          ) : (
-            <div className="text-sm font-medium">Parceiros</div>
           )}
           <PartnerCombobox />
         </div>
@@ -300,63 +298,63 @@ export default function Header({
               </DropdownMenuItem>
               <div suppressHydrationWarning>
                 {person.admin && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="new-partner"
-                    onSelect={() =>
-                      navigate("/dashboard/admin/celebration/new")
-                    }
-                  >
-                    <CalendarPlusIcon className="size-4 opacity-50" />
-                    <div>Novo Data Comemorativa</div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="partners"
-                    onSelect={() => navigate("/dashboard/cnvt6")}
-                  >
-                    <HexagonIcon className="size-4 opacity-50" />
-                    <div>CNVT.6</div>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="partners"
-                    onSelect={() => navigate("/dashboard/admin/partners")}
-                  >
-                    <HandshakeIcon className="size-4 opacity-50" />
-                    <div>Parceiros</div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="new-partner"
-                    onSelect={() => navigate("/dashboard/admin/partner/new")}
-                  >
-                    <PlusIcon className="size-4 opacity-50" />
-                    <div>Novo parceiro</div>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="new-partner"
+                      onSelect={() =>
+                        navigate("/dashboard/admin/celebration/new")
+                      }
+                    >
+                      <CalendarPlusIcon className="size-4 opacity-50" />
+                      <div>Novo Data Comemorativa</div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="partners"
+                      onSelect={() => navigate("/dashboard/cnvt6")}
+                    >
+                      <HexagonIcon className="size-4 opacity-50" />
+                      <div>CNVT.6</div>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="partners"
+                      onSelect={() => navigate("/dashboard/admin/partners")}
+                    >
+                      <HandshakeIcon className="size-4 opacity-50" />
+                      <div>Parceiros</div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="new-partner"
+                      onSelect={() => navigate("/dashboard/admin/partner/new")}
+                    >
+                      <PlusIcon className="size-4 opacity-50" />
+                      <div>Novo parceiro</div>
+                    </DropdownMenuItem>
 
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="users"
-                    onSelect={() => navigate("/dashboard/admin/users/")}
-                  >
-                    <Users2Icon className="size-4 opacity-50" />
-                    <div>Usuários</div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="bg-item"
-                    id="new-user"
-                    onSelect={() => navigate("/dashboard/admin/user/new")}
-                  >
-                    <PlusIcon className="size-4 opacity-50" />
-                    <div>Novo usuário</div>
-                  </DropdownMenuItem>
-                </>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="users"
+                      onSelect={() => navigate("/dashboard/admin/users/")}
+                    >
+                      <Users2Icon className="size-4 opacity-50" />
+                      <div>Usuários</div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="bg-item"
+                      id="new-user"
+                      onSelect={() => navigate("/dashboard/admin/user/new")}
+                    >
+                      <PlusIcon className="size-4 opacity-50" />
+                      <div>Novo usuário</div>
+                    </DropdownMenuItem>
+                  </>
                 )}
               </div>
             </DropdownMenuContent>

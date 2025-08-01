@@ -175,16 +175,16 @@ export default function Search({
     async function getActions() {
       if (supabase && sections) {
         setLoading(true);
+        const partner_slug = partner
+          ? [partner.slug]
+          : partners.map((p) => p.slug)!;
 
         supabase
           .from("actions")
           .select("*")
           .is("archived", false)
           .contains("responsibles", person?.admin ? [] : [person.user_id])
-          .containedBy(
-            "partners",
-            partner ? [partner.slug] : partners.map((p) => p.slug)!,
-          )
+          .containedBy("partners", partner_slug)
           .order("date", { ascending: false })
           .textSearch("title", `%${query}%`, { type: "websearch" })
           .then((value) => {
@@ -192,7 +192,7 @@ export default function Search({
               ? value.data.map((action: Action) => ({
                   id: action.id,
                   title: action.title,
-                  href: `/dashboard/action/${action.id}/${partner?.slug}`,
+                  href: `/dashboard/action/${action.id}/${partner_slug}`,
                   options: [action.title, action.id],
                   obs: {
                     state: states.find((state) => state.slug === action.state)!,

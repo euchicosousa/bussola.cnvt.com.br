@@ -1216,6 +1216,7 @@ function LowerBar({
           actionTopics={action.topics || []}
           topics={topics}
           onCheckedChange={(topics) => setAction({ ...action, topics })}
+          mode="command"
         />
 
         {/* Prioridade */}

@@ -99,6 +99,7 @@ export default function CreateAction({
     user_id: user.id,
     color: partner ? partner.colors[0] : BASE_COLOR,
     time: TIMES.post,
+    topics: [],
   };
 
   const [action, setAction] = useState<RawAction>(cleanAction);
@@ -364,6 +365,7 @@ export default function CreateAction({
                 setAction({ ...action, topics });
               }}
               partner={action.partners[0]}
+              mode="command"
             />
 
             {/* Responsáveis */}

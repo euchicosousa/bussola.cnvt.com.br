@@ -39,6 +39,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       caption: "",
     };
 
+    console.log(actionToInsert);
+
     const { data, error } = await supabase
       .from("actions")
       .insert(actionToInsert as any)
