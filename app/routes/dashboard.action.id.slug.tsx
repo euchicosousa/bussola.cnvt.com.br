@@ -48,6 +48,7 @@ import {
   PartnersDropdown,
   ResponsibleForAction,
   StateSelect,
+  TopicsAction,
 } from "~/components/CreateAction";
 import { Button } from "~/components/ui/button";
 import {
@@ -92,6 +93,7 @@ import {
 import { createClient } from "~/lib/supabase";
 import { cn } from "~/lib/utils";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
+import { Select } from "~/components/ui/select";
 
 export const config = { runtime: "edge" };
 const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
@@ -99,20 +101,37 @@ const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
   const { id } = params;
+  const { slug } = params;
 
   if (!id) throw new Error("$id não foi definido");
 
-  const { data: action } = await supabase
-    .from("actions")
-    .select("*")
-    .is("archived", false)
-    .match({ id })
-    .returns<Action[]>()
-    .single();
+  const [{ data: action }, { data: partner }, { data: topics }] =
+    await Promise.all([
+      supabase
+        .from("actions")
+        .select("*")
+        .is("archived", false)
+        .match({ id })
+        .returns<Action[]>()
+        .single(),
+      supabase
+        .from("partners")
+        .select("*")
+        .match({ slug })
+        .returns<Partner>()
+        .single(),
+      supabase
+        .from("topics")
+        .select("*")
+        .match({ partner_slug: slug })
+        .returns<Topic[]>(),
+    ]);
 
   invariant(action);
+  invariant(partner);
+  invariant(topics);
 
-  return { action };
+  return { action, partner, topics };
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -163,7 +182,11 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export default function ActionPage() {
-  const { action: baseAction } = useLoaderData<typeof loader>();
+  const {
+    action: baseAction,
+    partner,
+    topics,
+  } = useLoaderData<typeof loader>();
   const data = useActionData<{ urls: string[] }>();
 
   const [action, setAction] = useState(baseAction);
@@ -182,9 +205,6 @@ export default function ActionPage() {
 
   const navigation = useNavigation();
   const fetchers = useFetchers();
-  const partner = partners.find(
-    (partner) => partner.slug === action.partners[0],
-  ) as Partner;
 
   const isWorking =
     navigation.state !== "idle" ||
@@ -295,6 +315,7 @@ export default function ActionPage() {
         setAction={setAction}
         isWorking={isWorking}
         partner={partner}
+        topics={topics}
       />
     </div>
   );
@@ -1072,11 +1093,13 @@ function LowerBar({
   setAction,
   isWorking,
   partner,
+  topics,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
   partner: Partner;
+  topics: Topic[];
 }) {
   const matches = useMatches();
   const submit = useSubmit();
@@ -1087,9 +1110,7 @@ function LowerBar({
     .data as DashboardRootType;
   const actionPartners = getPartners(action.partners, partners);
 
-  const handleActions = (data: {
-    [key: string]: string | number | string[] | null | boolean;
-  }) => {
+  const handleActions = (data: HandleActionsDataType) => {
     submit(
       {
         ...data,
@@ -1188,6 +1209,12 @@ function LowerBar({
               });
             }
           }}
+        />
+
+        <TopicsAction
+          actionTopics={action.topics || []}
+          topics={topics}
+          onCheckedChange={(topics) => setAction({ ...action, topics })}
         />
 
         {/* Prioridade */}
@@ -1297,6 +1324,7 @@ function LowerBar({
             </Button>
           </>
         ) : null}
+
         {/* Tempo */}
         <div className="flex items-center gap-2">
           <Button

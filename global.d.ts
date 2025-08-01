@@ -14,11 +14,12 @@ declare global {
   type Sprint = Database["public"]["Tables"]["sprints"]["Row"];
   type Celebration = Database["public"]["Tables"]["celebrations"]["Row"];
   type Config = Database["public"]["Tables"]["config"]["Row"];
+  type Topic = Database["public"]["Tables"]["topics"]["Row"];
 
   type Sow = Database["public"]["Enums"]["sow"];
 
   type HandleActionsDataType = {
-    [key: string]: string | number | null | string[] | boolean;
+    [key: string]: string | number | null | string[] | boolean | number[];
   };
 
   type ActionFull = Action & {
@@ -53,6 +54,7 @@ declare global {
     sprints: Sprint[];
     celebrations: Celebration[];
     config: Config;
+    topics: Topic[];
   };
 
   type ActionChart = { category: string; date: string; state: string };
@@ -83,6 +85,7 @@ declare global {
     color: string;
     time: number;
     partners: string[];
+    topics?: number[] | null;
   };
 
   user_id: string;
@@ -102,7 +105,7 @@ declare global {
 
   type ContextType = {
     showFeed: boolean;
-    set_showFeed: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowFeed: React.Dispatch<React.SetStateAction<boolean>>;
     isTransitioning: boolean;
     setTransitioning: React.Dispatch<React.SetStateAction<boolean>>;
     stateFilter: State;

@@ -32,7 +32,7 @@ export type Database = {
           state: string
           time: number
           title: string
-          topics: string[] | null
+          topics: number[] | null
           updated_at: string
           user_id: string
         }
@@ -53,7 +53,7 @@ export type Database = {
           state: string
           time?: number
           title: string
-          topics?: string[] | null
+          topics?: number[] | null
           updated_at: string
           user_id?: string
         }
@@ -74,7 +74,7 @@ export type Database = {
           state?: string
           time?: number
           title?: string
-          topics?: string[] | null
+          topics?: number[] | null
           updated_at?: string
           user_id?: string
         }
@@ -396,7 +396,7 @@ export type Database = {
           created_at: string
           foreground: string
           id: number
-          partner_id: string
+          partner_slug: string
           title: string
         }
         Insert: {
@@ -404,7 +404,7 @@ export type Database = {
           created_at?: string
           foreground: string
           id?: number
-          partner_id: string
+          partner_slug: string
           title: string
         }
         Update: {
@@ -412,16 +412,16 @@ export type Database = {
           created_at?: string
           foreground?: string
           id?: number
-          partner_id?: string
+          partner_slug?: string
           title?: string
         }
         Relationships: [
           {
-            foreignKeyName: "topics_partner_id_fkey"
-            columns: ["partner_id"]
+            foreignKeyName: "topics_partner_slug_fkey"
+            columns: ["partner_slug"]
             isOneToOne: false
             referencedRelation: "partners"
-            referencedColumns: ["id"]
+            referencedColumns: ["slug"]
           },
         ]
       }

@@ -74,6 +74,7 @@ export default function Header({
   const fetchers = useFetchers();
   const [searchParams, setSearchParams] = useSearchParams();
   const [theme, setTheme] = useTheme();
+  const isLoading = navigation.state !== "idle";
 
   const { showFeed, set_showFeed } = useOutletContext() as ContextType;
 
@@ -193,8 +194,7 @@ export default function Header({
                     short: person.initials!,
                   }}
                 />
-                {(navigation.state !== "idle" ||
-                  fetchers.filter((f) => f.formData).length > 0) && (
+                {isLoading && (
                   <div className="absolute top-0 right-0">
                     <Loader size="lgs" />
                   </div>

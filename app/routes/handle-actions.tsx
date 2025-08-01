@@ -63,6 +63,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // delete values.state;
     // delete values.partner;
     // delete values.slug;
+    delete values.topics;
     delete values.archived;
 
     if (values.color === "" || values.color === null) delete values.color;

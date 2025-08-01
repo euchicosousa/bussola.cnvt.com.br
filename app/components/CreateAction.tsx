@@ -48,7 +48,7 @@ export default function CreateAction({
   mode: "fixed" | "day" | "button" | "plus";
   shortcut?: boolean;
 }) {
-  const { categories, partners, user, areas, people, config } = useMatches()[1]
+  const { categories, partners, user, areas, config, topics } = useMatches()[1]
     .data as DashboardRootType;
   const matches = useMatches();
   const location = useLocation();
@@ -341,6 +341,16 @@ export default function CreateAction({
               }}
             />
 
+            <TopicsAction
+              actionTopics={action.topics || []}
+              topics={topics.filter(
+                (topic) => topic.partner_slug === action.partners[0],
+              )}
+              onCheckedChange={(topics) => {
+                setAction({ ...action, topics });
+              }}
+            />
+
             {/* Responsáveis */}
             <ResponsibleForAction
               responsibles={action.responsibles}
@@ -522,6 +532,83 @@ export function PartnersDropdown({
                 }}
               />
               <div>{partner.title}</div>
+            </div>
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function TopicsAction({
+  size,
+  actionTopics,
+  topics,
+  onCheckedChange,
+}: {
+  size?: Size;
+  actionTopics: number[];
+  topics: Topic[];
+  onCheckedChange: (topics: number[]) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="button-trigger">
+        {actionTopics.length > 0 ? (
+          <div className="flex">
+            {actionTopics.map((topic, i) => {
+              const _topic = topics.find((t) => t.id === topic);
+              return (
+                <div
+                  key={topic}
+                  className={`border-background rounded-full border-2 ${size === "sm" ? "size-4" : "size-6"} ${i !== 0 && "-ml-2"}`}
+                  style={{ backgroundColor: _topic?.color }}
+                ></div>
+              );
+            })}
+          </div>
+        ) : (
+          "Tópicos"
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-content">
+        {topics.map((topic) => (
+          <DropdownMenuCheckboxItem
+            key={topic.id}
+            className="bg-select-item"
+            checked={actionTopics.includes(topic.id)}
+            onClick={(event) => {
+              const checked = actionTopics.includes(topic.id);
+              const _topics = actionTopics || [];
+
+              if (checked) {
+                onCheckedChange([..._topics.filter((id) => id !== topic.id)]);
+              } else {
+                onCheckedChange([..._topics, topic.id]);
+              }
+
+              // if (checked && action.topics?.length < 2) {
+              //   alert("É necessário ter pelo menos um responsável pela ação");
+              //   return false;
+              // }
+
+              // if (!event.shiftKey) {
+              //   tempTopics = checked
+              //     ? action.topics?.filter((id) => id !== topic.id)
+              //     : [...action.topics, topic.id];
+              // }
+              // onCheckedChange(tempResponsibles);
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <div
+                className="size-2 rounded-full"
+                style={{
+                  backgroundColor: topic.color,
+                  color: topic.foreground,
+                }}
+              ></div>
+              <div>{topic.title}</div>
             </div>
           </DropdownMenuCheckboxItem>
         ))}

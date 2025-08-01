@@ -1,6 +1,6 @@
 import { EditIcon, Grid3x3Icon, SaveIcon, TextIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Description, Header, Title } from "~/routes/dashboard.action.id";
+import { Description, Header, Title } from "~/routes/dashboard.action.id.slug";
 import { Button } from "./ui/button";
 import { useFetcher, useNavigate, useSubmit } from "react-router";
 import { format } from "date-fns";
@@ -122,7 +122,9 @@ export default function EditAction({
                 e.stopPropagation();
                 await handleSave(editingAction);
 
-                navigate(`/dashboard/action/${editingAction.id}`);
+                navigate(
+                  `/dashboard/action/${editingAction.id}/${partner.slug}`,
+                );
               }}
             >
               <span>Editar</span>

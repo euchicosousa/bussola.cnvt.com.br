@@ -30,6 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     { data: sprints },
     { data: celebrations },
     { data: configs },
+    { data: topics },
   ] = await Promise.all([
     supabase
       .from("partners")
@@ -75,6 +76,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .select("*")
       .match({ user_id: user.id })
       .returns<Config[]>(),
+    supabase.from("topics").select("*").returns<Topic[]>(),
   ]);
 
   const config = configs?.[0] || {
@@ -101,12 +103,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     sprints,
     celebrations,
     config,
+    topics,
   } as DashboardRootType;
 }
 
 export default function Dashboard() {
   const {
     setShowFeed,
+
     showFeed,
     isTransitioning,
     setTransitioning,

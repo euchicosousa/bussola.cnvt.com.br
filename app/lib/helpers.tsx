@@ -64,6 +64,8 @@ import {
 } from "~/components/ui/popover";
 import { BASE_COLOR, INTENTS, PRIORITIES } from "./constants";
 import { cn } from "./utils";
+import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
 
 export function ShortText({
   text,
@@ -508,7 +510,9 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           files: String(fetcher.formData?.get("files")).split(","),
           archived: Boolean(fetcher.formData?.get("archived")),
           partners: String(fetcher.formData?.get("partners")).split(","),
-          topics: String(fetcher.formData?.get("topics")).split(","),
+          topics: String(fetcher.formData?.get("topics"))
+            .split(",")
+            .map(Number),
         };
 
         return { ...action };

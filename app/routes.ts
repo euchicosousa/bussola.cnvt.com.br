@@ -9,7 +9,8 @@ export default [
     route("cnvt6", "routes/dashboard.cnvt6.tsx"),
     route(":partner", "routes/dashboard.partner.tsx"),
     route(":partner/archived", "routes/dashboard.partner.archived.tsx"),
-    route("action/:id", "routes/dashboard.action.id.tsx"),
+
+    route("action/:id/:slug", "routes/dashboard.action.id.slug.tsx"),
 
     route("admin/users", "routes/dashboard.admin.users.tsx"),
     route("admin/user/:id/actions", "routes/dashboard.admin.user.actions.tsx"),
@@ -19,9 +20,12 @@ export default [
     route("admin/partners", "routes/dashboard.admin.partners.tsx"),
     route("admin/partner/:slug", "routes/dashboard.admin.partner.slug.tsx"),
     route("admin/partner/new", "routes/dashboard.admin.partner.new.tsx"),
-    
-    route("admin/celebration/new", "routes/dashboard.admin.celebration.new.tsx"),
-    
+
+    route(
+      "admin/celebration/new",
+      "routes/dashboard.admin.celebration.new.tsx",
+    ),
+
     route("me", "routes/dashboard.me.tsx"),
     route("help", "routes/dashboard.help.tsx"),
   ]),

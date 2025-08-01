@@ -1,20 +1,21 @@
 /* eslint-disable jsx-a11y/no-autofocus */
 import {
-  Form,
   Link,
   redirect,
   useFetcher,
   useLoaderData,
   useMatches,
+  useNavigation,
   type ActionFunctionArgs,
   type LoaderFunctionArgs,
   type MetaFunction,
 } from "react-router";
 // @ts-ignore
 import Color from "color";
-import { PlusIcon, TrashIcon } from "lucide-react";
+import { PlusIcon, SaveIcon, TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
+import ColorPicker from "~/components/ColorPicker";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -32,16 +33,23 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   invariant(slug);
 
-  const { data: partner } = await supabase
-    .from("partners")
-    .select("*")
-    .match({ slug })
-    .returns<Partner[]>()
-    .single();
+  const [{ data: partner }, { data: topics }] = await Promise.all([
+    supabase
+      .from("partners")
+      .select("*")
+      .match({ slug })
+      .returns<Partner[]>()
+      .single(),
+    supabase
+      .from("topics")
+      .select()
+      .match({ partner_slug: slug })
+      .returns<Topic[]>(),
+  ]);
 
   if (!partner) throw redirect("/dashboard/admin/partners");
 
-  return { partner };
+  return { partner, topics };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -61,67 +69,74 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const id = String(formData.get("id"));
 
-  const data = {
+  const dataPartner = {
     title: String(formData.get("title")),
     short: String(formData.get("short")),
     slug: String(formData.get("slug")),
-    colors: String(formData.getAll("colors")).split(","),
+    colors: String(formData.getAll("colors_partner")).split(","),
     context: String(formData.get("context")),
     sow: formData.get("sow") as "marketing" | "socialmedia" | "demand",
     users_ids: String(formData.getAll("users_ids")).split(","),
   } as any;
 
-  const { error } = await supabase
+  // Parse topics from JSON string
+  const topicsData = formData.get("topics");
+  const currentTopics = topicsData ? JSON.parse(String(topicsData)) : [];
+
+  const { error: errorPartner } = await supabase
     .from("partners")
-    .update(data)
+    .update(dataPartner)
     .match({ id: id });
 
-  if (error) {
-    console.log(error);
-  } else {
-    return redirect(`/dashboard/admin/partners`);
+  // Process topics - delete existing and insert new ones
+  if (currentTopics.length > 0) {
+    // First delete existing topics for this partner
+    await supabase
+      .from("topics")
+      .delete()
+      .match({ partner_slug: dataPartner.slug });
+
+    // Then insert the new topics
+    const topicsToInsert = currentTopics.map((topic: any) => ({
+      partner_slug: dataPartner.slug,
+      title: topic.title,
+      color: topic.color,
+      foreground: topic.foreground,
+    }));
+
+    const { error: errorTopics } = await supabase
+      .from("topics")
+      .insert(topicsToInsert);
+
+    if (errorTopics) {
+      throw new Error(errorTopics.message);
+    }
   }
 
-  return { ok: true };
+  if (errorPartner) {
+    throw new Error(errorPartner.message);
+  } else {
+    return { ok: true };
+  }
 };
 
 export default function AdminPartners() {
   const matches = useMatches();
+  const fetcher = useFetcher();
 
-  const { partner } = useLoaderData<typeof loader>();
+  const { partner, topics } = useLoaderData<typeof loader>();
   const { people } = matches[1].data as DashboardRootType;
 
   const [colors, setColors] = useState(partner.colors);
+  const [currentTopics, setTopics] = useState(topics || []);
+  const [currentPartner, setPartner] = useState(partner);
 
-  const [text, setText] = useState("");
-
-  const fetcher = useFetcher();
-
-  // useEffect(() => {
-  //   setText("Atualizando...");
-  //   fetcher.submit(
-  //     {
-  //       title: "Apresente a empresa ou profissional.",
-  //       context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
-  //       intent: "caption",
-  //       model: "medium",
-  //       trigger: "Novidade",
-  //       voice: vx,
-  //     },
-  //     {
-  //       action: "/handle-openai",
-  //       method: "post",
-  //     },
-  //   );
-  // }, [vx]);
+  const isLoading =
+    useNavigation().state !== "idle" || fetcher.state !== "idle";
 
   useEffect(() => {
-    if (fetcher.data) {
-      if (fetcher.formData?.get("intent") === "caption") {
-        setText((fetcher.data as { message: string }).message);
-      }
-    }
-  }, [fetcher.data]);
+    setPartner({ ...currentPartner, colors });
+  }, [colors]);
 
   return (
     <div className="scrollbars-v px-4 md:px-8 lg:px-8">
@@ -129,162 +144,354 @@ export default function AdminPartners() {
         {/* Header */}
         <div
           className="flex items-center gap-2 py-4 font-bold tracking-tighter"
-          key={partner.slug}
+          key={currentPartner.slug}
         >
           <Avatar
             item={{
-              short: partner.short,
-              bg: partner.colors[0],
-              fg: partner.colors[1],
+              short: currentPartner.short,
+              bg: currentPartner.colors[0],
+              fg: currentPartner.colors[1],
             }}
             size="lg"
           />
-          <Link to={`/dashboard/${partner.slug}`} className="text-2xl">
-            {partner.title}
+          <Link to={`/dashboard/${currentPartner.slug}`} className="text-2xl">
+            {currentPartner.title}
           </Link>
         </div>
 
-        <Form className="mx-auto" method="post">
-          <input type="hidden" value={partner.id} name="id" />
-          <div className="mb-4">
-            <Label className="mb-2 block">Nome</Label>
+        <input type="hidden" value={currentPartner.id} name="id" />
+        {/* Title */}
+        <div className="mb-4">
+          <Label className="mb-2 block">Nome</Label>
+          <Input
+            defaultValue={currentPartner.title}
+            name="title"
+            type="text"
+            tabIndex={0}
+            autoFocus
+            onChange={(e) =>
+              setPartner({ ...currentPartner, title: e.target.value })
+            }
+          />
+        </div>
+        {/* Slug e Short */}
+        <div className="gap-2 md:flex">
+          {/* Slug */}
+          <div className="mb-4 w-full">
+            <Label className="mb-2 block">Slug</Label>
             <Input
-              defaultValue={partner.title}
-              name="title"
-              type="text"
-              tabIndex={0}
-              autoFocus
+              defaultValue={currentPartner.slug}
+              name="slug"
+              onChange={(e) =>
+                setPartner({ ...currentPartner, slug: e.target.value })
+              }
             />
           </div>
-          <div className="gap-2 md:flex">
-            <div className="mb-4 w-full">
-              <Label className="mb-2 block">Slug</Label>
-              <Input defaultValue={partner.slug} name="slug" />
-            </div>
-            <div className="mb-4 w-full">
-              <Label className="mb-2 block">Short</Label>
-              <Input defaultValue={partner.short} name="short" />
-            </div>
-          </div>
-          <div className="mb-4">
-            <Label className="mb-2 block">Contexto</Label>
-            <Textarea
-              name="context"
-              defaultValue={partner.context || ""}
-              // @ts-ignore
-              style={{ fieldSizing: "content" }}
+          {/* Short */}
+          <div className="mb-4 w-full">
+            <Label className="mb-2 block">Short</Label>
+            <Input
+              defaultValue={currentPartner.short}
+              name="short"
+              onChange={(e) =>
+                setPartner({ ...currentPartner, short: e.target.value })
+              }
             />
           </div>
-          <div className="mb-8">
-            <Label className="mb-2 block">Serviço Contratado</Label>
-            <RadioGroup name="sow" defaultValue={partner.sow.toString()}>
-              {[
-                {
-                  value: "marketing",
-                  title: "Consultoria de Marketing 360",
-                },
-                {
-                  value: "socialmedia",
-                  title: "Gestão de Redes Sociais",
-                },
-                {
-                  value: "demand",
-                  title: "Serviços avulsos",
-                },
-              ].map((p) => (
-                <div className="flex items-center gap-2" key={p.value}>
-                  <RadioGroupItem value={p.value} id={`radio_${p.value}`} />
-                  <Label htmlFor={`radio_${p.value}`}>{p.title}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-          <div className="mb-4">
-            <Label className="mb-2 block">Usuários</Label>
-            <div className="flex items-center gap-4">
-              {people.map((person) => (
-                <label
-                  key={person.id}
-                  className={`relative mb-2 flex items-center`}
+        </div>
+        {/* Context */}
+        <div className="mb-4">
+          <Label className="mb-2 block">Contexto</Label>
+          <Textarea
+            name="context"
+            defaultValue={currentPartner.context || ""}
+            onChange={(e) =>
+              setPartner({ ...currentPartner, context: e.target.value })
+            }
+            // @ts-ignore
+            style={{ fieldSizing: "content" }}
+          />
+        </div>
+        {/* SOW */}
+        <div className="mb-8">
+          <Label className="mb-2 block">Serviço Contratado</Label>
+          <RadioGroup
+            name="sow"
+            defaultValue={partner.sow.toString()}
+            onValueChange={(value) =>
+              setPartner({ ...currentPartner, sow: value as Sow })
+            }
+          >
+            {[
+              {
+                value: "marketing",
+                title: "Consultoria de Marketing 360",
+              },
+              {
+                value: "socialmedia",
+                title: "Gestão de Redes Sociais",
+              },
+              {
+                value: "demand",
+                title: "Serviços avulsos",
+              },
+            ].map((p) => (
+              <div className="flex items-center gap-2" key={p.value}>
+                <RadioGroupItem value={p.value} id={`radio_${p.value}`} />
+                <Label htmlFor={`radio_${p.value}`}>{p.title}</Label>
+              </div>
+            ))}
+          </RadioGroup>
+        </div>
+        {/* Usuários */}
+        <div className="mb-4">
+          <Label className="mb-2 block">Usuários</Label>
+          <div className="flex items-center gap-4">
+            {people.map((person) => (
+              <label
+                key={person.id}
+                className={`relative mb-2 flex items-center`}
+              >
+                <input
+                  type="checkbox"
+                  value={person.user_id}
+                  name="users_ids"
+                  className={`peer absolute opacity-0`}
+                  defaultChecked={
+                    currentPartner.users_ids?.find(
+                      (user_id) => person.user_id === user_id,
+                    )
+                      ? true
+                      : false
+                  }
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setPartner({
+                        ...currentPartner,
+                        users_ids: [
+                          ...currentPartner.users_ids,
+                          e.target.value,
+                        ],
+                      });
+                    } else {
+                      setPartner({
+                        ...currentPartner,
+                        users_ids: currentPartner.users_ids.filter(
+                          (user_id) => user_id !== e.target.value,
+                        ),
+                      });
+                    }
+                  }}
+                />
+                <div
+                  className={`ring-ring ring-offset-background rounded-full ring-offset-2 peer-checked:ring-2`}
                 >
-                  <input
-                    type="checkbox"
-                    value={person.user_id}
-                    name="users_ids"
-                    className={`peer absolute opacity-0`}
-                    defaultChecked={
-                      partner.users_ids?.find(
-                        (user_id) => person.user_id === user_id,
-                      )
-                        ? true
-                        : false
+                  <Avatar
+                    item={{
+                      image: person.image,
+                      short: person.initials!,
+                    }}
+                    size="lg"
+                  />
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+        {/* Cores */}
+        <div className="mb-4 gap-2 md:flex">
+          <div className="mb-4 w-full">
+            <Label className="mb-2 block">Cores</Label>
+            <div className="flex flex-wrap gap-4">
+              {colors.map((color, i) => (
+                <div key={i} className="group flex gap-2">
+                  <ColorPicker
+                    color={color}
+                    onChange={(_c) =>
+                      setColors(colors.map((c) => (c === color ? _c : c)))
                     }
                   />
-                  <div
-                    className={`ring-ring ring-offset-background rounded-full ring-offset-2 peer-checked:ring-2`}
-                  >
-                    <Avatar
-                      item={{
-                        image: person.image,
-                        short: person.initials!,
-                      }}
-                      size="lg"
-                    />
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-          {/* Cores */}
-          <div className="gap-2 md:flex">
-            <div className="mb-4 w-full">
-              <Label className="mb-2 block">Cores</Label>
-              <div className="flex flex-wrap gap-4">
-                {colors.map((color, i) => (
-                  <div key={i} className="flex gap-2">
-                    <Input
-                      className="h-16 w-20"
-                      defaultValue={color}
-                      name="colors"
-                      type="color"
-                    />
-                    <Button
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setColors(colors.filter((c) => c !== color));
-                      }}
-                      variant={"ghost"}
-                    >
-                      <TrashIcon className="size-4" />
-                    </Button>
-                  </div>
-                ))}
-                <div className="grid place-content-center">
                   <Button
-                    variant={"secondary"}
                     onClick={(event) => {
                       event.preventDefault();
-                      setColors([
-                        ...colors,
-                        Color(colors[0])
-                          .rotate(Math.random() * 220 + 30)
-                          .hex(),
-                      ]);
+                      console.log("AQUI");
+                      setColors(colors.filter((c) => c !== color));
                     }}
+                    variant={"ghost"}
+                    className="size-8 h-auto p-1 opacity-0 group-hover:opacity-100"
                   >
-                    <PlusIcon className="size-4" />
+                    <TrashIcon className="size-4" />
                   </Button>
                 </div>
+              ))}
+              <div className="grid place-content-center">
+                <Button
+                  variant={"secondary"}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setColors([
+                      ...colors,
+                      Color(colors[0])
+                        .rotate(Math.random() * 220 + 30)
+                        .hex(),
+                    ]);
+                  }}
+                >
+                  <PlusIcon className="size-4" />
+                </Button>
               </div>
             </div>
           </div>
+        </div>
+        {/* Tópicos */}
+        {/* <pre>{JSON.stringify(currentTopics, null, 2)}</pre> */}
+        <div className="gap-2 md:flex">
+          <div className="mb-4 w-full">
+            <Label className="mb-2 block">Tópicos</Label>
+            <div className="flex flex-col gap-2">
+              {currentTopics?.map((topic) => (
+                <div
+                  key={topic.id}
+                  className="bg-card group flex items-center justify-between gap-2 rounded-sm px-3 py-2"
+                >
+                  <input
+                    type="text"
+                    className="rounded-full px-3 py-1 text-sm font-medium outline-none"
+                    style={{
+                      color: topic.foreground,
+                      backgroundColor: topic.color,
+                      // @ts-ignore
+                      fieldSizing: "content",
+                    }}
+                    value={topic.title}
+                    onChange={(e) =>
+                      setTopics(
+                        currentTopics.map((t) =>
+                          t.id === topic.id
+                            ? { ...t, title: e.target.value }
+                            : t,
+                        ),
+                      )
+                    }
+                  />
 
-          <div className="pb-8 text-right">
-            <Button type="submit" size={"lg"}>
-              Atualizar
-            </Button>
+                  {/* <div
+                    className="rounded-full px-3 py-1 text-sm font-medium outline-none"
+                    style={{
+                      color: topic.color,
+                      backgroundColor: topic.foreground,
+                    }}
+                  >
+                    {topic.title}
+                  </div> */}
+
+                  <div className="flex items-center gap-4">
+                    <div className="opacity-0 group-hover:opacity-100">
+                      <Button
+                        variant={"ghost"}
+                        size={"icon"}
+                        onClick={() =>
+                          setTopics(
+                            currentTopics.filter((t) => t.id !== topic.id),
+                          )
+                        }
+                      >
+                        <TrashIcon />
+                      </Button>
+                    </div>
+                    <div>
+                      <ColorPicker
+                        color={topic.color}
+                        onChange={(c) =>
+                          setTopics(
+                            currentTopics.map((t) =>
+                              t.id === topic.id ? { ...t, color: c } : t,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <ColorPicker
+                        color={topic.foreground}
+                        onChange={(c) =>
+                          setTopics(
+                            currentTopics.map((t) =>
+                              t.id === topic.id ? { ...t, foreground: c } : t,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="text-right">
+                <Button
+                  variant={"secondary"}
+                  onClick={(event) => {
+                    event.preventDefault();
+
+                    setTopics([
+                      ...currentTopics,
+                      {
+                        id: Date.now(),
+                        title: "Novo tópico",
+                        color: partner.colors[0],
+                        foreground: partner.colors[1],
+                        created_at: new Date().toISOString(),
+                        partner_slug: partner.slug,
+                      },
+                    ]);
+                  }}
+                >
+                  <PlusIcon />
+                </Button>
+              </div>
+            </div>
           </div>
-        </Form>
+        </div>
+        {/* Button */}
+        <div className="border-t pt-8 pb-8 text-right">
+          <Button
+            size={"lg"}
+            onClick={() => {
+              const formData = new FormData();
+
+              // Add partner data
+              Object.entries(currentPartner).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                  value.forEach((v) => formData.append(key, v));
+                } else {
+                  formData.append(key, value as string);
+                }
+              });
+
+              // Add colors
+              colors.forEach((color) =>
+                formData.append("colors_partner", color),
+              );
+
+              // Add topics as JSON string
+              formData.append("topics", JSON.stringify(currentTopics));
+
+              fetcher.submit(formData, {
+                action: `/dashboard/admin/partner/${partner.slug}`,
+                method: "post",
+              });
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="size-4 animate-spin rounded-full border-2 border-white border-b-transparent" />
+            ) : (
+              <>
+                <span>Atualizar</span>
+                <SaveIcon />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

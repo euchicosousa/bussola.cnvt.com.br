@@ -170,7 +170,9 @@ export function ActionLine({
         {isHair ? (
           <div
             onClick={() => {
-              navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+              navigate(
+                `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
+              );
             }}
             ref={setNodeRef}
             {...listeners}
@@ -212,7 +214,9 @@ export function ActionLine({
             onClick={() => {
               if (setEditingAction) {
                 if (editingAction === action.id) {
-                  navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                  navigate(
+                    `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
+                  );
                 } else {
                   setEditingAction(action.id);
                   params.set("editing_action", action.id);
@@ -220,11 +224,13 @@ export function ActionLine({
                   setSearchParams(params);
                 }
               } else {
-                navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                navigate(
+                  `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
+                );
               }
             }}
             // onClick={() => {
-            //   navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+            //   navigate(`/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`);
             // }}
             ref={setNodeRef}
             {...listeners}
@@ -322,12 +328,12 @@ export function ActionLine({
               e.stopPropagation();
 
               if (!edit && !selectMultiple) {
-                // navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                // navigate(`/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`);
 
                 if (setEditingAction) {
                   if (editingAction === action.id) {
                     navigate(
-                      `/dashboard/action/${action.id}${getQueryString()}`,
+                      `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
                     );
                   } else {
                     setEditingAction(action.id);
@@ -336,7 +342,9 @@ export function ActionLine({
                     setSearchParams(params);
                   }
                 } else {
-                  navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                  navigate(
+                    `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
+                  );
                 }
               }
             }}
@@ -658,9 +666,7 @@ export function ActionBlock({
 
   const state = states.find((state) => state.slug === action.state) as State;
 
-  function handleActions(data: {
-    [key: string]: string | number | null | string[] | boolean;
-  }) {
+  function handleActions(data: HandleActionsDataType) {
     submit(
       { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
       {
@@ -702,7 +708,9 @@ export function ActionBlock({
               event.preventDefault();
               event.stopPropagation();
               if (!edit) {
-                navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+                navigate(
+                  `/dashboard/action/${action.id}/${action.partners[0]}${getQueryString()}`,
+                );
               }
             }}
             onMouseEnter={() => {
@@ -993,7 +1001,7 @@ export function GridOfActions({
       <div className="grid grid-cols-3 overflow-hidden rounded-xs">
         {actions?.map((action, index) => (
           <Link
-            to={`/dashboard/action/${action.id}${getQueryString()}`}
+            to={`/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`}
             key={index}
           >
             <Content
@@ -1019,9 +1027,7 @@ function ShortcutActions({ action }: { action: Action }) {
   const { states, categories, priorities, person, sprints } = matches[1]
     .data as DashboardRootType;
 
-  function handleActions(data: {
-    [key: string]: string | number | null | string[] | boolean;
-  }) {
+  function handleActions(data: HandleActionsDataType) {
     submit(
       { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
       {
@@ -1049,7 +1055,9 @@ function ShortcutActions({ action }: { action: Action }) {
       // ATALHOS SÓ COM SHIFT
       else if (event.shiftKey) {
         if (key === "e") {
-          navigate(`/dashboard/action/${action.id}${getQueryString()}`);
+          navigate(
+            `/dashboard/action/${action.id}/${action.partners[0]}${getQueryString()}`,
+          );
         } else if (key === "d") {
           handleActions({
             ...action,
@@ -1252,9 +1260,7 @@ export function ContextMenuItems({
 }: {
   action: Action;
   isInstagramDate?: boolean;
-  handleActions: (data: {
-    [key: string]: string | number | null | string[] | boolean;
-  }) => void;
+  handleActions: (data: HandleActionsDataType) => void;
 }) {
   const matches = useMatches();
   const {
@@ -1279,7 +1285,7 @@ export function ContextMenuItems({
       <ContextMenuItem asChild>
         <Link
           className="bg-item flex items-center gap-2"
-          to={`/dashboard/action/${action.id}${getQueryString()}`}
+          to={`/dashboard/action/${action.id}/${action.partners[0]}${getQueryString()}`}
         >
           <PencilLineIcon className="size-3" />
           <span>Editar</span>

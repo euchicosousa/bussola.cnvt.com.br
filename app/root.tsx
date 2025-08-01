@@ -91,7 +91,7 @@ export function App({ children }: { children: React.ReactNode }) {
 export default function AppWithProviders() {
   const [searchParams] = useSearchParams();
 
-  const [showFeed, set_showFeed] = useState(!!searchParams.get("show_feed"));
+  const [showFeed, setShowFeed] = useState(!!searchParams.get("show_feed"));
   const [isTransitioning, setTransitioning] = useState(false);
   const [stateFilter, setStateFilter] = useState<State>();
 
@@ -105,7 +105,7 @@ export default function AppWithProviders() {
             showFeed,
             isTransitioning,
             stateFilter,
-            set_showFeed,
+            setShowFeed,
             setTransitioning,
             setStateFilter,
           }}
