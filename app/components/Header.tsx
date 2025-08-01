@@ -9,6 +9,7 @@ import {
   HelpCircle,
   HexagonIcon,
   LogOutIcon,
+  MenuIcon,
   MoonIcon,
   PlusIcon,
   SearchIcon,
@@ -104,6 +105,10 @@ export default function Header({
 
   const lateActions = getDelayedActions({ actions: actionsChart });
 
+  const date = params.get("date")
+    ? parseISO(params.get("date") as string)
+    : new Date();
+
   return (
     <header
       className={`flex items-center justify-between gap-4 border-b px-6 py-2`}
@@ -178,8 +183,37 @@ export default function Header({
         <CreateAction mode="plus" shortcut />
 
         {/* parceiros         */}
-        <div className="flex items-center gap-0">
-          <PartnerCombobox partner={partner} actions={actions} />
+        <div className="flex items-center gap-4">
+          {partner ? (
+            <Link to={`/dashboard/${partner.slug}`}>
+              <div className="flex gap-4">
+                <div className="relative">
+                  <Avatar
+                    size="md"
+                    item={{
+                      short: partner.short,
+                      bg: partner.colors[0],
+                      fg: partner.colors[1],
+                    }}
+                  />
+
+                  <CircularProgress
+                    actions={getMonthsActions(actions, date)}
+                    title={format(new Date(), "MMMM 'de' yyyy", {
+                      locale: ptBR,
+                    })}
+                    className="absolute -top-1/2 -left-1/2"
+                  />
+                </div>
+                <span className="hidden text-2xl font-bold tracking-tight md:block">
+                  {partner.title}
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <div className="text-sm font-medium">Parceiros</div>
+          )}
+          <PartnerCombobox />
         </div>
 
         {/* menu de ações */}
@@ -329,13 +363,7 @@ export default function Header({
   );
 }
 
-function PartnerCombobox({
-  partner,
-  actions,
-}: {
-  partner: Partner;
-  actions: Action[];
-}) {
+function PartnerCombobox() {
   const matches = useMatches();
   const navigate = useNavigate();
 
@@ -353,42 +381,12 @@ function PartnerCombobox({
   const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
   let params = new URLSearchParams(searchParams);
 
-  const date = params.get("date")
-    ? parseISO(params.get("date") as string)
-    : new Date();
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="outline-none" asChild>
         <div className="flex cursor-pointer items-center gap-2">
-          {partner ? (
-            <div className="flex gap-4">
-              <div className="relative">
-                <Avatar
-                  size="md"
-                  item={{
-                    short: partner.short,
-                    bg: partner.colors[0],
-                    fg: partner.colors[1],
-                  }}
-                />
-
-                <CircularProgress
-                  actions={getMonthsActions(actions, date)}
-                  title={format(new Date(), "MMMM 'de' yyyy", {
-                    locale: ptBR,
-                  })}
-                  className="absolute -top-1/2 -left-1/2"
-                />
-              </div>
-              <span className="hidden text-2xl font-bold tracking-tight md:block">
-                {partner.title}
-              </span>
-            </div>
-          ) : (
-            <div className="text-sm font-medium">Parceiros</div>
-          )}
-          <ChevronsUpDownIcon className="size-4" />
+          {/* <ChevronsUpDownIcon className="size-6" /> */}
+          <MenuIcon className="size-6" />
         </div>
       </PopoverTrigger>
       <PopoverContent className="bg-content mx-8 p-0">
