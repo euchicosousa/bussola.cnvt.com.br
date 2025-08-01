@@ -76,7 +76,7 @@ export default function Header({
   const [theme, setTheme] = useTheme();
   const isLoading = navigation.state !== "idle";
 
-  const { showFeed, set_showFeed } = useOutletContext() as ContextType;
+  const { showFeed, setShowFeed } = useOutletContext() as ContextType;
 
   const params = new URLSearchParams(searchParams);
 
@@ -136,11 +136,11 @@ export default function Header({
                 onClick={() => {
                   if (showFeed) {
                     params.delete("show_feed");
-                    set_showFeed(false);
+                    setShowFeed(false);
                   } else {
                     params.delete("editing_action");
                     params.set("show_feed", "true");
-                    set_showFeed(true);
+                    setShowFeed(true);
                   }
 
                   setSearchParams(params);
