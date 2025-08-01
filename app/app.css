@@ -27,7 +27,7 @@
     --destructive-foreground: 0 0% 100%;
 
     --highlight: 0 0% 100%;
-    --border: 200 10% 86%;
+    --border: 200 10% 40%;
     --input: 200 10% 98%;
     --ring: var(--primary);
     --radius: 12px;
@@ -63,7 +63,7 @@
     --destructive-foreground: 250 20% 98%;
 
     --highlight: 200 10% 30%;
-    --border: 200 10% 25%;
+    --border: 200 10% 100%;
     --input: 200 10% 16%;
     /* --ring: 200 10% 90%; */
 
@@ -76,7 +76,7 @@
 }
 
 @theme {
-  --color-border: hsl(var(--border));
+  --color-border: hsl(var(--border) / 0.2);
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
   --color-background: hsl(var(--background));

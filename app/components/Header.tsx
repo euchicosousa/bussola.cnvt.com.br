@@ -169,13 +169,15 @@ export default function Header({
             <SearchIcon className="size-6" />
           </Button>
 
-          {person.admin && partner && (
-            <Button variant={"ghost"} size={"icon"} asChild>
-              <Link to={`/dashboard/admin/partner/${partner.slug}`}>
-                <SettingsIcon className="size-4" />
-              </Link>
-            </Button>
-          )}
+          <div suppressHydrationWarning>
+            {person.admin && partner && (
+              <Button variant={"ghost"} size={"icon"} asChild>
+                <Link to={`/dashboard/admin/partner/${partner.slug}`}>
+                  <SettingsIcon className="size-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Botão de criar ação */}
@@ -296,7 +298,8 @@ export default function Header({
                 <LogOutIcon className="size-4 opacity-50" />
                 <div>Sair</div>
               </DropdownMenuItem>
-              {person.admin && (
+              <div suppressHydrationWarning>
+                {person.admin && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -354,7 +357,8 @@ export default function Header({
                     <div>Novo usuário</div>
                   </DropdownMenuItem>
                 </>
-              )}
+                )}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         )}

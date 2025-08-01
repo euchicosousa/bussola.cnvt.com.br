@@ -76,9 +76,9 @@ import {
   getTodayActions,
   getTomorrowActions,
   sortActions,
-  useIDsToRemove,
-  usePendingData,
 } from "~/lib/helpers";
+import { usePendingDataSafe } from "~/hooks/usePendingDataSafe";
+import { useIDsToRemoveSafe } from "~/hooks/useIDsToRemoveSafe";
 import { createClient } from "~/lib/supabase";
 import { cn } from "~/lib/utils";
 
@@ -186,17 +186,8 @@ export default function DashboardIndex() {
 
   const { person } = matches[1].data as DashboardRootType;
 
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  const allPendingActions = usePendingData().actions;
-  const allDeletingIDsActions = useIDsToRemove().actions;
-  
-  const pendingActions = isHydrated ? allPendingActions : [];
-  const deletingIDsActions = isHydrated ? allDeletingIDsActions : [];
+  const { actions: pendingActions } = usePendingDataSafe();
+  const { actions: deletingIDsActions } = useIDsToRemoveSafe();
 
   //Actions
   // Transform into a Map
@@ -237,7 +228,9 @@ export default function DashboardIndex() {
     <div className="scrollbars-v">
       {/* Progresso  */}
 
-      {person.admin && <ActionsProgress />}
+      <div suppressHydrationWarning>
+        {person.admin && <ActionsProgress />}
+      </div>
 
       {/* Sprint */}
       <Sprint />
@@ -543,7 +536,7 @@ function CalendarMonth({ actions }: { actions: Action[] | null }) {
                       </div>
                     </div>
 
-                    <ListOfActions actions={actions} isHair isFoldable />
+                    <ListOfActions actions={actions} isHair isFoldable date={{ timeFormat: 1 }} />
                   </div>
                 );
               })}
@@ -744,6 +737,7 @@ function DelayedActions({ actions }: { actions: Action[] }) {
             descending
             orderBy={order}
             showPartner
+            date={{ timeFormat: 1 }}
           />
         ) : (
           <CategoriesView actions={filteredActions} />
@@ -833,6 +827,7 @@ function CategoriesView({ actions }: { actions: Action[] }) {
             )}
             isFoldable
             showPartner
+            date={{ timeFormat: 1 }}
           />
         </div>
       ))}
@@ -914,17 +909,8 @@ function Sprint() {
   let { actions } = useLoaderData<typeof loader>();
   let { sprints } = matches[1].data as DashboardRootType;
 
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  const allPendingSprints = usePendingData().sprints;
-  const allDeletingIDsSprints = useIDsToRemove().sprints;
-  
-  const pendingSprints = isHydrated ? allPendingSprints : [];
-  const deletingIDsSprints = isHydrated ? allDeletingIDsSprints : [];
+  const { sprints: pendingSprints } = usePendingDataSafe();
+  const { sprints: deletingIDsSprints } = useIDsToRemoveSafe();
 
   //Sprints
   // Transform into a Map

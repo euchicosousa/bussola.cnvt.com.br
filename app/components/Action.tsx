@@ -33,6 +33,7 @@ import {
   TrashIcon,
 } from "lucide-react";
 import React, { Fragment, useEffect, useRef, useState } from "react";
+import { useIsMobile } from "~/hooks/useIsMobile";
 import { flushSync } from "react-dom";
 import {
   ContextMenu,
@@ -111,11 +112,13 @@ export function ActionLine({
   const matches = useMatches();
   const [searchParams, setSearchParams] = useSearchParams();
   let params = new URLSearchParams(searchParams);
-  const isInstagramDate = searchParams.get("instagram_date");
-
+  
   const [edit, setEdit] = useState(false);
   const [isHover, setHover] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const isMobile = useIsMobile();
+  
+  const isInstagramDate = isHydrated ? searchParams.get("instagram_date") : null;
 
   const { states, categories, person, people, priorities, partners, sprints } =
     matches[1].data as DashboardRootType;
@@ -147,12 +150,8 @@ export function ActionLine({
   }
 
   useEffect(() => {
-    setIsMobile(
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
-    );
-  }, [isMobile]);
+    setIsHydrated(true);
+  }, []);
 
   const { attributes, listeners, transform, setNodeRef, isDragging } =
     useDraggable({
@@ -239,7 +238,6 @@ export function ActionLine({
             className="outline-none"
           >
             <div
-              title={action.title}
               className={`ring-ring ring-offset-background relative cursor-pointer ring-offset-2 outline-hidden focus-within:ring-3 ${
                 showDelay &&
                 state.slug !== "finished" &&
@@ -311,7 +309,6 @@ export function ActionLine({
             {...listeners}
             {...attributes}
             style={style}
-            title={action.title}
             className={`action group/action action-item items-center gap-2 hover:z-100 [&>*]:border-red-500 ${
               isDragging ? "z-[100]" : "z-0"
             } ${
@@ -459,7 +456,7 @@ export function ActionLine({
                     }
                   }}
                 >
-                  {action.title}
+                  <span suppressHydrationWarning>{action.title}</span>
                 </button>
               )}
             </div>
@@ -595,8 +592,11 @@ export function ActionLine({
                 />
               </div>
             ) : (
-              amIResponsible(action.responsibles, person.user_id) && (
-                <div title={`${person.name} é a pessoa responsável pela ação`}>
+              <div 
+                title={isHydrated && amIResponsible(action.responsibles, person.user_id) ? `${person.name} é a pessoa responsável pela ação` : undefined}
+                suppressHydrationWarning
+              >
+                {isHydrated && amIResponsible(action.responsibles, person.user_id) && (
                   <Avatar
                     item={{
                       image: person.image,
@@ -604,8 +604,8 @@ export function ActionLine({
                     }}
                     size={long ? "sm" : "xs"}
                   />
-                </div>
-              )
+                )}
+              </div>
             )}
 
             {long ? (
@@ -618,8 +618,11 @@ export function ActionLine({
               </div>
             ) : (
               date && (
-                <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
-                  {formatActionDatetime({
+                <div 
+                  className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block"
+                  suppressHydrationWarning
+                >
+                  {isHydrated && formatActionDatetime({
                     date:
                       isInstagramDate && isInstagramFeed(action.category, true)
                         ? action.instagram_date
@@ -654,7 +657,8 @@ export function ActionBlock({
   const submit = useSubmit();
   const [edit, setEdit] = useState(false);
   const [isHover, setHover] = useState(false);
-  const [isMobile, setIsMobile] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const isMobile = useIsMobile();
 
   const matches = useMatches();
   const navigate = useNavigate();
@@ -678,12 +682,8 @@ export function ActionBlock({
   }
 
   useEffect(() => {
-    setIsMobile(
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
-    );
-  }, [isMobile]);
+    setIsHydrated(true);
+  }, []);
 
   const { attributes, listeners, transform, setNodeRef, isDragging } =
     useDraggable({
@@ -700,7 +700,6 @@ export function ActionBlock({
       <ContextMenuTrigger>
         <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
           <div
-            title={action.title}
             className={`action group/action action-item action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm ${
               isDragging ? "z-[100]" : "z-0"
             } ${isSprint(action.id, sprints) && sprint ? "action-sprint" : ""}`}
@@ -780,7 +779,7 @@ export function ActionBlock({
                     }
                   }}
                 >
-                  {action.title}
+                  <span suppressHydrationWarning>{action.title}</span>
                 </button>
               )}
             </div>

@@ -118,6 +118,7 @@ export default function AdminPartners() {
           orderBy="time"
           showCategory
           showPartner
+          date={{ dateFormat: 2, timeFormat: 1 }}
         />
       </div>
     </div>

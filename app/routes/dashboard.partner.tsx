@@ -86,9 +86,9 @@ import {
   getResponsibles,
   isInstagramFeed,
   sortActions,
-  useIDsToRemove,
-  usePendingData,
 } from "~/lib/helpers";
+import { usePendingDataSafe } from "~/hooks/usePendingDataSafe";
+import { useIDsToRemoveSafe } from "~/hooks/useIDsToRemoveSafe";
 import { createClient } from "~/lib/supabase";
 
 export const config = { runtime: "edge" };
@@ -218,17 +218,9 @@ export default function Partner() {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
 
   const [currentDate, setCurrentDate] = useState(date);
-  const [isHydrated, setIsHydrated] = useState(false);
 
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  const allPendingActions = usePendingData().actions;
-  const allDeletingIDsActions = useIDsToRemove().actions;
-
-  const pendingActions = isHydrated ? allPendingActions : [];
-  const deletingIDsActions = isHydrated ? allDeletingIDsActions : [];
+  const { actions: pendingActions } = usePendingDataSafe();
+  const { actions: deletingIDsActions } = useIDsToRemoveSafe();
 
   // Calcs
 
