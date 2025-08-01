@@ -192,7 +192,7 @@ export default function Search({
               ? value.data.map((action: Action) => ({
                   id: action.id,
                   title: action.title,
-                  href: `/dashboard/action/${action.id}/${partner.slug}`,
+                  href: `/dashboard/action/${action.id}/${partner?.slug}`,
                   options: [action.title, action.id],
                   obs: {
                     state: states.find((state) => state.slug === action.state)!,

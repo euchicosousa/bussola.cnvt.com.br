@@ -389,7 +389,7 @@ function PartnerCombobox() {
           <MenuIcon className="size-6" />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="bg-content mx-8 p-0">
+      <PopoverContent className="mx-8 bg-transparent p-0">
         <Command className="outline-none">
           <CommandInput />
           <CommandList>

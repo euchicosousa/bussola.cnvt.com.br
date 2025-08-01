@@ -1212,6 +1212,7 @@ function LowerBar({
         />
 
         <TopicsAction
+          partner={action.partners[0]}
           actionTopics={action.topics || []}
           topics={topics}
           onCheckedChange={(topics) => setAction({ ...action, topics })}

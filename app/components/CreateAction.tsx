@@ -2,9 +2,15 @@ import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format, formatDuration, isToday, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CheckCircle2Icon, PlusCircleIcon, PlusIcon } from "lucide-react";
+import {
+  CheckCircle2Icon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  PlusCircleIcon,
+  PlusIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { useLocation, useMatches, useSubmit } from "react-router";
+import { useFetcher, useLocation, useMatches, useSubmit } from "react-router";
 import invariant from "tiny-invariant";
 import { BASE_COLOR, INTENTS, TIMES } from "~/lib/constants";
 import {
@@ -19,6 +25,14 @@ import {
 
 import { Button } from "./ui/button";
 import { Calendar } from "./ui/calendar";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./ui/command";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -349,6 +363,7 @@ export default function CreateAction({
               onCheckedChange={(topics) => {
                 setAction({ ...action, topics });
               }}
+              partner={action.partners[0]}
             />
 
             {/* Responsáveis */}
@@ -544,14 +559,128 @@ export function TopicsAction({
   size,
   actionTopics,
   topics,
+  partner,
   onCheckedChange,
+  mode = "dropdown",
 }: {
   size?: Size;
+  partner: string;
   actionTopics: number[];
   topics: Topic[];
   onCheckedChange: (topics: number[]) => void;
+  mode?: "command" | "dropdown" | "context";
 }) {
-  return (
+  const [query, setQuery] = useState("");
+  const fetcher = useFetcher();
+
+  return mode === "command" ? (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          title={
+            actionTopics.length > 0
+              ? topics
+                  .filter((t) => actionTopics.includes(t.id))
+                  .map((t) => t.title)
+                  .join(", ")
+              : "Tópicos"
+          }
+        >
+          {actionTopics.length > 0 ? (
+            <div className="flex">
+              {actionTopics.map((topic, i) => {
+                const _topic = topics.find((t) => t.id === topic);
+                return (
+                  <div
+                    key={topic}
+                    className={`border-background grid place-content-center rounded-full border-2 text-xs font-medium ${size === "sm" ? "size-4" : "size-6"} ${i !== 0 && "-ml-2"}`}
+                    style={{
+                      backgroundColor: _topic?.color,
+                      color: _topic?.foreground,
+                    }}
+                  >
+                    {_topic?.title.slice(0, 1)}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            "Tópicos"
+          )}
+          <ChevronsUpDownIcon className="opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="bg-transparent p-0">
+        <Command className="outline-none">
+          <CommandInput
+            placeholder="Procurar tópicos..."
+            value={query}
+            onValueChange={setQuery}
+          />
+          <CommandList>
+            <CommandEmpty>
+              <div className="flex flex-col gap-4">
+                <div>Nenhum tópico encontrado.</div>
+                <div>
+                  <Button
+                    variant={"secondary"}
+                    onClick={() => {
+                      fetcher.submit(
+                        {
+                          title: query,
+                          partner_slug: partner,
+                          color: "#999",
+                          foreground: "#fff",
+                          intent: INTENTS.createTopic,
+                        },
+                        {
+                          method: "post",
+                          action: "/handle-actions",
+                        },
+                      );
+                    }}
+                  >
+                    Adicionar "{query}" <PlusCircleIcon />
+                  </Button>
+                </div>
+              </div>
+            </CommandEmpty>
+            <CommandGroup>
+              {topics.map((topic) => (
+                <CommandItem
+                  key={topic.id}
+                  onSelect={() => {
+                    if (actionTopics.includes(topic.id)) {
+                      onCheckedChange([
+                        ...actionTopics.filter((id) => id !== topic.id),
+                      ]);
+                    } else {
+                      onCheckedChange([...actionTopics, topic.id]);
+                    }
+                  }}
+                  className="bg-select-item relative"
+                >
+                  {actionTopics.includes(topic.id) && (
+                    <CheckIcon className="absolute top-1/2 left-2 size-3 -translate-y-1/2" />
+                  )}
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <div
+                      className="size-2 rounded-full"
+                      style={{ backgroundColor: topic.color }}
+                    ></div>
+                    <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                      {topic.title}
+                    </div>
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  ) : mode === "dropdown" ? (
     <DropdownMenu>
       <DropdownMenuTrigger className="button-trigger">
         {actionTopics.length > 0 ? (
@@ -614,7 +743,7 @@ export function TopicsAction({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  ) : mode === "context" ? null : null;
 }
 
 export function ResponsibleForAction({

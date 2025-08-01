@@ -37,6 +37,7 @@ export const INTENTS = {
   duplicateAction: "action-duplicate",
   updatePerson: "person-update",
   updatePartner: "partner-update",
+  createTopic: "topic-create",
 };
 
 export const BASE_COLOR = "rgba(120,140,150,.2)";

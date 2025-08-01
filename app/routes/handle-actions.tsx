@@ -201,6 +201,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (error) console.log({ error });
 
     return { data, error };
+  } else if (intent === INTENTS.createTopic) {
+    const topic = {
+      partner_slug: values["partner_slug"].toString(),
+      title: values["title"].toString(),
+      color: values["color"].toString(),
+      foreground: values["foreground"].toString(),
+    };
+
+    const { data, error } = await supabase
+      .from("topics")
+      .insert({ ...topic } as any)
+      .select()
+      .single();
+
+    if (error) console.log({ error });
+
+    return { data, error };
   }
 
   return {};
