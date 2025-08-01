@@ -186,7 +186,7 @@ export default function Partner() {
     (action) => action.id === editingAction,
   );
 
-  const { stateFilter, setStateFilter, showFeed, set_showFeed } =
+  const { stateFilter, setStateFilter, showFeed, setShowFeed } =
     useOutletContext() as ContextType;
 
   const { categories, states, person, people, celebrations } = matches[1]
@@ -219,14 +219,14 @@ export default function Partner() {
 
   const [currentDate, setCurrentDate] = useState(date);
   const [isHydrated, setIsHydrated] = useState(false);
-  
+
   useEffect(() => {
     setIsHydrated(true);
   }, []);
-  
+
   const allPendingActions = usePendingData().actions;
   const allDeletingIDsActions = useIDsToRemove().actions;
-  
+
   const pendingActions = isHydrated ? allPendingActions : [];
   const deletingIDsActions = isHydrated ? allDeletingIDsActions : [];
 
@@ -339,7 +339,7 @@ export default function Partner() {
           if (params.get("show_feed")) {
             set_isInstagramDate(false);
             set_showContent(false);
-            set_showFeed(false);
+            setShowFeed(false);
 
             params.delete("show_feed");
             params.delete("instagram_date");
@@ -347,7 +347,7 @@ export default function Partner() {
           } else {
             set_isInstagramDate(true);
             set_showContent(true);
-            set_showFeed(true);
+            setShowFeed(true);
 
             params.set("instagram_date", "true");
             params.set("show_content", "true");
