@@ -540,17 +540,21 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
 }
 
 export function getResponsibles(people: Person[], users_ids?: string[] | null) {
-  return people.filter((person) =>
-    users_ids?.find((user) => person.user_id === user),
-  );
+  return people
+    .filter((person) =>
+      users_ids?.find((user) => person.user_id === user),
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 export function getPartners(partners_slug: string[], partners: Partner[]) {
   if (partners_slug.length) {
-    return partners.filter((partner) =>
-      partners_slug?.find((p) => partner.slug === p),
-    );
+    return partners
+      .filter((partner) =>
+        partners_slug?.find((p) => partner.slug === p),
+      )
+      .sort((a, b) => a.title.localeCompare(b.title));
   }
-  return partners;
+  return partners.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 export function amIResponsible(responsibles: string[], user_id: string) {
@@ -746,7 +750,9 @@ export const Post = ({
   colors: string[];
   className?: string;
 }) => {
-  let factor = Math.floor(Math.random() * colors.length);
+  // Use action.id for deterministic color selection
+  const hash = action.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  let factor = hash % colors.length;
   factor = factor === 1 ? factor - 1 : factor;
 
   const bgColor =
@@ -958,9 +964,9 @@ export function LikeFooter({
 
   const engagement = useMemo(
     () => [
-      Math.ceil(Math.random() * 200) + 50,
-      Math.ceil(Math.random() * 130) + 10,
-      Math.ceil(Math.random() * 20) + 5,
+      150, // Math.ceil(Math.random() * 200) + 50,
+      75,  // Math.ceil(Math.random() * 130) + 10,
+      12,  // Math.ceil(Math.random() * 20) + 5,
     ],
     [],
   );

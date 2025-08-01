@@ -134,6 +134,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .containedBy("partners", partners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
       .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
+      .order("title", { ascending: true })
       .returns<Action[]>(),
     supabase
       .from("actions")
@@ -185,8 +186,17 @@ export default function DashboardIndex() {
 
   const { person } = matches[1].data as DashboardRootType;
 
-  const pendingActions = usePendingData().actions;
-  const deletingIDsActions = useIDsToRemove().actions;
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const allPendingActions = usePendingData().actions;
+  const allDeletingIDsActions = useIDsToRemove().actions;
+  
+  const pendingActions = isHydrated ? allPendingActions : [];
+  const deletingIDsActions = isHydrated ? allDeletingIDsActions : [];
 
   //Actions
   // Transform into a Map
@@ -904,8 +914,17 @@ function Sprint() {
   let { actions } = useLoaderData<typeof loader>();
   let { sprints } = matches[1].data as DashboardRootType;
 
-  const pendingSprints = usePendingData().sprints;
-  const deletingIDsSprints = useIDsToRemove().sprints;
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const allPendingSprints = usePendingData().sprints;
+  const allDeletingIDsSprints = useIDsToRemove().sprints;
+  
+  const pendingSprints = isHydrated ? allPendingSprints : [];
+  const deletingIDsSprints = isHydrated ? allDeletingIDsSprints : [];
 
   //Sprints
   // Transform into a Map

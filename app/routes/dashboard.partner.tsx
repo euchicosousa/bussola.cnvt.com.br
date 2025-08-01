@@ -135,6 +135,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .is("archived", false)
         .contains("responsibles", person?.admin ? [] : [user.id])
         .contains("partners", [params["partner"]!])
+        .order("title", { ascending: true })
         .returns<Action[]>(),
       supabase
         .from("actions")
@@ -217,8 +218,17 @@ export default function Partner() {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
 
   const [currentDate, setCurrentDate] = useState(date);
-  const pendingActions = usePendingData().actions;
-  const deletingIDsActions = useIDsToRemove().actions;
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  const allPendingActions = usePendingData().actions;
+  const allDeletingIDsActions = useIDsToRemove().actions;
+  
+  const pendingActions = isHydrated ? allPendingActions : [];
+  const deletingIDsActions = isHydrated ? allDeletingIDsActions : [];
 
   // Calcs
 

@@ -62,6 +62,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         //@ts-ignore
         .neq("state", "finished")
         .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
+        .order("title", { ascending: true })
         .returns<Action[]>(),
 
       supabase
