@@ -1,6 +1,6 @@
 import { useGSAP } from "@gsap/react";
 import { ArrowRightIcon } from "lucide-react";
-import { Link, type MetaFunction } from "react-router";
+import { Link, useNavigate, type MetaFunction } from "react-router";
 import type { Route } from "./+types/home";
 import { gsap } from "gsap";
 
