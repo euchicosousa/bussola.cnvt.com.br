@@ -4,15 +4,15 @@ import {
   type ActionFunctionArgs,
   type MetaFunction,
 } from "react-router";
-import { Heading } from "~/components/Headings";
-import LenisScrollContainer from "~/components/LenisScrollContainer";
+import { Heading } from "~/components/common/forms/Headings";
+import LenisScrollContainer from "~/components/common/layout/LenisScrollContainer";
 import { Button } from "~/components/ui/button";
 
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Avatar } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const meta: MetaFunction = () => {
   return [

@@ -35,7 +35,7 @@ import {
   isInstagramFeed,
   LikeFooter,
 } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

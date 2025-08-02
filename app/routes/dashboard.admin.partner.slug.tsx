@@ -15,14 +15,14 @@ import Color from "color";
 import { PlusIcon, SaveIcon, TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
-import ColorPicker from "~/components/ColorPicker";
+import ColorPicker from "~/components/common/forms/ColorPicker";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { Textarea } from "~/components/ui/textarea";
 import { Avatar } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 
@@ -127,8 +127,8 @@ export default function AdminPartners() {
   const { partner, topics } = useLoaderData<typeof loader>();
   const { people } = matches[1].data as DashboardRootType;
 
-  const [colors, setColors] = useState(partner.colors);
-  const [currentTopics, setTopics] = useState(topics || []);
+  const [colors, setColors] = useState<string[]>(partner.colors);
+  const [currentTopics, setTopics] = useState<Topic[]>(topics || []);
   const [currentPartner, setPartner] = useState(partner);
 
   const isLoading =
@@ -266,7 +266,7 @@ export default function AdminPartners() {
                   className={`peer absolute opacity-0`}
                   defaultChecked={
                     currentPartner.users_ids?.find(
-                      (user_id) => person.user_id === user_id,
+                      (user_id: string) => person.user_id === user_id,
                     )
                       ? true
                       : false
@@ -284,7 +284,7 @@ export default function AdminPartners() {
                       setPartner({
                         ...currentPartner,
                         users_ids: currentPartner.users_ids.filter(
-                          (user_id) => user_id !== e.target.value,
+                          (user_id: string) => user_id !== e.target.value,
                         ),
                       });
                     }
@@ -310,12 +310,14 @@ export default function AdminPartners() {
           <div className="mb-4 w-full">
             <Label className="mb-2 block">Cores</Label>
             <div className="flex flex-wrap gap-4">
-              {colors.map((color, i) => (
+              {colors.map((color: string, i: number) => (
                 <div key={i} className="group flex gap-2">
                   <ColorPicker
                     color={color}
                     onChange={(_c) =>
-                      setColors(colors.map((c) => (c === color ? _c : c)))
+                      setColors(
+                        colors.map((c: string) => (c === color ? _c : c)),
+                      )
                     }
                   />
                   <Button

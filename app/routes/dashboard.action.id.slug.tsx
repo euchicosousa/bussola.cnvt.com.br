@@ -40,7 +40,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone-esm";
 import invariant from "tiny-invariant";
 
-import Tiptap from "~/components/Tiptap";
+import Tiptap from "~/components/features/content/Tiptap";
 
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import {
@@ -49,7 +49,7 @@ import {
   ResponsibleForAction,
   StateSelect,
   TopicsAction,
-} from "~/components/CreateAction";
+} from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -90,8 +90,8 @@ import {
   isInstagramFeed,
   LikeFooter,
 } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
-import { cn } from "~/lib/utils";
+import { createClient } from "~/lib/database/supabase";
+import { cn } from "~/lib/ui/utils";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
 import { Select } from "~/components/ui/select";
 
@@ -197,7 +197,7 @@ export default function ActionPage() {
   const { partners, people } = matches[1].data as DashboardRootType;
 
   const responsibles: Person[] = [];
-  action.responsibles?.filter((user_id) =>
+  action.responsibles?.filter((user_id: string) =>
     responsibles.push(
       people.find((person) => person.user_id === user_id) as Person,
     ),
@@ -293,8 +293,6 @@ export default function ActionPage() {
             action={action}
             setAction={setAction}
             isWorking={isWorking}
-            trigger={trigger}
-            setTrigger={setTrigger}
             partner={partner}
           />
 
@@ -304,8 +302,6 @@ export default function ActionPage() {
           action={action}
           setAction={setAction}
           isWorking={isWorking}
-          trigger={trigger}
-          setTrigger={setTrigger}
           partner={partner}
         />
       </div>
@@ -504,15 +500,11 @@ export function Description({
   action,
   setAction,
   isWorking,
-  setTrigger,
-  trigger,
   partner,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
-  setTrigger: (trigger: string) => void;
-  trigger: string;
   partner: Partner;
 }) {
   const fetcher = useFetcher({ key: "action-page" });
@@ -698,7 +690,6 @@ export function Description({
                             context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
                             intent: "carousel",
                             model: k,
-                            trigger,
                           },
                           {
                             action: "/handle-openai",
@@ -777,7 +768,7 @@ export function Description({
 
       <Tiptap
         content={action.description}
-        onBlur={(text) => {
+        onBlur={(text: string) => {
           setAction({
             ...action,
             description: text,
@@ -791,16 +782,12 @@ export function Description({
 function RightSide({
   action,
   setAction,
-  trigger,
-  setTrigger,
   isWorking,
   partner,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
-  setTrigger: (trigger: string) => void;
-  trigger: string;
   partner: Partner;
 }) {
   const [files, setFiles] = useState<{
@@ -1273,7 +1260,7 @@ function LowerBar({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-content">
                 {actionPartners[0].colors.map(
-                  (color, i) =>
+                  (color: string, i: number) =>
                     i !== 1 && (
                       <DropdownMenuItem
                         key={i}

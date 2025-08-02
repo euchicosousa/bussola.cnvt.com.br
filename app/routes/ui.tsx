@@ -1,11 +1,11 @@
 import { MoonIcon, SunIcon } from "lucide-react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { Theme, useTheme } from "remix-themes";
-import Loader from "~/components/Loader";
+import Loader from "~/components/common/feedback/Loader";
 import { Button } from "~/components/ui/button";
 import { Toggle } from "~/components/ui/toggle";
 import { Avatar, AvatarGroup, Icons } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

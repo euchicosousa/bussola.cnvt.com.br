@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs } from "react-router";
 import { INTENTS, PRIORITIES, TIMES } from "~/lib/constants";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

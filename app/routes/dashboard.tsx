@@ -4,8 +4,8 @@ import {
   redirect,
   useOutletContext,
 } from "react-router";
-import Layout from "~/components/Layout";
-import { createClient } from "~/lib/supabase";
+import Layout from "~/components/features/dashboard/Layout";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

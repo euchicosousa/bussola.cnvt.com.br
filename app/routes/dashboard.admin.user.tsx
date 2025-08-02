@@ -10,13 +10,13 @@ import {
 	type MetaFunction,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { Heading } from "~/components/Headings";
+import { Heading } from "~/components/common/forms/Headings";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { INTENTS } from "~/lib/constants";
 import { Avatar } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 
@@ -204,7 +204,7 @@ export default function AdminUsersId() {
 										if (!e.target.checked) {
 											users_ids =
 												partner.users_ids.filter(
-													(user_id) =>
+													(user_id: any) =>
 														user_id !==
 														person.user_id
 												);

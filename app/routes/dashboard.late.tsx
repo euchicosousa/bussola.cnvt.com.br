@@ -6,9 +6,9 @@ import {
   useLoaderData,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { ListOfActions } from "~/components/Action";
-import { Heading } from "~/components/Headings";
-import { createClient } from "~/lib/supabase";
+import { ListOfActions } from "~/components/features/actions/Action";
+import { Heading } from "~/components/common/forms/Headings";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

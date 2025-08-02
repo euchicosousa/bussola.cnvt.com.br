@@ -8,11 +8,11 @@ import {
   type MetaFunction,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { ListOfActions } from "~/components/Action";
-import { Heading } from "~/components/Headings";
+import { ListOfActions } from "~/components/features/actions/Action";
+import { Heading } from "~/components/common/forms/Headings";
 import { Button } from "~/components/ui/button";
 import { Avatar } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = await createClient(request);

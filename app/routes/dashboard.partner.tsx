@@ -50,8 +50,8 @@ import {
   ActionLine,
   GridOfActions,
   getNewDateValues,
-} from "~/components/Action";
-import CreateAction from "~/components/CreateAction";
+} from "~/components/features/actions/Action";
+import CreateAction from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -75,7 +75,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
-import EditAction from "~/components/EditAction";
+import EditAction from "~/components/features/actions/EditAction";
 import { INTENTS } from "~/lib/constants";
 import {
   Avatar,
@@ -87,9 +87,9 @@ import {
   isInstagramFeed,
   sortActions,
 } from "~/lib/helpers";
-import { usePendingDataSafe } from "~/hooks/usePendingDataSafe";
-import { useIDsToRemoveSafe } from "~/hooks/useIDsToRemoveSafe";
-import { createClient } from "~/lib/supabase";
+import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
+import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 
@@ -261,7 +261,7 @@ export default function Partner() {
               )
             : true) &&
           (stateFilter ? action.state === stateFilter?.slug : true) &&
-          action.responsibles.find((responsible) =>
+          action.responsibles.find((responsible: any) =>
             responsiblesFilter.find((user_id) => user_id === responsible),
           ),
       ),

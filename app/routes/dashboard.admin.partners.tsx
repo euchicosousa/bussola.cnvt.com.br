@@ -7,10 +7,10 @@ import {
   type LoaderFunctionArgs,
   type MetaFunction,
 } from "react-router";
-import { Heading } from "~/components/Headings";
+import { Heading } from "~/components/common/forms/Headings";
 import { INTENTS } from "~/lib/constants";
 import { Avatar, AvatarGroup, getResponsibles } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

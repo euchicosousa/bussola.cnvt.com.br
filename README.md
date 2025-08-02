@@ -1,53 +1,65 @@
-# Welcome to React Router!
+# 🧭 Bússola
 
-A modern, production-ready template for building full-stack React applications using React Router.
+> Plataforma inteligente de gestão de projetos que combina metodologia ágil com IA para entregar resultados precisos.
 
-## Features
+## ✨ Principais Funcionalidades
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+- 🤖 **IA Integrada** - Geração automática de conteúdo com OpenAI/Claude
+- 📊 **Dashboard Intuitivo** - Visão 360° de projetos com métricas em tempo real
+- 👥 **Multi-Cliente** - Gestão isolada por parceiro com relatórios personalizados
+- 🎯 **Kanban Inteligente** - Estados customizáveis com automações
+- 📅 **Sprints Ágeis** - Metodologia adaptável ao seu fluxo de trabalho
+- 🔒 **Segurança Total** - Autenticação robusta e controle granular de acesso
 
-## Getting Started
+## 🚀 Stack Tecnológico
 
-### Installation
+- **Frontend**: React 19 + React Router 7 + TypeScript
+- **Backend**: Supabase (PostgreSQL) + Edge Runtime
+- **UI/UX**: Tailwind CSS 4 + shadcn/ui + Tiptap Editor
+- **IA**: OpenAI API + Anthropic Claude SDK
+- **Deploy**: Vercel + Cloudinary
+- **Animations**: GSAP + Framer Motion
 
-Install the dependencies:
+## 🛠️ Desenvolvimento
 
+### Pré-requisitos
+```bash
+# Variáveis de ambiente necessárias
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+OPENAI_API_KEY=your_openai_key
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_UPLOAD_PRESET=your_upload_preset
+```
+
+### Instalação
 ```bash
 npm install
 ```
 
-### Development
-
-Start the development server with HMR:
-
+### Desenvolvimento
 ```bash
-npm run dev
+npm run dev          # Servidor de desenvolvimento (localhost:3000)
+npm run typecheck    # Verificação de tipos TypeScript
+npm run build        # Build de produção
+npm run gentypes     # Gerar tipos do Supabase
 ```
 
-Your application will be available at `http://localhost:5173`.
+## 📈 Casos de Uso
 
-## Building for Production
+- **Agências**: Gestão multi-cliente com aprovações e entregas
+- **Consultorias**: Projetos complexos com documentação rica
+- **Startups**: Roadmap de produto e equipes remotas
+- **Corporações**: Projetos interdepartamentais e SLAs
 
-Create a production build:
+## 🎯 Metodologia CNVT
 
-```bash
-npm run build
-```
-
-## Deployment
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjacob-ebey%2Freact-router-templates%2Ftree%2Fmain%2Fvercel&project-name=my-react-router-app&repository-name=my-react-router-app)
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+Sistema baseado na filosofia de **navegação empresarial**:
+- **Norte Verdadeiro**: Objetivos claros e mensuráveis
+- **Coordenadas Precisas**: Marcos e entregas bem definidos
+- **Vento Favorável**: Fluxos otimizados e automações
+- **Chegada Garantida**: Resultados consistentes
 
 ---
 
-Built with ❤️ using React Router.
+**Desenvolvido por CNVT** | [bussola.cnvt.com.br](https://bussola.cnvt.com.br)

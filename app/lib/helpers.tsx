@@ -49,7 +49,7 @@ import {
 import React, { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { type DateRange } from "react-day-picker";
 import invariant from "tiny-invariant";
-import { formatActionDatetime } from "~/components/Action";
+import { formatActionDatetime } from "~/components/features/actions/Action";
 import {
   AvatarFallback,
   AvatarImage,
@@ -63,9 +63,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { BASE_COLOR, INTENTS, PRIORITIES } from "./constants";
-import { cn } from "./utils";
-import { Label } from "~/components/ui/label";
-import { Input } from "~/components/ui/input";
+import { cn } from "./ui/utils";
 
 export function ShortText({
   text,
@@ -696,7 +694,7 @@ export const Content = ({
     "previews" in action && action.previews
       ? action.previews
       : action.files && action.files[0]
-        ? action.files.map((f) => ({
+        ? action.files.map((f: any) => ({
             preview: f,
             type: getTypeOfTheContent(f),
           }))
@@ -718,7 +716,7 @@ export const Content = ({
               className,
             )}
           >
-            {files.map((file, i) => (
+            {files.map((file: any, i: number) => (
               <div className="w-full shrink-0 snap-center" key={i}>
                 <img src={`${file.preview}`} />
               </div>
@@ -766,7 +764,7 @@ export const Post = ({
   className?: string;
 }) => {
   // Use action.id for deterministic color selection
-  const hash = action.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  const hash = action.id.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
   let factor = hash % colors.length;
   factor = factor === 1 ? factor - 1 : factor;
 

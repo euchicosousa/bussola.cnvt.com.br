@@ -1,5 +1,5 @@
 import { createThemeAction } from "remix-themes";
-import { themeSessionResolver } from "~/lib/session.server";
+import { themeSessionResolver } from "~/lib/auth/session.server";
 
 export const config = { runtime: "edge" };
 

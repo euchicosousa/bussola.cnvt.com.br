@@ -6,8 +6,8 @@ import {
   redirect,
   useLoaderData,
 } from "react-router";
-import { ListOfActions } from "~/components/Action";
-import { createClient } from "~/lib/supabase";
+import { ListOfActions } from "~/components/features/actions/Action";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 

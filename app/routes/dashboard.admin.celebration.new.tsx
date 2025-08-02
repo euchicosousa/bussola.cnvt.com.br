@@ -16,7 +16,7 @@ import {
   type ActionFunctionArgs,
   type MetaFunction,
 } from "react-router";
-import { Heading } from "~/components/Headings";
+import { Heading } from "~/components/common/forms/Headings";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { Input } from "~/components/ui/input";
@@ -26,7 +26,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { createClient } from "~/lib/supabase";
+import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 
@@ -99,7 +99,7 @@ export default function NewPartners() {
 
   let dates = months.map((month) => ({
     month,
-    celebrations: celebrations?.filter((celebration) => {
+    celebrations: celebrations?.filter((celebration: Celebration) => {
       return isSameMonth(parseISO(celebration.date), month);
     }),
   }));
@@ -107,7 +107,7 @@ export default function NewPartners() {
   dates = dates.map((date) => ({
     month: date.month,
     celebrations:
-      date.celebrations?.sort((a, b) => {
+      date.celebrations?.sort((a: Celebration, b: Celebration) => {
         return parseISO(a.date).getTime() - parseISO(b.date).getTime();
       }) || [],
   }));
@@ -131,7 +131,7 @@ export default function NewPartners() {
                   {format(date.month, "MMMM", { locale: ptBR })}
                 </div>
                 <div className="divide-y text-sm">
-                  {date.celebrations?.map((celebration) => (
+                  {date.celebrations?.map((celebration: Celebration) => (
                     <div className="group flex gap-2 py-2" key={celebration.id}>
                       <div
                         className="w-8 font-medium"

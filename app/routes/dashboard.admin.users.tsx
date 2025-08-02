@@ -3,8 +3,8 @@ import { type LoaderFunctionArgs } from "react-router";
 import { Edit3Icon, ListIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Avatar } from "~/lib/helpers";
-import { createClient } from "~/lib/supabase";
-import { Heading } from "~/components/Headings";
+import { createClient } from "~/lib/database/supabase";
+import { Heading } from "~/components/common/forms/Headings";
 
 export const config = { runtime: "edge" };
 

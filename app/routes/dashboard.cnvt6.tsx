@@ -1,4 +1,4 @@
-import LenisScrollContainer from "~/components/LenisScrollContainer";
+import LenisScrollContainer from "~/components/common/layout/LenisScrollContainer";
 
 export default function Process() {
   return (

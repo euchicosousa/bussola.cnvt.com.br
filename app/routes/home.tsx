@@ -1,15 +1,12 @@
 import { useGSAP } from "@gsap/react";
 import { ArrowRightIcon } from "lucide-react";
-import { Link, NavLink, useNavigate, type MetaFunction } from "react-router";
+import { Link, type MetaFunction } from "react-router";
 import type { Route } from "./+types/home";
 import { gsap } from "gsap";
-import LoaderTransition from "~/components/LoaderTransition";
-import { useState } from "react";
-import { motion } from "motion/react";
 
 gsap.registerPlugin(useGSAP);
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = () => {
   return [
     { title: `ʙússoʟa` },
     {

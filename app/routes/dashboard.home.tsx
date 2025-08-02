@@ -50,10 +50,14 @@ import {
 } from "react-router";
 import invariant from "tiny-invariant";
 
-import { ActionLine, BlockOfActions, ListOfActions } from "~/components/Action";
-import Badge from "~/components/Badge";
-import { Heading } from "~/components/Headings";
-import Kanban from "~/components/Kanban";
+import {
+  ActionLine,
+  BlockOfActions,
+  ListOfActions,
+} from "~/components/features/actions/Action";
+import Badge from "~/components/common/forms/Badge";
+import { Heading } from "~/components/common/forms/Headings";
+import Kanban from "~/components/features/actions/Kanban";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -77,10 +81,10 @@ import {
   getTomorrowActions,
   sortActions,
 } from "~/lib/helpers";
-import { usePendingDataSafe } from "~/hooks/usePendingDataSafe";
-import { useIDsToRemoveSafe } from "~/hooks/useIDsToRemoveSafe";
-import { createClient } from "~/lib/supabase";
-import { cn } from "~/lib/utils";
+import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
+import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
+import { createClient } from "~/lib/database/supabase";
+import { cn } from "~/lib/ui/utils";
 
 export const config = { runtime: "edge" };
 gsap.registerPlugin(useGSAP);
@@ -228,9 +232,7 @@ export default function DashboardIndex() {
     <div className="scrollbars-v">
       {/* Progresso  */}
 
-      <div suppressHydrationWarning>
-        {person.admin && <ActionsProgress />}
-      </div>
+      <div suppressHydrationWarning>{person.admin && <ActionsProgress />}</div>
 
       {/* Sprint */}
       <Sprint />
@@ -536,7 +538,12 @@ function CalendarMonth({ actions }: { actions: Action[] | null }) {
                       </div>
                     </div>
 
-                    <ListOfActions actions={actions} isHair isFoldable date={{ timeFormat: 1 }} />
+                    <ListOfActions
+                      actions={actions}
+                      isHair
+                      isFoldable
+                      date={{ timeFormat: 1 }}
+                    />
                   </div>
                 );
               })}
@@ -786,7 +793,7 @@ function Partners({ actions }: { actions?: Action[] }) {
                   className="absolute top-0 -right-8"
                   value={
                     lateActions.filter((action) =>
-                      action.partners.find((p) => p === partner.slug),
+                      action.partners.find((p: any) => p === partner.slug),
                     ).length
                   }
                   isDynamic
@@ -796,7 +803,7 @@ function Partners({ actions }: { actions?: Action[] }) {
               <div className="mt-4 hidden w-full opacity-0 group-hover:opacity-100">
                 <ProgressBar
                   actions={actions.filter((action) =>
-                    action.partners.find((p) => p === partner.slug),
+                    action.partners.find((p: any) => p === partner.slug),
                   )}
                 />
               </div>
@@ -894,7 +901,9 @@ const ActionsProgress = () => {
             className={`overflow-hidden px-8 py-8 md:border-l lg:py-12 ${i < 3 ? "border-b xl:border-b-0" : ""}`}
           >
             <h3 className="text-xl font-medium capitalize">{title}</h3>
-            <div className="my-2 text-7xl font-light">{actions.length}</div>
+            <div className="my-2 text-7xl font-light whitespace-nowrap">
+              {actions.length}
+            </div>
 
             <ProgressBar actions={actions} />
           </div>

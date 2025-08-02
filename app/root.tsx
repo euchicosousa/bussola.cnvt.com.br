@@ -10,7 +10,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
-import { Theme, ThemeColor } from "~/lib/theme-provider";
+import { Theme, ThemeColor } from "~/lib/theme/theme-provider";
 
 //@ts-ignore
 import { useState } from "react";
@@ -26,7 +26,7 @@ import {
   ThemeProvider,
   useTheme,
 } from "remix-themes";
-import { themeSessionResolver } from "./lib/session.server";
+import { themeSessionResolver } from "./lib/auth/session.server";
 
 export type LoaderData = {
   theme: Theme | null;
@@ -78,7 +78,7 @@ export function App({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body className="selection:bg-foreground selection:text-background">
+      <body>
         {children}
 
         <ScrollRestoration />
