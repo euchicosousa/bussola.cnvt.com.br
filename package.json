@@ -111,5 +111,13 @@
     "typescript": "^5.9.2",
     "vite": "^7.0.6",
     "vite-tsconfig-paths": "^5.1.4"
+  },
+  "overrides": {
+    "rollup": "^4.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "^4.0.0"
+    }
   }
 }
