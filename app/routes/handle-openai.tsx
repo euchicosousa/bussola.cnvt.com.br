@@ -212,13 +212,6 @@ Tema a ser desenvolvido: ${title} - ${description}
         const _mission = _tense.missions.filter((m) => m.id === mission)[0];
         const _tactic = _mission.tactics.filter((t) => t.id === tactic)[0];
 
-        console.log(
-          _tense.title,
-          _mission.tension,
-          _mission.role,
-          _tactic.examples.join(" |"),
-        );
-
         content = `Sua missão é transformar o seguinte conteúdo em um post para Instagram. O título tem a função de "${_tense.title}". Ele deve provocar esse sentimento: "${_mission.tension}". E também deve ter esse objetivo: "${_mission.role}". Use esses exemplos como modelos placeholder: "${_tactic.examples.join(" | ")}".
         
         Importante:

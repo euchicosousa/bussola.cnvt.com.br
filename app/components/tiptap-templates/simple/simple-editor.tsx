@@ -267,7 +267,7 @@ export function SimpleEditor({
   // });
 
   return (
-    <div className="simple-editor-wrapper overflow-hidden">
+    <div className="simple-editor-wrapper w-full overflow-hidden">
       <EditorContext.Provider value={{ editor }}>
         <Toolbar
           ref={toolbarRef}
@@ -281,6 +281,7 @@ export function SimpleEditor({
                 }
               : {}),
           }}
+          className="w-full"
         >
           {mobileView === "main" ? (
             <MainToolbarContent

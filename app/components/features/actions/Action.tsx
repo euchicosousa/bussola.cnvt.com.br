@@ -32,7 +32,14 @@ import {
   TimerIcon,
   TrashIcon,
 } from "lucide-react";
-import React, { Fragment, useEffect, useRef, useState } from "react";
+import React, {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useIsMobile } from "~/lib/hooks/ui/useIsMobile";
 import { flushSync } from "react-dom";
 import {
@@ -76,7 +83,16 @@ import { toast } from "~/components/ui/use-toast";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 
-export function ActionLine({
+// Constants
+const DEFAULT_UPDATE_TIMESTAMP = () =>
+  format(new Date(), "yyyy-MM-dd HH:mm:ss");
+const FOLD_MULTIPLIER = 4;
+const HOURS_TO_MINUTES = 60;
+const DAY_TO_MINUTES = 24 * 60;
+const WEEK_TO_MINUTES = 7 * 24 * 60;
+const MONTH_TO_MINUTES = 30 * 24 * 60;
+
+export const ActionLine = React.memo(function ActionLine({
   action,
   date,
   short,
@@ -112,13 +128,15 @@ export function ActionLine({
   const matches = useMatches();
   const [searchParams, setSearchParams] = useSearchParams();
   let params = new URLSearchParams(searchParams);
-  
+
   const [edit, setEdit] = useState(false);
   const [isHover, setHover] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const isMobile = useIsMobile();
-  
-  const isInstagramDate = isHydrated ? searchParams.get("instagram_date") : null;
+
+  const isInstagramDate = isHydrated
+    ? searchParams.get("instagram_date")
+    : null;
 
   const { states, categories, person, people, priorities, partners, sprints } =
     matches[1].data as DashboardRootType;
@@ -136,18 +154,24 @@ export function ActionLine({
     (partner) => partner.slug === action.partners[0],
   ) as Partner;
 
-  const responsibles = getResponsibles(people, action.responsibles);
+  const responsibles = useMemo(
+    () => getResponsibles(people, action.responsibles),
+    [people, action.responsibles],
+  );
 
-  function handleActions(data: HandleActionsDataType) {
-    submit(
-      { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
-      {
-        action: "/handle-actions",
-        method: "post",
-        navigate: false,
-      },
-    );
-  }
+  const handleActions = useCallback(
+    (data: HandleActionsDataType) => {
+      submit(
+        { ...data, updated_at: DEFAULT_UPDATE_TIMESTAMP() },
+        {
+          action: "/handle-actions",
+          method: "post",
+          navigate: false,
+        },
+      );
+    },
+    [submit],
+  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -159,9 +183,13 @@ export function ActionLine({
       data: { ...action },
     });
 
-  const style = transform
-    ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0px)` }
-    : undefined;
+  const style = useMemo(
+    () =>
+      transform
+        ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0px)` }
+        : undefined,
+    [transform],
+  );
 
   return (
     <ContextMenu>
@@ -577,7 +605,8 @@ export function ActionLine({
                     .filter(
                       (person) =>
                         action.responsibles.filter(
-                          (responsible_id: string) => responsible_id === person.user_id,
+                          (responsible_id: string) =>
+                            responsible_id === person.user_id,
                         ).length > 0,
                     )
                     .map((person) => ({
@@ -592,19 +621,25 @@ export function ActionLine({
                 />
               </div>
             ) : (
-              <div 
-                title={isHydrated && amIResponsible(action.responsibles, person.user_id) ? `${person.name} é a pessoa responsável pela ação` : undefined}
+              <div
+                title={
+                  isHydrated &&
+                  amIResponsible(action.responsibles, person.user_id)
+                    ? `${person.name} é a pessoa responsável pela ação`
+                    : undefined
+                }
                 suppressHydrationWarning
               >
-                {isHydrated && amIResponsible(action.responsibles, person.user_id) && (
-                  <Avatar
-                    item={{
-                      image: person.image,
-                      short: person.initials!,
-                    }}
-                    size={long ? "sm" : "xs"}
-                  />
-                )}
+                {isHydrated &&
+                  amIResponsible(action.responsibles, person.user_id) && (
+                    <Avatar
+                      item={{
+                        image: person.image,
+                        short: person.initials!,
+                      }}
+                      size={long ? "sm" : "xs"}
+                    />
+                  )}
               </div>
             )}
 
@@ -618,18 +653,20 @@ export function ActionLine({
               </div>
             ) : (
               date && (
-                <div 
+                <div
                   className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block"
                   suppressHydrationWarning
                 >
-                  {isHydrated && formatActionDatetime({
-                    date:
-                      isInstagramDate && isInstagramFeed(action.category, true)
-                        ? action.instagram_date
-                        : action.date,
-                    dateFormat: date.dateFormat,
-                    timeFormat: date.timeFormat,
-                  })}
+                  {isHydrated &&
+                    formatActionDatetime({
+                      date:
+                        isInstagramDate &&
+                        isInstagramFeed(action.category, true)
+                          ? action.instagram_date
+                          : action.date,
+                      dateFormat: date.dateFormat,
+                      timeFormat: date.timeFormat,
+                    })}
                 </div>
               )
             )}
@@ -643,9 +680,9 @@ export function ActionLine({
       />
     </ContextMenu>
   );
-}
+});
 
-export function ActionBlock({
+export const ActionBlock = React.memo(function ActionBlock({
   action,
   sprint,
 }: {
@@ -670,16 +707,19 @@ export function ActionBlock({
 
   const state = states.find((state) => state.slug === action.state) as State;
 
-  function handleActions(data: HandleActionsDataType) {
-    submit(
-      { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
-      {
-        action: "/handle-actions",
-        method: "post",
-        navigate: false,
-      },
-    );
-  }
+  const handleActions = useCallback(
+    (data: HandleActionsDataType) => {
+      submit(
+        { ...data, updated_at: DEFAULT_UPDATE_TIMESTAMP() },
+        {
+          action: "/handle-actions",
+          method: "post",
+          navigate: false,
+        },
+      );
+    },
+    [submit],
+  );
 
   useEffect(() => {
     setIsHydrated(true);
@@ -845,7 +885,7 @@ export function ActionBlock({
       <ContextMenuItems action={action} handleActions={handleActions} />
     </ContextMenu>
   );
-}
+});
 
 export function ListOfActions({
   actions,
@@ -885,7 +925,7 @@ export function ListOfActions({
         : actions
     : [];
 
-  const foldCount = columns * 4;
+  const foldCount = columns * FOLD_MULTIPLIER;
   const [fold, setFold] = useState(isFoldable ? foldCount : undefined);
   return actions.length > 0 ? (
     <div className="group">
@@ -1016,7 +1056,11 @@ export function GridOfActions({
   );
 }
 
-function ShortcutActions({ action }: { action: Action }) {
+const ShortcutActions = React.memo(function ShortcutActions({
+  action,
+}: {
+  action: Action;
+}) {
   const navigate = useNavigate();
   const submit = useSubmit();
   const matches = useMatches();
@@ -1026,19 +1070,22 @@ function ShortcutActions({ action }: { action: Action }) {
   const { states, categories, priorities, person, sprints } = matches[1]
     .data as DashboardRootType;
 
-  function handleActions(data: HandleActionsDataType) {
-    submit(
-      { ...data, updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss") },
-      {
-        action: "/handle-actions",
-        method: "post",
-        navigate: false,
-      },
-    );
-  }
+  const handleActions = useCallback(
+    (data: HandleActionsDataType) => {
+      submit(
+        { ...data, updated_at: DEFAULT_UPDATE_TIMESTAMP() },
+        {
+          action: "/handle-actions",
+          method: "post",
+          navigate: false,
+        },
+      );
+    },
+    [submit],
+  );
 
-  useEffect(() => {
-    const keyDown = async function (event: KeyboardEvent) {
+  const keyDownHandler = useCallback(
+    async (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       const code = event.code;
 
@@ -1048,7 +1095,7 @@ function ShortcutActions({ action }: { action: Action }) {
           handleActions({
             ...action,
             intent: INTENTS.updateAction,
-            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, true),
+            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, false),
           });
       }
       // ATALHOS SÓ COM SHIFT
@@ -1130,7 +1177,7 @@ function ShortcutActions({ action }: { action: Action }) {
           handleActions({
             ...action,
             intent: INTENTS.updateAction,
-            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, false),
+            ...getNewDateValues(action, isInstagramDate, 7 * 24 * 60, true),
           });
         }
         // Adiciona um mês
@@ -1185,14 +1232,27 @@ function ShortcutActions({ action }: { action: Action }) {
           priority,
         });
       }
-    };
-    window.addEventListener("keydown", keyDown);
+    },
+    [
+      action,
+      navigate,
+      handleActions,
+      isInstagramDate,
+      categories,
+      states,
+      priorities,
+      person,
+      sprints,
+    ],
+  );
 
-    return () => window.removeEventListener("keydown", keyDown);
-  }, [action, navigate]);
+  useEffect(() => {
+    window.addEventListener("keydown", keyDownHandler);
+    return () => window.removeEventListener("keydown", keyDownHandler);
+  }, [keyDownHandler]);
 
   return <></>;
-}
+});
 
 /**
  * Retorna a formatação da data e da hora de acordo com os parâmetros
@@ -1252,7 +1312,7 @@ export function formatActionDatetime({
     : format(date, formatString, { locale: ptBR });
 }
 
-export function ContextMenuItems({
+export const ContextMenuItems = React.memo(function ContextMenuItems({
   action,
   isInstagramDate,
   handleActions,
@@ -1454,7 +1514,9 @@ export function ContextMenuItems({
                     });
                   } else {
                     const tempPartners = checked
-                      ? action.partners.filter((id: string) => id !== partner.slug)
+                      ? action.partners.filter(
+                          (id: string) => id !== partner.slug,
+                        )
                       : [...action.partners, partner.slug];
                     handleActions({
                       ...action,
@@ -1734,7 +1796,7 @@ export function ContextMenuItems({
       </ContextMenuSub>
     </ContextMenuContent>
   );
-}
+});
 
 /* 
 

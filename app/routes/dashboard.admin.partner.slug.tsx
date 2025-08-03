@@ -323,7 +323,6 @@ export default function AdminPartners() {
                   <Button
                     onClick={(event) => {
                       event.preventDefault();
-                      console.log("AQUI");
                       setColors(colors.filter((c) => c !== color));
                     }}
                     variant={"ghost"}
