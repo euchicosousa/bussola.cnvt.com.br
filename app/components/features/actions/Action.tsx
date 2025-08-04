@@ -1806,16 +1806,21 @@ export const ContextMenuItems = React.memo(function ContextMenuItems({
   );
 });
 
-/* 
-
-@params
-action: Action
-isInstagramDate?: boolean
-minutes = 30
-isRelative = false
-absoluteDate?: Date
-
-*/
+/**
+ * Calcula novos valores de data para uma ação, com base em diferentes configurações
+ * 
+ * @description Esta função determina a nova data para uma ação considerando se é uma data 
+ * do Instagram, se deve ser relativa ao tempo atual, e se há constraints específicas para 
+ * posts do Instagram (onde a data de postagem deve ser anterior à data da ação).
+ * 
+ * @param action - A ação que terá suas datas atualizadas
+ * @param isInstagramDate - Se true, trabalha com instagram_date ao invés de date
+ * @param minutes - Quantidade de minutos a adicionar na data base (padrão: 30)
+ * @param isRelative - Se true, considera a data atual como base se a data da ação for passada
+ * @param absoluteDate - Data específica a ser usada, ignorando cálculos relativos
+ * 
+ * @returns Objeto com os novos valores de data para atualizar a ação
+ */
 
 export function getNewDateValues(
   action: Action,

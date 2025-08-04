@@ -1,10 +1,11 @@
-import { EditIcon, SaveIcon, XIcon } from "lucide-react";
+import { EditIcon, Grid3x3Icon, SaveIcon, TextIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Description, Header, Title } from "~/routes/dashboard.action.id.slug";
 import { Button } from "~/components/ui/button";
 import { useNavigate, useSubmit } from "react-router";
 import { format } from "date-fns";
 import { INTENTS } from "~/lib/constants";
+import { isInstagramFeed } from "~/lib/helpers";
 
 export default function EditAction({
   action,
@@ -45,45 +46,50 @@ export default function EditAction({
     <div className="flex h-full flex-col overflow-hidden border-l">
       {/* header */}
       <div className="flex items-center justify-between">
-        <h3 className="w-full px-4 py-3.5 text-xl font-medium tracking-tighter">
+        <h3 className="w-full border-b px-4 py-3.5 text-xl font-medium tracking-tighter">
           Editar Ação
         </h3>
-        <div className="pr-4">
-          <Button
-            size={"icon"}
-            variant={"ghost"}
-            onClick={() => {
-              setClose();
-            }}
-          >
-            <XIcon />
-          </Button>
+
+        <div className="flex items-center">
+          {isInstagramFeed(action.category) && (
+            <>
+              <div
+                className={`${
+                  mode === "context"
+                    ? "bg-card text-foreground border-l border-b-transparent"
+                    : "hover:text-foreground text-muted"
+                } grid place-content-center border-b px-8 py-5 transition-colors`}
+                onClick={() => setMode("context")}
+              >
+                <TextIcon className="size-4" />
+              </div>
+              <div
+                className={`${
+                  mode === "instagram"
+                    ? "bg-card border-b-transparent"
+                    : "hover:text-foreground text-muted"
+                } border-b border-l px-8 py-5 transition-colors duration-200 ease-in-out`}
+                onClick={() => setMode("instagram")}
+              >
+                <Grid3x3Icon className="size-4" />
+              </div>
+            </>
+          )}
+          <div className="grid h-14 place-content-center border-b pr-4">
+            <Button
+              size={"icon"}
+              variant={"ghost"}
+              onClick={() => {
+                setClose();
+              }}
+            >
+              <XIcon />
+            </Button>
+          </div>
         </div>
-        {/* <div className="flex">
-          <div
-            className={`${
-              mode === "context"
-                ? "bg-card text-foreground border-l border-b-transparent"
-                : "hover:text-foreground text-muted"
-            } grid place-content-center border-b px-8 py-5 transition-colors`}
-            onClick={() => setMode("context")}
-          >
-            <TextIcon className="size-4" />
-          </div>
-          <div
-            className={`${
-              mode === "instagram"
-                ? "bg-card border-b-transparent"
-                : "hover:text-foreground text-muted"
-            } border-b border-l px-8 py-5 transition-colors duration-200 ease-in-out`}
-            onClick={() => setMode("instagram")}
-          >
-            <Grid3x3Icon className="size-4" />
-          </div>
-        </div> */}
       </div>
 
-      <div className="flex h-full flex-col overflow-hidden pb-4">
+      <div className="bg-card flex h-full flex-col overflow-hidden py-4">
         {mode === "context" ? (
           <div className="flex h-full flex-col overflow-hidden px-4">
             <Header action={editingAction} partner={partner} />

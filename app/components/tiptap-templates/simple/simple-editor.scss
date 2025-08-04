@@ -9,22 +9,21 @@ body {
   }
 }
 
-body {
-  font-family: "Inter", sans-serif;
-  color: var(--tt-theme-text);
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
-  padding: 0;
-}
+// body {
+//   color: var(--tt-theme-text);
+//   font-optical-sizing: auto;
+//   font-weight: 400;
+//   font-style: normal;
+//   padding: 0;
+// }
 
-html,
-body,
-#root,
-#app {
-  height: 100%;
-  background-color: var(--tt-bg-color);
-}
+// html,
+// body,
+// #root,
+// #app {
+//   height: 100%;
+//   background-color: var(--tt-bg-color);
+// }
 
 ::-webkit-scrollbar {
   width: 0.25rem;
@@ -54,11 +53,9 @@ body,
   background: #fff;
 }
 
-.dark .simple-editor-wrapper{
+.dark .simple-editor-wrapper {
   background-color: #000;
 }
-
-
 
 .simple-editor-content {
   width: 100%;
