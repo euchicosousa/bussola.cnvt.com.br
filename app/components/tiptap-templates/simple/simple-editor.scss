@@ -51,7 +51,14 @@ body,
 .simple-editor-wrapper {
   display: flex;
   flex-direction: column;
+  background: #fff;
 }
+
+.dark .simple-editor-wrapper{
+  background-color: #000;
+}
+
+
 
 .simple-editor-content {
   width: 100%;

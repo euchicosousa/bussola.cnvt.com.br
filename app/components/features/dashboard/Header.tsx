@@ -58,7 +58,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 
 import { Theme, useTheme } from "remix-themes";
 import { getMonthsActions } from "~/lib/helpers";
@@ -207,7 +211,7 @@ export default function Header({
                     className="absolute -top-1/2 -left-1/2"
                   />
                 </div>
-                <span className="hidden text-2xl font-bold tracking-tight md:block">
+                <span className="hidden text-2xl font-bold tracking-tight lg:block">
                   {partner.title}
                 </span>
               </div>

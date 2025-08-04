@@ -907,7 +907,7 @@ export function DateTimeAndInstagramDate({
               }
             }}
           />
-          <div className="mx-auto flex gap-2">
+          <div className="mx-auto flex w-full gap-2">
             <div className="flex shrink-0">
               <Input
                 value={action.date.getHours().toString()}
@@ -1032,7 +1032,7 @@ export function DateTimeAndInstagramDate({
                 }
               }}
             />
-            <div className="mx-auto flex gap-2">
+            <div className="flex justify-center gap-2">
               <div className="flex shrink-0">
                 <Input
                   value={action.instagram_date.getHours().toString()}
