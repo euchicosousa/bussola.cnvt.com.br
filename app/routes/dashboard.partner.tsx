@@ -644,6 +644,18 @@ export default function Partner() {
               size={"sm"}
               variant={selectMultiple ? "secondary" : "ghost"}
               onClick={() => {
+                document.addEventListener("keydown", (event) => {
+                  if (event.metaKey && event.code === "KeyA") {
+                    let actionsToBeSelected: string[] = [];
+                    event.preventDefault();
+                    calendar.map((day) => {
+                      day.actions?.map((action) => {
+                        actionsToBeSelected.push(action.id);
+                      });
+                    });
+                    setSelectedActions(actionsToBeSelected);
+                  }
+                });
                 if (selectMultiple) {
                   setSelectedActions([]);
                   set_selectMultiple(false);
