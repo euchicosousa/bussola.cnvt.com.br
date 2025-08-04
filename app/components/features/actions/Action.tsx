@@ -196,6 +196,8 @@ export const ActionLine = React.memo(function ActionLine({
       <ContextMenuTrigger className={isDragging ? "z-10" : ""}>
         {isHair ? (
           <div
+            title={isHydrated ? action.title : undefined}
+            suppressHydrationWarning
             onClick={() => {
               navigate(
                 `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
@@ -238,6 +240,8 @@ export const ActionLine = React.memo(function ActionLine({
           </div>
         ) : isInstagramFeed(action.category) && showContent ? (
           <div
+            title={isHydrated ? action.title : undefined}
+            suppressHydrationWarning
             onClick={() => {
               if (setEditingAction) {
                 if (editingAction === action.id) {
@@ -333,6 +337,8 @@ export const ActionLine = React.memo(function ActionLine({
           </div>
         ) : (
           <div
+            title={isHydrated ? action.title : undefined}
+            suppressHydrationWarning
             ref={setNodeRef}
             {...listeners}
             {...attributes}
@@ -740,6 +746,8 @@ export const ActionBlock = React.memo(function ActionBlock({
       <ContextMenuTrigger>
         <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
           <div
+            title={isHydrated ? action.title : undefined}
+            suppressHydrationWarning
             className={`action group/action action-item action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm ${
               isDragging ? "z-[100]" : "z-0"
             } ${isSprint(action.id, sprints) && sprint ? "action-sprint" : ""}`}
