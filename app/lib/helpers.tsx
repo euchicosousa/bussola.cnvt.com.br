@@ -539,34 +539,30 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
 
 export function getResponsibles(people: Person[], users_ids?: string[] | null) {
   return people
-    .filter((person) =>
-      users_ids?.find((user) => person.user_id === user),
-    )
+    .filter((person) => users_ids?.find((user) => person.user_id === user))
     .sort((a, b) => {
-      const nameCompare = a.name.localeCompare(b.name, 'pt-BR');
+      const nameCompare = a.name.localeCompare(b.name, "pt-BR");
       if (nameCompare !== 0) return nameCompare;
       // Secondary sort by user_id for stability
-      return a.user_id.localeCompare(b.user_id, 'pt-BR');
+      return a.user_id.localeCompare(b.user_id, "pt-BR");
     });
 }
 export function getPartners(partners_slug: string[], partners: Partner[]) {
   if (partners_slug.length) {
     return partners
-      .filter((partner) =>
-        partners_slug?.find((p) => partner.slug === p),
-      )
+      .filter((partner) => partners_slug?.find((p) => partner.slug === p))
       .sort((a, b) => {
-        const titleCompare = a.title.localeCompare(b.title, 'pt-BR');
+        const titleCompare = a.title.localeCompare(b.title, "pt-BR");
         if (titleCompare !== 0) return titleCompare;
         // Secondary sort by slug for stability
-        return a.slug.localeCompare(b.slug, 'pt-BR');
+        return a.slug.localeCompare(b.slug, "pt-BR");
       });
   }
   return partners.sort((a, b) => {
-    const titleCompare = a.title.localeCompare(b.title, 'pt-BR');
+    const titleCompare = a.title.localeCompare(b.title, "pt-BR");
     if (titleCompare !== 0) return titleCompare;
     // Secondary sort by slug for stability
-    return a.slug.localeCompare(b.slug, 'pt-BR');
+    return a.slug.localeCompare(b.slug, "pt-BR");
   });
 }
 
@@ -764,7 +760,9 @@ export const Post = ({
   className?: string;
 }) => {
   // Use action.id for deterministic color selection
-  const hash = action.id.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
+  const hash = action.id
+    .split("")
+    .reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
   let factor = hash % colors.length;
   factor = factor === 1 ? factor - 1 : factor;
 
@@ -862,6 +860,16 @@ function ContentLowerBar({
     </div>
   );
 }
+
+/*
+
+@description Função que verifica se a categoria é uma categoria de feed do Instagram e Stories
+
+@params category: string
+@params stories: boolean
+
+@returns boolean
+*/
 
 export function isInstagramFeed(category: string, stories = false) {
   return ["post", "reels", "carousel", stories ? "stories" : null].includes(
@@ -978,8 +986,8 @@ export function LikeFooter({
   const engagement = useMemo(
     () => [
       150, // Math.ceil(Math.random() * 200) + 50,
-      75,  // Math.ceil(Math.random() * 130) + 10,
-      12,  // Math.ceil(Math.random() * 20) + 5,
+      75, // Math.ceil(Math.random() * 130) + 10,
+      12, // Math.ceil(Math.random() * 20) + 5,
     ],
     [],
   );

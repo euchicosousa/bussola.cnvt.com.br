@@ -23,6 +23,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CalendarClock,
+  CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ComponentIcon,
@@ -50,16 +51,23 @@ import {
 } from "react-router";
 import invariant from "tiny-invariant";
 
+import Badge from "~/components/common/forms/Badge";
+import { Heading } from "~/components/common/forms/Headings";
+import { CreateAction } from "~/components/features/actions";
 import {
   ActionLine,
   BlockOfActions,
   ListOfActions,
 } from "~/components/features/actions/Action";
-import Badge from "~/components/common/forms/Badge";
-import { Heading } from "~/components/common/forms/Headings";
 import Kanban from "~/components/features/actions/Kanban";
 import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
 import { Input } from "~/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -68,6 +76,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Toggle } from "~/components/ui/toggle";
+import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
   Icons,
@@ -81,9 +90,8 @@ import {
   getTomorrowActions,
   sortActions,
 } from "~/lib/helpers";
-import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
-import { createClient } from "~/lib/database/supabase";
+import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 import { cn } from "~/lib/ui/utils";
 
 export const config = { runtime: "edge" };
@@ -288,7 +296,7 @@ function TodayViews({ actions }: { actions: Action[] }) {
         <div className="px-2 py-8 md:px-8 lg:py-24">
           <div className="flex justify-between pb-8">
             <div className="flex">
-              <div className="relative flex">
+              <div className="relative flex items-center gap-2">
                 <h2 className="text-3xl font-semibold tracking-tight capitalize">
                   {isToday(currentDay)
                     ? "hoje"
@@ -301,6 +309,11 @@ function TodayViews({ actions }: { actions: Action[] }) {
                         })}
                 </h2>
                 <Badge value={currentActions?.length} isDynamic />
+
+                <CreateAction
+                  date={format(currentDay, "yyyy-MM-dd")}
+                  mode="day"
+                />
               </div>
               <Button
                 onClick={() => setCurrentDay(subDays(currentDay, 1))}
@@ -310,6 +323,25 @@ function TodayViews({ actions }: { actions: Action[] }) {
               >
                 <ChevronLeftIcon className="size-4" />
               </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"ghost"}>
+                    <CalendarIcon />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="bg-content">
+                  <Calendar
+                    locale={ptBR}
+                    mode="single"
+                    selected={currentDay}
+                    onSelect={(date) => {
+                      if (date) {
+                        setCurrentDay(date);
+                      }
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
               <Button
                 onClick={() => setCurrentDay(addDays(currentDay, 1))}
                 size={"icon"}
@@ -476,20 +508,44 @@ function CalendarMonth({ actions }: { actions: Action[] | null }) {
     <>
       <div className="border-b"></div>
       <div className="py-8 lg:py-24">
-        <div className="flex justify-between gap-4 px-2 py-2 md:px-8">
-          <h3 className="leading-none font-semibold tracking-tighter lg:text-2xl">
-            {`${format(
-              days[0],
-              "d".concat(
-                !isSameMonth(days[0], days[days.length - 1])
-                  ? " 'de' MMMM"
-                  : "",
-              ),
-              {
-                locale: ptBR,
-              },
-            )} a ${format(days[days.length - 1], " d 'de' MMMM", { locale: ptBR })}`}
-          </h3>
+        <div className="flex items-center justify-between gap-4 px-2 py-2 md:px-8">
+          <div className="flex items-center gap-2">
+            <h3 className="leading-none font-semibold tracking-tighter lg:text-2xl">
+              {`${format(
+                days[0],
+                "d".concat(
+                  !isSameMonth(days[0], days[days.length - 1])
+                    ? " 'de' MMMM"
+                    : "",
+                ),
+                {
+                  locale: ptBR,
+                },
+              )} a ${format(days[days.length - 1], " d 'de' MMMM", { locale: ptBR })}`}
+            </h3>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant={"ghost"}>
+                  <CalendarIcon />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="bg-content">
+                <Calendar
+                  locale={ptBR}
+                  mode="single"
+                  selected={parseISO(currentDate)}
+                  onSelect={(date) => {
+                    if (date) {
+                      setCurrentDate(
+                        format(date, "yyyy-MM-dd", { locale: ptBR }),
+                      );
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="flex items-center gap-2">
             <Button
               onClick={() => setView("month")}

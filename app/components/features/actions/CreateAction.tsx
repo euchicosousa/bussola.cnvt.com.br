@@ -259,7 +259,7 @@ export default function CreateAction({
           </Button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="bg-content mr-[5vw] w-[90dvw] max-w-[90vw] shadow-2xl md:max-w-[500px] md:px-6">
+      <PopoverContent className="bg-content mx-4 mr-[5vw] w-[90dvw] max-w-[90vw] shadow-2xl md:max-w-[500px] md:px-6">
         {/* Título */}
         <div className="relative">
           <textarea
@@ -356,17 +356,19 @@ export default function CreateAction({
               }}
             />
 
-            <TopicsAction
-              actionTopics={action.topics || []}
-              topics={topics.filter(
-                (topic) => topic.partner_slug === action.partners[0],
-              )}
-              onCheckedChange={(topics) => {
-                setAction({ ...action, topics });
-              }}
-              partner={action.partners[0]}
-              mode="command"
-            />
+            {isInstagramFeed(action.category) && (
+              <TopicsAction
+                actionTopics={action.topics || []}
+                topics={topics.filter(
+                  (topic) => topic.partner_slug === action.partners[0],
+                )}
+                onCheckedChange={(topics) => {
+                  setAction({ ...action, topics });
+                }}
+                partner={action.partners[0]}
+                mode="command"
+              />
+            )}
 
             {/* Responsáveis */}
             <ResponsibleForAction

@@ -49,9 +49,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return { data, error };
   } else if (intent === INTENTS.updateActions) {
     if (ids) {
+      if (values["responsibles"] !== "null") {
+        //@ts-ignore
+        values["responsibles"] = values["responsibles"].toString().split(",");
+      }
+
       const { data, error } = await supabase
         .from("actions")
         .update({ ...values } as any)
+        .select()
         // @ts-ignore
         .in("id", ids.toString().split(","));
     }

@@ -28,6 +28,7 @@ import {
   ChevronsDownUpIcon,
   ChevronsUpDownIcon,
   CircleCheckIcon,
+  CopyCheckIcon,
   Grid3x3Icon,
   ImageIcon,
   UserIcon,
@@ -243,6 +244,11 @@ export default function Partner() {
     start: startOfWeek(startOfMonth(currentDate)),
     end: endOfWeek(endOfMonth(currentDate)),
   });
+
+  // People of this partner
+  const partnerResponsibles = partner.users_ids.map((user_id) => {
+    return people.find((person) => person.user_id === user_id);
+  }) as Person[];
 
   const calendar = days.map((day) => {
     return {
@@ -496,14 +502,15 @@ export default function Partner() {
             {selectedActions.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    className={`outline-none`}
-                    variant={"ghost"}
-                    size={"sm"}
-                  >
+                  <Button variant={"ghost"}>
                     <span>
-                      {selectedActions.length} ações{" "}
-                      <span className="hidden md:inline">selecionadas</span>
+                      {selectedActions.length}
+                      {selectedActions.length === 1 ? " ação" : " ações"}
+                      <span className="hidden md:inline">
+                        {selectedActions.length === 1
+                          ? " selecionada"
+                          : " selecionadas"}
+                      </span>
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -513,67 +520,113 @@ export default function Partner() {
                     <DropdownMenuSubTrigger className="bg-item">
                       Mudar Status
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="bg-content">
-                      {states.map((state) => (
-                        <DropdownMenuItem
-                          key={state.slug}
-                          className="bg-item"
-                          onSelect={() => {
-                            submit(
-                              {
-                                intent: INTENTS.updateActions,
-                                state: state.slug,
-                                ids: selectedActions.join(","),
-                              },
-                              {
-                                action: "/handle-actions",
-                                method: "POST",
-                                navigate: false,
-                                fetcherKey: `action:update:state`,
-                              },
-                            );
-                          }}
-                        >
-                          <div
-                            className={`h-2 w-2 rounded-full`}
-                            style={{ backgroundColor: state.color }}
-                          ></div>
-                          <div>{state.title}</div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {states.map((state) => (
+                          <DropdownMenuItem
+                            key={state.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  state: state.slug,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:state`,
+                                },
+                              );
+                            }}
+                          >
+                            <div
+                              className={`h-2 w-2 rounded-full`}
+                              style={{ backgroundColor: state.color }}
+                            ></div>
+                            <div>{state.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
                   </DropdownMenuSub>
                   {/* Mudar Categoria */}
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="bg-item">
                       Mudar Categoria
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="bg-content">
-                      {categories.map((category) => (
-                        <DropdownMenuItem
-                          key={category.slug}
-                          className="bg-item"
-                          onSelect={() => {
-                            submit(
-                              {
-                                intent: INTENTS.updateActions,
-                                category: category.slug,
-                                ids: selectedActions.join(","),
-                              },
-                              {
-                                action: "/handle-actions",
-                                method: "POST",
-                                navigate: false,
-                                fetcherKey: `action:update:category`,
-                              },
-                            );
-                          }}
-                        >
-                          <Icons className="size-3" id={category.slug} />
-                          <div>{category.title}</div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuSubContent>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {categories.map((category) => (
+                          <DropdownMenuItem
+                            key={category.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  category: category.slug,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:category`,
+                                },
+                              );
+                            }}
+                          >
+                            <Icons className="size-3" id={category.slug} />
+                            <div>{category.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="bg-item">
+                      Mudar Responsável
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {partnerResponsibles.map((person) => (
+                          <DropdownMenuItem
+                            key={person.id}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  responsibles: person.user_id,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:responsible`,
+                                },
+                              );
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar
+                                item={{
+                                  image: person.image,
+                                  short: person.initials!,
+                                }}
+                              />
+                              <div>
+                                {person.name} {person.surname}
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
                   </DropdownMenuSub>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -603,7 +656,7 @@ export default function Partner() {
               }}
               title={"Selecionar múltiplas ações"}
             >
-              <CircleCheckIcon className="size-4" />{" "}
+              <CopyCheckIcon className="size-4" />{" "}
             </Button>
             <Button
               size={"sm"}

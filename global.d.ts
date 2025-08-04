@@ -1,22 +1,22 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "database";
 import type { DateRange } from "react-day-picker";
+import type { Tables } from "types";
 import type { Theme, ThemeColor } from "~/lib/theme-provider";
 
 declare global {
-  type Partner = Database["public"]["Tables"]["partners"]["Row"];
-  type Person = Database["public"]["Tables"]["people"]["Row"];
-  type Category = Database["public"]["Tables"]["categories"]["Row"];
-  type State = Database["public"]["Tables"]["states"]["Row"];
-  type Priority = Database["public"]["Tables"]["priorities"]["Row"];
-  type Action = Database["public"]["Tables"]["actions"]["Row"];
-  type Area = Database["public"]["Tables"]["areas"]["Row"];
-  type Sprint = Database["public"]["Tables"]["sprints"]["Row"];
-  type Celebration = Database["public"]["Tables"]["celebrations"]["Row"];
-  type Config = Database["public"]["Tables"]["config"]["Row"];
-  type Topic = Database["public"]["Tables"]["topics"]["Row"];
-
-  type Sow = Database["public"]["Enums"]["sow"];
+  type Partner = Tables<"partners">;
+  type Person = Tables<"people">;
+  type Category = Tables<"categories">;
+  type State = Tables<"states">;
+  type Priority = Tables<"priorities">;
+  type Action = Tables<"actions">;
+  type Area = Tables<"areas">;
+  type Sprint = Tables<"sprints">;
+  type Celebration = Tables<"celebrations">;
+  type Config = Tables<"config">;
+  type Topic = Tables<"topics">;
+  type Sow = Tables<"sow">;
 
   type HandleActionsDataType = {
     [key: string]: string | number | null | string[] | boolean | number[];
