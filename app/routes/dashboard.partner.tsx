@@ -27,7 +27,6 @@ import {
   ChevronRightIcon,
   ChevronsDownUpIcon,
   ChevronsUpDownIcon,
-  CircleCheckIcon,
   CopyCheckIcon,
   Grid3x3Icon,
   ImageIcon,
@@ -78,6 +77,7 @@ import {
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
 import { INTENTS } from "~/lib/constants";
+import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
   AvatarGroup,
@@ -88,9 +88,8 @@ import {
   isInstagramFeed,
   sortActions,
 } from "~/lib/helpers";
-import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
-import { createClient } from "~/lib/database/supabase";
+import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 
 export const config = { runtime: "edge" };
 
@@ -246,9 +245,9 @@ export default function Partner() {
   });
 
   // People of this partner
-  const partnerResponsibles = partner.users_ids.map((user_id) => {
-    return people.find((person) => person.user_id === user_id);
-  }) as Person[];
+  const partnerResponsibles = partner.users_ids
+    .map((user_id) => people.find((person) => person.user_id === user_id))
+    .filter((person): person is Person => person !== undefined);
 
   const calendar = days.map((day) => {
     return {
@@ -615,7 +614,7 @@ export default function Partner() {
                             <div className="flex items-center gap-2">
                               <Avatar
                                 item={{
-                                  image: person.image,
+                                  image: person.image || undefined,
                                   short: person.initials!,
                                 }}
                               />
@@ -782,7 +781,7 @@ export default function Partner() {
                         (person) => ({
                           item: {
                             short: person.short,
-                            image: person.image,
+                            image: person.image || undefined,
                             title: `${person.name} ${person.surname}`,
                           },
                           className:
@@ -848,7 +847,7 @@ export default function Partner() {
                       >
                         <Avatar
                           item={{
-                            image: person.image,
+                            image: person.image || undefined,
                             short: person.initials!,
                           }}
                           size="sm"
@@ -949,7 +948,7 @@ export default function Partner() {
                   <Icons className="h-3 w-3" id="all" />
                   <div>Todas as Categorias</div>
                 </DropdownMenuCheckboxItem>
-
+                {/* Mostra apenas as categorias de feed */}
                 <DropdownMenuCheckboxItem
                   className="bg-select-item flex gap-2"
                   checked={
@@ -991,22 +990,26 @@ export default function Partner() {
                         : false
                     }
                     onCheckedChange={(checked) => {
-                      let _categories_slugs = getCategoriesQueryString();
-                      let _categories = categories.filter((category) =>
-                        _categories_slugs.split("-").includes(category.slug),
-                      );
-
                       if (checked) {
                         params.set(
                           "categories",
-                          getCategoriesQueryString().concat(category.slug),
+                          getCategoriesQueryString(category.slug),
                         );
                       } else {
+                        let _categories_slugs = getCategoriesQueryString();
                         _categories_slugs = _categories_slugs
                           .split("-")
                           .filter((c) => c !== category.slug && c !== "")
                           .join("-");
                         params.set("categories", _categories_slugs);
+
+                        setCategoryFilter(
+                          categories.filter((c) =>
+                            _categories_slugs
+                              .split("-")
+                              .find((_c) => _c === c.slug),
+                          ),
+                        );
                       }
                       setSearchParams(params);
                     }}
@@ -1066,10 +1069,11 @@ export default function Partner() {
                     showContent={showContent}
                     key={i}
                     index={i}
-                    setSelectedActions={setSelectedActions}
                     selectMultiple={selectMultiple}
-                    setEditingAction={setEditingAction}
+                    selectedActions={selectedActions}
+                    setSelectedActions={setSelectedActions}
                     editingAction={editingAction}
+                    setEditingAction={setEditingAction}
                   />
                 ))}
               </div>
@@ -1079,20 +1083,15 @@ export default function Partner() {
       </div>
 
       {editingAction && !showFeed && (
-        <div
-          className="3xl:max-w-[720px] relative flex w-full min-w-96 flex-col xl:max-w-[480px]"
-          id="edit-action"
-        >
-          <EditAction
-            partner={partner}
-            action={fullEditingAction!}
-            setClose={() => {
-              setEditingAction(null);
-              params.delete("editing_action");
-              setSearchParams(params);
-            }}
-          />
-        </div>
+        <EditAction
+          partner={partner}
+          action={fullEditingAction!}
+          setClose={() => {
+            setEditingAction(null);
+            params.delete("editing_action");
+            setSearchParams(params);
+          }}
+        />
       )}
 
       {/* Instagram Grid */}
@@ -1183,6 +1182,7 @@ export const CalendarDay = ({
   selectMultiple,
   editingAction,
   setEditingAction,
+  selectedActions,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
   currentDate: Date | string;
@@ -1195,6 +1195,7 @@ export const CalendarDay = ({
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedActions?: string[];
 }) => {
   const matches = useMatches();
   const { categories } = matches[1].data as DashboardRootType;
@@ -1236,6 +1237,7 @@ export const CalendarDay = ({
       {/* Actions and Celebration */}
       <div className="flex h-full flex-col justify-between px-2">
         <div className="relative flex h-full grow flex-col gap-3">
+          {/* Se for par amostrar o conteúdo estilo Instagram */}
           {showContent ? (
             <div className="flex flex-col gap-3">
               {day.actions?.filter((action) => isInstagramFeed(action.category))
@@ -1253,6 +1255,7 @@ export const CalendarDay = ({
                       ?.filter((action) => isInstagramFeed(action.category))
                       .map((action) => (
                         <ActionLine
+                          selectedActions={selectedActions}
                           editingAction={editingAction}
                           setEditingAction={setEditingAction}
                           selectMultiple={selectMultiple}
@@ -1282,6 +1285,7 @@ export const CalendarDay = ({
                   }))
                   .map(({ category, actions }) => (
                     <CategoryActions
+                      selectedActions={selectedActions}
                       editingAction={editingAction}
                       setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
@@ -1309,6 +1313,7 @@ export const CalendarDay = ({
                   actions &&
                   actions.length > 0 && (
                     <CategoryActions
+                      selectedActions={selectedActions}
                       editingAction={editingAction}
                       setEditingAction={setEditingAction}
                       selectMultiple={selectMultiple}
@@ -1348,6 +1353,7 @@ function CategoryActions({
   selectMultiple = false,
   editingAction,
   setEditingAction,
+  selectedActions,
 }: {
   category: Category;
   actions?: Action[];
@@ -1358,6 +1364,7 @@ function CategoryActions({
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedActions?: string[];
 }) {
   actions = actions?.sort((a, b) =>
     isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
@@ -1378,6 +1385,7 @@ function CategoryActions({
       <div className={`flex flex-col gap-1`}>
         {actions?.map((action) => (
           <ActionLine
+            selectedActions={selectedActions}
             editingAction={editingAction}
             setEditingAction={setEditingAction}
             selectMultiple={selectMultiple}

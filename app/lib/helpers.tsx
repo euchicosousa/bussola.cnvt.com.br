@@ -1105,20 +1105,42 @@ export function getCategoriesQueryString(category?: string) {
   if (typeof window !== "undefined") {
     const searchParams = new URLSearchParams(location.search);
     categories = searchParams.get("categories") || "";
+
     categories =
-      categories !== "" && category !== undefined
-        ? `${categories}-${category}`
-        : category || "";
+      category !== undefined
+        ? categories !== ""
+          ? `${categories}-${category}`
+          : category
+        : categories;
   } else {
     const [searchParams] = useSearchParams();
     categories = searchParams.get("categories") || "";
     categories =
-      categories !== "" && category !== undefined
-        ? `${categories}-${category}`
-        : category || "";
+      category !== undefined
+        ? categories !== ""
+          ? `${categories}-${category}`
+          : category
+        : categories;
   }
 
   return categories;
+}
+
+export function actionToRawAction(action: Action): RawAction {
+  return {
+    title: action.title,
+    description: action.description,
+    category: action.category,
+    state: action.state,
+    date: parseISO(action.date),
+    instagram_date: parseISO(action.instagram_date),
+    user_id: action.user_id,
+    responsibles: action.responsibles,
+    color: action.color,
+    time: action.time,
+    partners: action.partners,
+    topics: action.topics,
+  };
 }
 
 export function FinishedCheck({
