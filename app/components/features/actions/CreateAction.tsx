@@ -87,7 +87,6 @@ export default function CreateAction({
 
   const cleanAction: RawAction = {
     category: "post",
-    partner: partner ? partner.slug : undefined,
     date: newDate,
     instagram_date: newDate,
     description: "",
@@ -102,41 +101,41 @@ export default function CreateAction({
     topics: [],
   };
 
-  const [action, setAction] = useState<RawAction>(cleanAction);
+  const [rawAction, setRawAction] = useState<RawAction>(cleanAction);
 
   const category = categories.find(
-    (category) => category.slug === action.category,
+    (category) => category.slug === rawAction.category,
   ) as Category;
 
   useEffect(() => {
-    if (action.partners) {
-      const newPartner = partners.find((p) => p.slug === action.partners[0]);
+    if (rawAction.partners) {
+      const newPartner = partners.find((p) => p.slug === rawAction.partners[0]);
       if (newPartner) {
         setPartner(newPartner);
-        setAction({ ...action, color: newPartner.colors[0] });
+        setRawAction({ ...rawAction, color: newPartner.colors[0] });
       }
     }
-  }, [action.partners]);
+  }, [rawAction.partners]);
 
   useEffect(() => {
     if (
       areas.find(
         (area) =>
-          categories.find((category) => category.slug === action.category)
+          categories.find((category) => category.slug === rawAction.category)
             ?.area === "creative",
       )
     ) {
-      setAction({
-        ...action,
+      setRawAction({
+        ...rawAction,
         responsibles: ["b4f1f8f7-e8bb-4726-8693-76e217472674"],
       });
     } else {
-      setAction({
-        ...action,
+      setRawAction({
+        ...rawAction,
         responsibles: [user.id],
       });
     }
-  }, [action.category]);
+  }, [rawAction.category]);
 
   useEffect(() => {
     setPartner(() =>
@@ -148,7 +147,7 @@ export default function CreateAction({
 
   useEffect(() => {
     if (open) {
-      setAction(cleanAction);
+      setRawAction(cleanAction);
     }
   }, [open]);
 
@@ -185,7 +184,7 @@ export default function CreateAction({
   }, []);
 
   function createAction() {
-    if (action.title.length === 0) {
+    if (rawAction.title.length === 0) {
       toast({
         variant: "destructive",
         title: "O título não pode ser em vazio.",
@@ -193,7 +192,7 @@ export default function CreateAction({
       });
       return false;
     }
-    if (!action.date) {
+    if (!rawAction.date) {
       toast({
         variant: "destructive",
         title: "Escolha a data da ação",
@@ -201,7 +200,7 @@ export default function CreateAction({
       });
       return false;
     }
-    if (action.partners.length === 0) {
+    if (rawAction.partners.length === 0) {
       toast({
         variant: "destructive",
         title: "Ação sem nenhum Parceiro.",
@@ -212,11 +211,11 @@ export default function CreateAction({
         {
           id: window.crypto.randomUUID(),
           intent: INTENTS.createAction,
-          ...action,
-          date: format(action.date, "y-MM-dd HH:mm:ss", {
+          ...rawAction,
+          date: format(rawAction.date, "y-MM-dd HH:mm:ss", {
             locale: ptBR,
           }),
-          instagram_date: format(action.instagram_date, "y-MM-dd HH:mm:ss", {
+          instagram_date: format(rawAction.instagram_date, "y-MM-dd HH:mm:ss", {
             locale: ptBR,
           }),
           created_at: format(new Date(), "y-MM-dd HH:mm:ss", {
@@ -232,7 +231,7 @@ export default function CreateAction({
           method: "POST",
         },
       );
-      setAction(cleanAction);
+      setRawAction(cleanAction);
       setOpen(false);
     }
   }
@@ -263,30 +262,30 @@ export default function CreateAction({
         {/* Título */}
         <div className="relative">
           <textarea
-            defaultValue={action.title}
+            defaultValue={rawAction.title}
             className="text-foreground placeholder:text-muted-foreground mb-1 field-sizing-content w-full resize-none overflow-hidden bg-transparent pr-2 text-3xl font-medium tracking-tighter outline-hidden"
             rows={1}
             onChange={(event) => {
-              setAction({ ...action, title: event.target.value });
+              setRawAction({ ...rawAction, title: event.target.value });
             }}
             placeholder="Qual o nome da sua ação?"
           />
           <div
             className={`absolute text-xs ${
-              action.title.length > 60 ? "text-error" : "text-foreground/50"
+              rawAction.title.length > 60 ? "text-error" : "text-foreground/50"
             } top-0 right-0`}
           >
-            {action.title.length > 0 ? action.title.length : ""}
+            {rawAction.title.length > 0 ? rawAction.title.length : ""}
           </div>
         </div>
         <textarea
-          defaultValue={action.description || ""}
+          defaultValue={rawAction.description || ""}
           className="font-regular placeholder:text-muted-foreground relative field-sizing-content w-full resize-none bg-transparent text-sm outline-hidden"
           rows={2}
           placeholder="Descreva brevemente a sua ação"
           onChange={(event) => {
-            setAction({
-              ...action,
+            setRawAction({
+              ...rawAction,
               description: event.target.value,
             });
           }}
@@ -297,96 +296,60 @@ export default function CreateAction({
           <div className="flex items-center justify-between gap-2">
             {/* Partners */}
             <PartnersDropdown
-              partners={action.partners}
+              partners={rawAction.partners}
               onSelect={(partners) => {
-                setAction((action) => ({ ...action, partners }));
+                setRawAction((action) => ({ ...action, partners }));
               }}
             />
 
             {/* Categoria */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="button-trigger">
-                <Icons id={category.slug} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-content">
-                {areas.map((area, i) => (
-                  <DropdownMenuGroup key={area.id}>
-                    {i > 0 && <DropdownMenuSeparator />}
-                    <h4 className="px-3 py-1 text-[10px] font-bold tracking-wider uppercase opacity-50">
-                      {area.title}
-                    </h4>
-                    {categories.map((category) =>
-                      category.area === area.slug ? (
-                        <DropdownMenuItem
-                          key={category.slug}
-                          className="bg-item flex items-center gap-2"
-                          onSelect={async () => {
-                            if (category.slug !== action.category) {
-                              setAction({
-                                ...action,
-                                category: category.slug,
-                                time: (TIMES as any)[category.slug],
-                              });
-                            }
-                          }}
-                        >
-                          <Icons
-                            id={category.slug}
-                            className={`size-4 opacity-50`}
-                          />
-                          <span>{category.title}</span>
-                        </DropdownMenuItem>
-                      ) : null,
-                    )}
-                  </DropdownMenuGroup>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <CategoryDropdown action={rawAction} setAction={setRawAction} />
 
             {/* States */}
             <StateSelect
-              state={action.state}
+              state={rawAction.state}
               onValueChange={(state) => {
-                if (state !== action.state) {
-                  setAction({
-                    ...action,
+                if (state !== rawAction.state) {
+                  setRawAction({
+                    ...rawAction,
                     state,
                   });
                 }
               }}
             />
 
-            {isInstagramFeed(action.category) && (
+            {isInstagramFeed(rawAction.category) && (
               <TopicsAction
-                actionTopics={action.topics || []}
+                actionTopics={rawAction.topics || []}
                 topics={topics.filter(
-                  (topic) => topic.partner_slug === action.partners[0],
+                  (topic) => topic.partner_slug === rawAction.partners[0],
                 )}
                 onCheckedChange={(topics) => {
-                  setAction({ ...action, topics });
+                  setRawAction({ ...rawAction, topics });
                 }}
-                partner={action.partners[0]}
+                partner={rawAction.partners[0]}
                 mode="command"
               />
             )}
 
             {/* Responsáveis */}
             <ResponsibleForAction
-              responsibles={action.responsibles}
+              responsibles={rawAction.responsibles}
               onCheckedChange={(responsibles) => {
-                setAction({ ...action, responsibles });
+                setRawAction({ ...rawAction, responsibles });
               }}
-              partner={action.partners[0]}
+              partner={rawAction.partners[0]}
             />
 
             {/* Cor da ação */}
-            {getInstagramFeed({ actions: [action] }).length > 0 && partner ? (
+            {getInstagramFeed({ actions: [rawAction] }).length > 0 &&
+            partner ? (
               <DropdownMenu>
                 <DropdownMenuTrigger className="button-trigger">
                   <div
                     className="border-foreground/10 size-8 rounded border"
                     style={{
-                      backgroundColor: action.color,
+                      backgroundColor: rawAction.color,
                     }}
                   ></div>
                 </DropdownMenuTrigger>
@@ -398,8 +361,8 @@ export default function CreateAction({
                           className="bg-item py-4"
                           key={i}
                           onSelect={() => {
-                            setAction({
-                              ...action,
+                            setRawAction({
+                              ...rawAction,
                               color,
                             });
                           }}
@@ -419,11 +382,12 @@ export default function CreateAction({
           </div>
           <div className="flex w-full items-center justify-between gap-2 overflow-hidden p-1">
             <DateTimeAndInstagramDate
-              action={action}
+              action={rawAction}
               onChange={({ date, instagram_date, time }) => {
-                if (date) setAction({ ...action, date });
-                if (instagram_date) setAction({ ...action, instagram_date });
-                if (time) setAction({ ...action, time });
+                if (date) setRawAction({ ...rawAction, date });
+                if (instagram_date)
+                  setRawAction({ ...rawAction, instagram_date });
+                if (time) setRawAction({ ...rawAction, time });
               }}
             />
 
@@ -496,11 +460,9 @@ export function StateSelect({
 export function PartnersDropdown({
   onSelect,
   partners,
-  ringColor = "",
 }: {
   onSelect: (partners: string[]) => void;
   partners: string[];
-  ringColor?: string;
 }) {
   const { partners: allPartners } = useMatches()[1].data as DashboardRootType;
   const actionPartners = getPartners(partners, allPartners);
@@ -624,29 +586,38 @@ export function TopicsAction({
           />
           <CommandList>
             <CommandEmpty>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-4 px-4">
                 <div>Nenhum tópico encontrado.</div>
+
                 <div>
-                  <Button
-                    variant={"secondary"}
-                    onClick={() => {
-                      fetcher.submit(
-                        {
-                          title: query,
-                          partner_slug: partner,
-                          color: "#999",
-                          foreground: "#fff",
-                          intent: INTENTS.createTopic,
-                        },
-                        {
-                          method: "post",
-                          action: "/handle-actions",
-                        },
-                      );
-                    }}
-                  >
-                    Adicionar "{query}" <PlusCircleIcon />
-                  </Button>
+                  {query.length < 3 ? (
+                    <div className="mb-2 text-xs opacity-50">
+                      Comece a digitar para <br /> criar um novo tópico.
+                    </div>
+                  ) : (
+                    <Button
+                      variant={"secondary"}
+                      onClick={async () => {
+                        await fetcher.submit(
+                          {
+                            title: query,
+                            partner_slug: partner,
+                            color: "#999",
+                            foreground: "#fff",
+                            intent: INTENTS.createTopic,
+                          },
+                          {
+                            method: "post",
+                            action: "/handle-actions",
+                          },
+                        );
+
+                        setQuery("");
+                      }}
+                    >
+                      Adicionar "{query}" <PlusCircleIcon />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CommandEmpty>
@@ -719,18 +690,6 @@ export function TopicsAction({
               } else {
                 onCheckedChange([..._topics, topic.id]);
               }
-
-              // if (checked && action.topics?.length < 2) {
-              //   alert("É necessário ter pelo menos um responsável pela ação");
-              //   return false;
-              // }
-
-              // if (!event.shiftKey) {
-              //   tempTopics = checked
-              //     ? action.topics?.filter((id) => id !== topic.id)
-              //     : [...action.topics, topic.id];
-              // }
-              // onCheckedChange(tempResponsibles);
             }}
           >
             <div className="flex items-center gap-2">
@@ -748,6 +707,54 @@ export function TopicsAction({
       </DropdownMenuContent>
     </DropdownMenu>
   ) : mode === "context" ? null : null;
+}
+
+export function CategoryDropdown({
+  action,
+  setAction,
+}: {
+  action: RawAction;
+  setAction: (action: RawAction) => void;
+}) {
+  const { categories, areas } = useMatches()[1].data as DashboardRootType;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="button-trigger">
+        <Icons id={action.category} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-content">
+        {areas.map((area, i) => (
+          <DropdownMenuGroup key={area.id}>
+            {i > 0 && <DropdownMenuSeparator />}
+            <h4 className="px-3 py-1 text-[10px] font-bold tracking-wider uppercase opacity-50">
+              {area.title}
+            </h4>
+            {categories.map((category) =>
+              category.area === area.slug ? (
+                <DropdownMenuItem
+                  key={category.slug}
+                  className="bg-item flex items-center gap-2"
+                  onSelect={async () => {
+                    if (category.slug !== action.category) {
+                      setAction({
+                        ...action,
+                        category: category.slug,
+                        time: (TIMES as any)[category.slug],
+                      });
+                    }
+                  }}
+                >
+                  <Icons id={category.slug} className={`size-4 opacity-50`} />
+                  <span>{category.title}</span>
+                </DropdownMenuItem>
+              ) : null,
+            )}
+          </DropdownMenuGroup>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }
 
 export function ResponsibleForAction({

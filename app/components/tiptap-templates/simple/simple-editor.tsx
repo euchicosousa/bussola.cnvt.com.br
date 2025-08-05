@@ -197,8 +197,6 @@ export function SimpleEditor({
   >("main");
   const toolbarRef = React.useRef<HTMLDivElement>(null);
 
-  console.log({ content });
-
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,

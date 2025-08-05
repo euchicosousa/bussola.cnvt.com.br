@@ -40,8 +40,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useIsMobile } from "~/lib/hooks/ui/useIsMobile";
 import { flushSync } from "react-dom";
+import { Calendar } from "~/components/ui/calendar";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -56,6 +57,8 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "~/components/ui/context-menu";
+import { Toggle } from "~/components/ui/toggle";
+import { toast } from "~/components/ui/use-toast";
 import { INTENTS, PRIORITIES } from "~/lib/constants";
 import {
   amIResponsible,
@@ -72,16 +75,12 @@ import {
   Icons,
   isInstagramFeed,
   isSprint,
-  LikeFooter,
 } from "~/lib/helpers";
+import { useIsMobile } from "~/lib/hooks/ui/useIsMobile";
 import { cn } from "~/lib/ui/utils";
-import { Calendar } from "~/components/ui/calendar";
-import { Checkbox } from "~/components/ui/checkbox";
-import { Toggle } from "~/components/ui/toggle";
-import { toast } from "~/components/ui/use-toast";
 
-import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 
 // Constants
 const DEFAULT_UPDATE_TIMESTAMP = () =>
@@ -105,6 +104,7 @@ export const ActionLine = React.memo(function ActionLine({
   isHair,
   selectMultiple,
   setSelectedActions,
+  selectedActions,
   editingAction,
   setEditingAction,
 }: {
@@ -120,6 +120,7 @@ export const ActionLine = React.memo(function ActionLine({
   isHair?: boolean;
   selectMultiple?: boolean;
   setSelectedActions?: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedActions?: string[];
   editingAction?: string | null;
   setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
@@ -333,7 +334,7 @@ export const ActionLine = React.memo(function ActionLine({
                 )}
               </div>
             </div>
-            <LikeFooter size="sm" liked={state.slug === "finished"} />
+            {/* <LikeFooter size="sm" liked={state.slug === "finished"} /> */}
           </div>
         ) : (
           <div
@@ -393,6 +394,7 @@ export const ActionLine = React.memo(function ActionLine({
 
             {selectMultiple && (
               <Checkbox
+                checked={selectedActions?.includes(action.id)}
                 className="bg-accent border-0"
                 onCheckedChange={(state) => {
                   if (setSelectedActions) {
@@ -1808,17 +1810,17 @@ export const ContextMenuItems = React.memo(function ContextMenuItems({
 
 /**
  * Calcula novos valores de data para uma ação, com base em diferentes configurações
- * 
- * @description Esta função determina a nova data para uma ação considerando se é uma data 
- * do Instagram, se deve ser relativa ao tempo atual, e se há constraints específicas para 
+ *
+ * @description Esta função determina a nova data para uma ação considerando se é uma data
+ * do Instagram, se deve ser relativa ao tempo atual, e se há constraints específicas para
  * posts do Instagram (onde a data de postagem deve ser anterior à data da ação).
- * 
+ *
  * @param action - A ação que terá suas datas atualizadas
  * @param isInstagramDate - Se true, trabalha com instagram_date ao invés de date
  * @param minutes - Quantidade de minutos a adicionar na data base (padrão: 30)
  * @param isRelative - Se true, considera a data atual como base se a data da ação for passada
  * @param absoluteDate - Data específica a ser usada, ignorando cálculos relativos
- * 
+ *
  * @returns Objeto com os novos valores de data para atualizar a ação
  */
 

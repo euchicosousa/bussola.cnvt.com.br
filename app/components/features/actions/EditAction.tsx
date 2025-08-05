@@ -5,7 +5,8 @@ import { Button } from "~/components/ui/button";
 import { useNavigate, useSubmit } from "react-router";
 import { format } from "date-fns";
 import { INTENTS } from "~/lib/constants";
-import { isInstagramFeed } from "~/lib/helpers";
+import { actionToRawAction, isInstagramFeed, Post } from "~/lib/helpers";
+import { CategoryDropdown } from "./CreateAction";
 
 export default function EditAction({
   action,
@@ -43,7 +44,10 @@ export default function EditAction({
   }, [action]);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden border-l">
+    <div
+      className={`relative flex w-full flex-col overflow-hidden border-l ${mode === "instagram" ? "max-w-96" : "3xl:max-w-[720px] min-w-96 xl:max-w-[480px]"}`}
+      id="edit-action"
+    >
       {/* header */}
       <div className="flex items-center justify-between">
         <h3 className="w-full border-b px-4 py-3.5 text-xl font-medium tracking-tighter">
@@ -109,15 +113,38 @@ export default function EditAction({
           </div>
         ) : (
           <div className="scrollbars-v h-full px-4">
-            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Earum
-            ducimus quibusdam id facilis ratione magni, quaerat nesciunt
-            architecto, officia rerum voluptate saepe tempore inventore! Fugit
-            itaque voluptas ducimus quam beatae.
+            <Post action={editingAction} colors={partner.colors} />
+            <textarea
+              placeholder="Escreva sua legenda aqui ou peça à βIA para criar no botão superior direito."
+              name="caption"
+              onChange={(event) =>
+                setEditingAction({
+                  ...editingAction,
+                  caption: event.target.value,
+                })
+              }
+              className={`mt-4 field-sizing-content min-h-screen w-full text-base font-normal outline-hidden transition lg:min-h-auto lg:text-sm ${
+                isInstagramFeed(action.category)
+                  ? "border-0 focus-within:ring-0"
+                  : ""
+              }`}
+              value={editingAction.caption ? editingAction.caption : undefined}
+            ></textarea>
           </div>
         )}
 
         <div className="mt-4 flex justify-between px-4">
-          <div></div>
+          <div>
+            <CategoryDropdown
+              action={actionToRawAction(editingAction)}
+              setAction={(action) => {
+                setEditingAction({
+                  ...editingAction,
+                  category: action.category,
+                });
+              }}
+            />
+          </div>
           <div className="flex justify-end gap-2">
             <Button
               variant={"ghost"}

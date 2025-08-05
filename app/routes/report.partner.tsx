@@ -330,7 +330,7 @@ const ActionReport = ({
           className="z-0"
         />
       </div>
-      <LikeFooter />
+      {/* <LikeFooter /> */}
       <div
         dangerouslySetInnerHTML={{
           __html: action.caption?.replace(/\n/gi, "<br>") || "",

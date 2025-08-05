@@ -75,7 +75,7 @@ declare global {
   type RawAction = {
     title: string;
     description: string | null;
-    partner?: string;
+    // partner?: string;
     category: string;
     state: string;
     date: Date;
@@ -87,8 +87,6 @@ declare global {
     partners: string[];
     topics?: number[] | null;
   };
-
-  user_id: string;
 
   type GenericItem = {
     id: string;

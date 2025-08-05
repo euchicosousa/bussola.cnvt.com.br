@@ -58,21 +58,22 @@ export default function Login() {
         )}
 
         <form method="post">
-          <Label className="mb-4 block w-full">
+          <Label className="focus-within:bg-card mb-4 block w-full p-4">
             <span className="mb-2 block w-full font-medium">E-mail</span>
 
-            <Input
+            <input
+              type="email"
               name="email"
-              className="h-auto px-6 py-3 text-xl font-medium tracking-tight"
+              className="w-full text-xl font-medium tracking-tight outline-none"
             />
           </Label>
-          <Label className="mb-4 block w-full">
+          <Label className="focus-within:bg-card mb-4 block w-full p-4">
             <span className="mb-2 block w-full font-medium">Senha</span>
 
-            <Input
+            <input
               type="password"
               name="password"
-              className="h-auto px-6 py-3 text-xl font-medium tracking-tight"
+              className="w-full text-xl font-medium tracking-tight outline-none"
             />
           </Label>
 

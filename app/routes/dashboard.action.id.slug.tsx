@@ -887,7 +887,7 @@ function RightSide({
               </div>
             </div>
           </Form>
-          <LikeFooter liked={action.state === "finished"} />
+          {/* <LikeFooter liked={action.state === "finished"} /> */}
         </>
       )}
       {/* Legenda */}
@@ -1197,14 +1197,15 @@ function LowerBar({
             }
           }}
         />
-
-        <TopicsAction
-          partner={action.partners[0]}
-          actionTopics={action.topics || []}
-          topics={topics}
-          onCheckedChange={(topics) => setAction({ ...action, topics })}
-          mode="command"
-        />
+        {isInstagramFeed(action.category) && (
+          <TopicsAction
+            partner={action.partners[0]}
+            actionTopics={action.topics || []}
+            topics={topics}
+            onCheckedChange={(topics) => setAction({ ...action, topics })}
+            mode="command"
+          />
+        )}
 
         {/* Prioridade */}
 
