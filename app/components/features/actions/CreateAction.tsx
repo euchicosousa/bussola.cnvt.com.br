@@ -6,6 +6,7 @@ import {
   CheckCircle2Icon,
   CheckIcon,
   ChevronsUpDownIcon,
+  Loader2Icon,
   PlusCircleIcon,
   PlusIcon,
 } from "lucide-react";
@@ -291,9 +292,9 @@ export default function CreateAction({
           }}
         />
 
-        <hr className="-mx-4 my-2 border-t p-1 md:-mx-6" />
+        <hr className="-mx-4 my-2 border-t md:-mx-6" />
         <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between gap-2">
+          <div className="-mx-1 flex items-center justify-between gap-2 overflow-hidden p-1">
             {/* Partners */}
             <PartnersDropdown
               partners={rawAction.partners}
@@ -344,40 +345,11 @@ export default function CreateAction({
             {/* Cor da ação */}
             {getInstagramFeed({ actions: [rawAction] }).length > 0 &&
             partner ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="button-trigger">
-                  <div
-                    className="border-foreground/10 size-8 rounded border"
-                    style={{
-                      backgroundColor: rawAction.color,
-                    }}
-                  ></div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-content">
-                  {partner.colors.map(
-                    (color: string, i: number) =>
-                      i !== 1 && (
-                        <DropdownMenuItem
-                          className="bg-item py-4"
-                          key={i}
-                          onSelect={() => {
-                            setRawAction({
-                              ...rawAction,
-                              color,
-                            });
-                          }}
-                        >
-                          <div
-                            className="border-foreground/10 h-8 w-full rounded-sm border"
-                            style={{
-                              backgroundColor: color,
-                            }}
-                          ></div>
-                        </DropdownMenuItem>
-                      ),
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ColorsPartnerDropdown
+                partner={partner}
+                rawAction={rawAction}
+                setRawAction={setRawAction}
+              />
             ) : null}
           </div>
           <div className="flex w-full items-center justify-between gap-2 overflow-hidden p-1">
@@ -429,12 +401,16 @@ export function StateSelect({
 
   return (
     <Select value={state} onValueChange={(value) => onValueChange(value)}>
-      <SelectTrigger className={`button-trigger inline-flex w-auto gap-2`}>
+      <SelectTrigger
+        className={`button-trigger debug-3 inline-flex w-auto gap-2 overflow-hidden`}
+      >
         <div
           className={`size-2 rounded-full`}
           style={{ backgroundColor: _state.color }}
         ></div>
-        {_state.title}
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+          {_state.title}
+        </div>
       </SelectTrigger>
       <SelectContent className="bg-content">
         {states.map((state) => (
@@ -469,7 +445,7 @@ export function PartnersDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="button-trigger">
+      <DropdownMenuTrigger className="button-trigger button-trigger__squared">
         {partners?.length > 0 ? (
           <AvatarGroup
             avatars={actionPartners.map((partner) => ({
@@ -538,12 +514,28 @@ export function TopicsAction({
 }) {
   const [query, setQuery] = useState("");
   const fetcher = useFetcher();
+  const [isCreatingTopic, setIsCreatingTopic] = useState(false);
+  const _partner = (useMatches()[1].data as DashboardRootType).partners.find(
+    (p) => p.slug === partner,
+  ) as Partner;
+
+  useEffect(() => {
+    if (
+      fetcher.formData?.get("intent") === INTENTS.createTopic &&
+      fetcher.state !== "idle"
+    ) {
+      setIsCreatingTopic(true);
+    } else {
+      setIsCreatingTopic(false);
+    }
+  }, [fetcher.formData]);
 
   return mode === "command" ? (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
+          className="overflow-hidden"
           title={
             actionTopics.length > 0
               ? topics
@@ -572,7 +564,9 @@ export function TopicsAction({
               })}
             </div>
           ) : (
-            "Tópicos"
+            <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+              Tópicos
+            </div>
           )}
           <ChevronsUpDownIcon className="opacity-50" />
         </Button>
@@ -587,38 +581,50 @@ export function TopicsAction({
           <CommandList>
             <CommandEmpty>
               <div className="flex flex-col gap-4 px-4">
-                <div>Nenhum tópico encontrado.</div>
+                {isCreatingTopic ? (
+                  <div>
+                    Criando o tópico {query}{" "}
+                    <Loader2Icon className="animate-spin" />
+                  </div>
+                ) : (
+                  <>
+                    <div>Nenhum tópico encontrado.</div>
+                    <div>
+                      {query.length < 3 ? (
+                        <div className="mb-2 text-xs opacity-50">
+                          Comece a digitar para <br /> criar um novo tópico.
+                        </div>
+                      ) : (
+                        <Button
+                          variant={"secondary"}
+                          style={{
+                            backgroundColor: _partner.colors[0],
+                            color: _partner.colors[1],
+                          }}
+                          onClick={async () => {
+                            await fetcher.submit(
+                              {
+                                title: query,
+                                partner_slug: partner,
+                                color: "#999",
+                                foreground: "#fff",
+                                intent: INTENTS.createTopic,
+                              },
+                              {
+                                method: "post",
+                                action: "/handle-actions",
+                              },
+                            );
 
-                <div>
-                  {query.length < 3 ? (
-                    <div className="mb-2 text-xs opacity-50">
-                      Comece a digitar para <br /> criar um novo tópico.
+                            setQuery("");
+                          }}
+                        >
+                          Adicionar "{query}" <PlusCircleIcon />
+                        </Button>
+                      )}
                     </div>
-                  ) : (
-                    <Button
-                      variant={"secondary"}
-                      onClick={async () => {
-                        await fetcher.submit(
-                          {
-                            title: query,
-                            partner_slug: partner,
-                            color: "#999",
-                            foreground: "#fff",
-                            intent: INTENTS.createTopic,
-                          },
-                          {
-                            method: "post",
-                            action: "/handle-actions",
-                          },
-                        );
-
-                        setQuery("");
-                      }}
-                    >
-                      Adicionar "{query}" <PlusCircleIcon />
-                    </Button>
-                  )}
-                </div>
+                  </>
+                )}
               </div>
             </CommandEmpty>
             <CommandGroup>
@@ -720,8 +726,8 @@ export function CategoryDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="button-trigger">
-        <Icons id={action.category} />
+      <DropdownMenuTrigger className="button-trigger button-trigger__squared">
+        <Icons id={action.category} className="size-5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-content">
         {areas.map((area, i) => (
@@ -1101,4 +1107,51 @@ function getResponsibleForArea(category: string) {
   );
 
   return responsibles;
+}
+
+function ColorsPartnerDropdown({
+  partner,
+  rawAction,
+  setRawAction,
+}: {
+  partner: Partner;
+  rawAction: RawAction;
+  setRawAction: (action: RawAction) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="button-trigger button-trigger__squared">
+        <div
+          className="border-foreground/10 size-6 rounded-sm border"
+          style={{
+            backgroundColor: rawAction.color,
+          }}
+        ></div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="bg-content">
+        {partner.colors.map(
+          (color: string, i: number) =>
+            i !== 1 && (
+              <DropdownMenuItem
+                className="bg-item py-4"
+                key={i}
+                onSelect={() => {
+                  setRawAction({
+                    ...rawAction,
+                    color,
+                  });
+                }}
+              >
+                <div
+                  className="border-foreground/10 h-8 w-full rounded-sm border"
+                  style={{
+                    backgroundColor: color,
+                  }}
+                ></div>
+              </DropdownMenuItem>
+            ),
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

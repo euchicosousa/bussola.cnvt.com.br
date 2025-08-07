@@ -49,7 +49,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return { data, error };
   } else if (intent === INTENTS.updateActions) {
     if (ids) {
-      if (values["responsibles"] !== "null") {
+      if (values["responsibles"] && values["responsibles"] !== "null") {
         //@ts-ignore
         values["responsibles"] = values["responsibles"].toString().split(",");
       }
@@ -60,6 +60,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .select()
         // @ts-ignore
         .in("id", ids.toString().split(","));
+
+      if (error) console.log({ error });
+
+      return { data, error };
     }
   } else if (intent === INTENTS.updateAction) {
     if (!id) throw new Error("No id was provided");
