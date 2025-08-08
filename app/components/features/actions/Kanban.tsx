@@ -6,11 +6,10 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { useId } from "react";
 import { useMatches, useSubmit } from "react-router";
 import { INTENTS } from "~/lib/constants";
 import { BlockOfActions, ListOfActions } from "./Action";
-import { useId } from "react";
-import Color from "color";
 
 export default function Kanban({
   actions,
@@ -93,7 +92,7 @@ function KanbanColumn({
       ref={setNodeRef}
       className={`relative z-0 flex max-h-[60vh] shrink-0 p-3 ${
         actions.length > 0 ? "min-w-72 grow" : "w-auto 2xl:min-w-72 2xl:grow"
-      } flex-col overflow-hidden border-t-4 ${isOver ? "dragover" : ""}`}
+      } flex-col overflow-y-hidden border-t-4 ${isOver ? "dragover" : ""}`}
       style={{ borderColor: state.color }}
       key={state.slug}
     >

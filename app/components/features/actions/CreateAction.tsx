@@ -582,8 +582,8 @@ export function TopicsAction({
             <CommandEmpty>
               <div className="flex flex-col gap-4 px-4">
                 {isCreatingTopic ? (
-                  <div>
-                    Criando o tópico {query}{" "}
+                  <div className="flex items-center gap-2">
+                    <div>Criando o tópico {query}</div>
                     <Loader2Icon className="animate-spin" />
                   </div>
                 ) : (
@@ -606,8 +606,8 @@ export function TopicsAction({
                               {
                                 title: query,
                                 partner_slug: partner,
-                                color: "#999",
-                                foreground: "#fff",
+                                color: _partner.colors[0],
+                                foreground: _partner.colors[1],
                                 intent: INTENTS.createTopic,
                               },
                               {
@@ -647,7 +647,7 @@ export function TopicsAction({
                   )}
                   <div className="flex items-center gap-2 overflow-hidden">
                     <div
-                      className="size-2 rounded-full"
+                      className="size-2 shrink-0 rounded-full"
                       style={{ backgroundColor: topic.color }}
                     ></div>
                     <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap">

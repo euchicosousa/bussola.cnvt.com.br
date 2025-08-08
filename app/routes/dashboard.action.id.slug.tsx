@@ -539,7 +539,10 @@ export function Description({
               <Bia size="xs" />
             </PopoverTrigger>
             <PopoverContent className="bg-content w-[90dvw] lg:max-w-[500px]">
-              <fieldset disabled={fetcher.formData?.get("intent") === "prompt"}>
+              <fieldset
+                disabled={fetcher.formData?.get("intent") === "prompt"}
+                className="disabled:opacity-50"
+              >
                 <div className="mb-2 text-sm font-medium">Peça algo à βia</div>
                 <div className="bg-input relative rounded-sm border p-2 pb-10">
                   <textarea

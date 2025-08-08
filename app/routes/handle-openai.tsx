@@ -1,3 +1,5 @@
+import { subMilliseconds } from "date-fns";
+import { loggerFor } from "node_modules/openai/internal/utils/log.mjs";
 import { OpenAI } from "openai";
 import type { ActionFunctionArgs } from "react-router";
 
@@ -338,6 +340,8 @@ Tema a ser desenvolvido: ${title} - ${description}
 `;
   }
 
+  const startDate = new Date();
+
   const chatCompletion = await openai.chat.completions.create({
     messages: [
       {
@@ -349,8 +353,14 @@ Tema a ser desenvolvido: ${title} - ${description}
         content,
       },
     ],
+    // model: "gpt-5-nano-2025-08-07",
     model: "gpt-4o",
   });
+
+  const endDate = new Date();
+  console.log(endDate.getTime() - startDate.getTime());
+
+  // gpt-5-2025-08-07
 
   return { message: chatCompletion.choices[0].message.content };
 };
@@ -927,9 +937,9 @@ type SintagmaType = {
       examples: string[];
     }[];
   }[];
-}[];
+};
 
-export const SintagmaHooks: SintagmaType = [
+export const SintagmaHooks: SintagmaType[] = [
   {
     id: "t1",
     title: "Encantar",
@@ -1531,7 +1541,7 @@ export const SintagmaHooks: SintagmaType = [
         ],
       },
       {
-        id: "t3-m2",
+        id: "t3-m3",
         title: "Derrubar Objeções Silenciosas",
         tension: "Eu sempre pensei isso, mas nunca tinha percebido o erro.",
         role: "Desbloqueio de venda",
@@ -1575,7 +1585,7 @@ export const SintagmaHooks: SintagmaType = [
         ],
       },
       {
-        id: "t3-m3",
+        id: "t3-m4",
         title: "Construir Referência Técnica",
         tension: "Essa pessoa realmente sabe o que está fazendo.",
         role: "Construção de autoridade",
@@ -1619,7 +1629,7 @@ export const SintagmaHooks: SintagmaType = [
         ],
       },
       {
-        id: "t3-m4",
+        id: "t3-m5",
         title: "Reforçar Princípios Não Negociáveis",
         tension: "Não é sobre agradar. É sobre deixar claro como funciona.",
         role: "Posicionamento",
@@ -1663,7 +1673,7 @@ export const SintagmaHooks: SintagmaType = [
         ],
       },
       {
-        id: "t3-m5",
+        id: "t3-m6",
         title: "Ancorar valor com provas reais",
         tension: "Se funcionou pra ela, talvez funcione pra mim também.",
         role: "Validação e prova social",

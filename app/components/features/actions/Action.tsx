@@ -243,22 +243,26 @@ export const ActionLine = React.memo(function ActionLine({
           <div
             title={isHydrated ? action.title : undefined}
             suppressHydrationWarning
-            onClick={() => {
-              if (setEditingAction) {
-                if (editingAction === action.id) {
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              if (!selectMultiple) {
+                if (setEditingAction) {
+                  if (editingAction === action.id) {
+                    navigate(
+                      `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
+                    );
+                  } else {
+                    setEditingAction(action.id);
+                    params.set("editing_action", action.id);
+                    params.delete("show_feed");
+                    setSearchParams(params);
+                  }
+                } else {
                   navigate(
                     `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
                   );
-                } else {
-                  setEditingAction(action.id);
-                  params.set("editing_action", action.id);
-                  params.delete("show_feed");
-                  setSearchParams(params);
                 }
-              } else {
-                navigate(
-                  `/dashboard/action/${action.id}/${partner.slug}${getQueryString()}`,
-                );
               }
             }}
             // onClick={() => {
@@ -271,7 +275,7 @@ export const ActionLine = React.memo(function ActionLine({
             className="outline-none"
           >
             <div
-              className={`ring-ring ring-offset-background relative cursor-pointer ring-offset-2 outline-hidden focus-within:ring-3 ${
+              className={`ring-ring ring-offset-background relative cursor-pointer rounded-md ring-offset-2 outline-hidden focus-within:ring-3 ${
                 showDelay &&
                 state.slug !== "finished" &&
                 (isBefore(action.instagram_date, new Date()) ||
@@ -298,6 +302,23 @@ export const ActionLine = React.memo(function ActionLine({
               <div className="late-border border-background ring-error absolute inset-0 hidden rounded-md border ring-2"></div>
 
               <div className="absolute -top-3 right-2 flex gap-2">
+                {selectMultiple && (
+                  <Checkbox
+                    checked={selectedActions?.includes(action.id)}
+                    className="bg-accent border-background size-6 rounded-full border-2"
+                    onCheckedChange={(state) => {
+                      if (setSelectedActions) {
+                        setSelectedActions((actions) => {
+                          if (state) {
+                            return [...actions, action.id];
+                          } else {
+                            return actions.filter((id) => id !== action.id);
+                          }
+                        });
+                      }
+                    }}
+                  />
+                )}
                 {isSprint(action.id, sprints) && (
                   <div className="border-background bg-primary text-primary-foreground grid size-6 place-content-center rounded-md border-2">
                     <RabbitIcon className="size-4" />
@@ -1170,7 +1191,7 @@ const ShortcutActions = React.memo(function ShortcutActions({
           handleActions({
             ...action,
             intent: INTENTS.updateAction,
-            ...getNewDateValues(action, isInstagramDate),
+            ...getNewDateValues(action, isInstagramDate, 30, true),
           });
         }
         // Amanhã
@@ -1182,7 +1203,7 @@ const ShortcutActions = React.memo(function ShortcutActions({
           });
         }
 
-        // Adiciona uma semana além de hoje
+        // Adiciona uma semana além da data
         else if (key === "s") {
           handleActions({
             ...action,
@@ -1217,6 +1238,29 @@ const ShortcutActions = React.memo(function ShortcutActions({
             intent: INTENTS.updateAction,
             ...action,
             category,
+          });
+        } else if (code === "Digit1") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+
+            ...getNewDateValues(action, isInstagramDate, 60, true),
+          });
+        }
+        //em duas horas
+        else if (code === "Digit2") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 2 * 60, true), // Em minutos
+          });
+        }
+        //em três horas
+        else if (code === "Digit3") {
+          handleActions({
+            ...action,
+            intent: INTENTS.updateAction,
+            ...getNewDateValues(action, isInstagramDate, 3 * 60, true), // Em minutos
           });
         }
       }
@@ -1313,7 +1357,7 @@ export function formatActionDatetime({
           : ""
   ).concat(
     timeFormat
-      ? `${dateFormat ? " 'às' " : ""}H'h'${date.getMinutes() > 0 ? "m" : ""}`
+      ? `${dateFormat ? " 'às' " : ""}H'h'${date.getMinutes() > 0 ? "mm" : ""}`
       : "",
   );
 
@@ -1818,7 +1862,7 @@ export const ContextMenuItems = React.memo(function ContextMenuItems({
  * @param action - A ação que terá suas datas atualizadas
  * @param isInstagramDate - Se true, trabalha com instagram_date ao invés de date
  * @param minutes - Quantidade de minutos a adicionar na data base (padrão: 30)
- * @param isRelative - Se true, considera a data atual como base se a data da ação for passada
+ * @param isRelativeFromNow - Se true, considera a data atual como base se a data da ação for passada
  * @param absoluteDate - Data específica a ser usada, ignorando cálculos relativos
  *
  * @returns Objeto com os novos valores de data para atualizar a ação
@@ -1828,7 +1872,7 @@ export function getNewDateValues(
   action: Action,
   isInstagramDate?: boolean,
   minutes = 30,
-  isRelative = false,
+  isRelativeFromNow = false,
   absoluteDate?: Date,
 ) {
   let values = {};
@@ -1841,13 +1885,24 @@ export function getNewDateValues(
   const newDate =
     absoluteDate ||
     addMinutes(
-      isRelative
-        ? isBefore(currentDate, new Date())
+      isRelativeFromNow
+        ? new Date()
+        : isBefore(currentDate, new Date())
           ? new Date()
-          : currentDate
-        : new Date(),
+          : currentDate,
       minutes,
     );
+
+  // const newDate =
+  //   absoluteDate ||
+  //   addMinutes(
+  //     isRelativeFromNow
+  //       ? isBefore(currentDate, new Date())
+  //         ? new Date()
+  //         : currentDate
+  //       : currentDate,
+  //     minutes,
+  //   );
 
   // Se for uma ação do instagram
 
