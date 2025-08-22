@@ -1,0 +1,19 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/object-sans/(.*)",
+
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Content-Type", "value": "font/woff" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/object-sans/(.*)",
+      "destination": "/object-sans/$1"
+    }
+  ]
+}

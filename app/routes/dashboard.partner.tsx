@@ -1,0 +1,1428 @@
+/* eslint-disable jsx-a11y/label-has-associated-control */
+import {
+  addMonths,
+  eachDayOfInterval,
+  eachMonthOfInterval,
+  endOfMonth,
+  endOfWeek,
+  endOfYear,
+  format,
+  isAfter,
+  isBefore,
+  isSameDay,
+  isSameMonth,
+  isSameYear,
+  isToday,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+  subMonths,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  CalendarDaysIcon,
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsDownUpIcon,
+  ChevronsUpDownIcon,
+  CopyCheckIcon,
+  Grid3x3Icon,
+  ImageIcon,
+  SearchIcon,
+  UserIcon,
+  UsersIcon,
+} from "lucide-react";
+import { useEffect, useId, useState } from "react";
+import {
+  type LoaderFunctionArgs,
+  type MetaFunction,
+  redirect,
+  useLoaderData,
+  useLocation,
+  useMatches,
+  useOutletContext,
+  useSearchParams,
+  useSubmit,
+} from "react-router";
+import invariant from "tiny-invariant";
+import { ActionItem } from "~/components/features/actions";
+import { GridOfActions } from "~/components/features/actions/containers/GridOfActions";
+import CreateAction from "~/components/features/actions/CreateAction";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { getNewDateValues } from "~/lib/helpers";
+
+import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { SiInstagram } from "@icons-pack/react-simple-icons";
+import EditAction from "~/components/features/actions/EditAction";
+import { Input } from "~/components/ui/input";
+import { INTENTS } from "~/lib/constants";
+import { createClient } from "~/lib/database/supabase";
+import {
+  Avatar,
+  AvatarGroup,
+  Icons,
+  getCategoriesQueryString,
+  getInstagramFeed,
+  getResponsibles,
+  isInstagramFeed,
+  sortActions,
+} from "~/lib/helpers";
+import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
+import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
+
+export const config = { runtime: "edge" };
+
+export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+  let _date = new URL(request.url).searchParams.get("date");
+
+  let date = _date
+    ? _date.split("-").length === 2
+      ? _date.concat("-15")
+      : _date
+    : format(new Date(), "yyyy-MM-dd");
+
+  date = date?.replace(/\-01$/, "-02");
+
+  // let start = startOfWeek(startOfMonth(date));
+  // let end = endOfDay(endOfWeek(endOfMonth(date)));
+
+  const { supabase } = createClient(request);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return redirect("/login");
+  }
+
+  let { data } = await supabase
+    .from("people")
+    .select("*")
+    .match({ user_id: user.id })
+    .returns<Person[]>();
+
+  invariant(data);
+
+  let person = data[0];
+
+  const [{ data: actions }, { data: actionsChart }, { data: partners }] =
+    await Promise.all([
+      supabase
+        .from("actions")
+        .select("*")
+        .is("archived", false)
+        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("partners", [params["partner"]!])
+        .order("title", { ascending: true })
+        .returns<Action[]>(),
+      supabase
+        .from("actions")
+        .select("category, state, date")
+        .is("archived", false)
+        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("partners", [params["partner"]!])
+        .returns<{ category: string; state: string; date: string }[]>(),
+      supabase
+        .from("partners")
+        .select()
+        .match({ slug: params["partner"]! })
+        .returns<Partner[]>(),
+    ]);
+  invariant(partners);
+
+  return { actions, actionsChart, partner: partners[0], person, date };
+};
+
+export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  return [
+    { title: data?.partner?.title.concat(" - ʙússoʟa") },
+    {
+      name: "description",
+      content:
+        "Aplicativo de Gestão de Projetos Criado e Mantido pela Agência CNVT®. ",
+    },
+  ];
+};
+
+export default function Partner() {
+  let { actions, partner, date } = useLoaderData<typeof loader>();
+
+  const matches = useMatches();
+  const submit = useSubmit();
+  const id = useId();
+  const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
+  const [responsiblesFilter, setResponsiblesFilter] = useState<string[]>(
+    partner.users_ids,
+  );
+  const [search, setSearch] = useState<string>("");
+
+  const [editingAction, setEditingAction] = useState<string | null>(
+    searchParams.get("editing_action"),
+  );
+
+  const fullEditingAction = (actions as Action[])?.find(
+    (action) => action.id === editingAction,
+  );
+
+  const {
+    stateFilter,
+    setStateFilter,
+    showFeed,
+    setShowFeed,
+    categoryFilter,
+    setCategoryFilter,
+  } = useOutletContext() as ContextType;
+
+  const { categories, states, person, people, celebrations } = matches[1]
+    .data as DashboardRootType;
+
+  let params = new URLSearchParams(searchParams);
+
+  for (const [key, value] of searchParams.entries()) {
+    params.set(key, value);
+  }
+
+  const [isInstagramDate, set_isInstagramDate] = useState(
+    !!searchParams.get("instagram_date"),
+  );
+  const [showInstagramContent, set_showInstagramContent] = useState(
+    !!searchParams.get("show_content"),
+  );
+  const [short, set_short] = useState(!!searchParams.get("short"));
+  const [showResponsibles, set_showResponsibles] = useState(
+    !!searchParams.get("show_responsibles"),
+  );
+  const [selectMultiple, set_selectMultiple] = useState(
+    !!searchParams.get("select_multiple"),
+  );
+  const [showAllActions, set_showAllActions] = useState(
+    !!searchParams.get("show_all_actions"),
+  );
+
+  const [selectedActions, setSelectedActions] = useState<string[]>([]);
+
+  const [currentDate, setCurrentDate] = useState(date);
+
+  const { actions: pendingActions } = usePendingDataSafe();
+  const { actions: deletingIDsActions } = useIDsToRemoveSafe();
+
+  // Calcs
+
+  const actionsMap = new Map<string, Action>(
+    actions?.map((action) => [action.id, action]),
+  );
+
+  for (const action of pendingActions) {
+    if (action.partners[0] === partner.slug) actionsMap.set(action.id, action);
+  }
+
+  for (const id of deletingIDsActions) {
+    actionsMap.delete(id);
+  }
+
+  const actionsArray = Array.from(actionsMap.values());
+  const sortedActions = sortActions(actionsArray) || actionsArray;
+  actions = sortedActions.filter((action) =>
+    search.length > 2
+      ? action.title.toLowerCase().includes(search.toLowerCase())
+      : true,
+  );
+  const instagramActions = getInstagramFeed({ actions });
+
+  const days = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(currentDate)),
+    end: endOfWeek(endOfMonth(currentDate)),
+  });
+
+  // People of this partner
+  const partnerResponsibles = partner.users_ids
+    .map((user_id) => people.find((person) => person.user_id === user_id))
+    .filter((person): person is Person => person !== undefined);
+
+  const calendar = days.map((day) => {
+    return {
+      date: format(day, "yyyy-MM-dd"),
+      actions: actions?.filter(
+        (action) =>
+          isSameDay(
+            isInstagramDate && isInstagramFeed(action.category, true)
+              ? parseISO(action.instagram_date)
+              : parseISO(action.date),
+            day,
+          ) &&
+          (categoryFilter.length > 0
+            ? categoryFilter.find(
+                (category) => category.slug === action.category,
+              )
+            : true) &&
+          (stateFilter ? action.state === stateFilter?.slug : true) &&
+          action.responsibles.find((responsible: any) =>
+            responsiblesFilter.find((user_id) => user_id === responsible),
+          ),
+      ),
+      celebrations: celebrations.filter((celebration) =>
+        isSameDay(day, parseISO(celebration.date)),
+      ),
+    };
+  });
+
+  useEffect(() => {
+    // Scroll into the day
+    let date = params.get("date");
+    date = date
+      ? date.split("-").length === 3
+        ? date
+        : date.concat("-01")
+      : format(new Date(), "yyyy-MM-dd");
+    const day = document.querySelector<HTMLDivElement>(`#day_${date}`)!;
+    const calendar = document.querySelector<HTMLDivElement>(`#calendar`)!;
+    const calendarFull =
+      document.querySelector<HTMLDivElement>(`#calendar-full`)!;
+
+    if (day) {
+      calendarFull.scrollTo({
+        left: day.offsetLeft - 48,
+        behavior: "smooth",
+      });
+      calendar.scrollTo({ top: day.offsetTop - 160, behavior: "smooth" });
+    }
+
+    function keyDown(event: KeyboardEvent) {
+      if (event.shiftKey && event.altKey) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const code = event.code;
+
+        if (code === "KeyC") {
+          if (params.get("show_content")) {
+            set_showInstagramContent(false);
+            params.delete("show_content");
+          } else {
+            set_showInstagramContent(true);
+            params.set("show_content", "true");
+          }
+          setSearchParams(params);
+        } else if (code === "KeyR") {
+          if (params.get("show_responsibles")) {
+            set_showResponsibles(false);
+            params.delete("show_responsibles");
+          } else {
+            set_showResponsibles(true);
+            params.set("show_responsibles", "true");
+          }
+          setSearchParams(params);
+        } else if (code === "KeyS") {
+          if (params.get("short")) {
+            set_short(false);
+            params.delete("short");
+          } else {
+            set_short(true);
+            params.set("short", "true");
+          }
+          setSearchParams(params);
+          // setShort((value) => !value);
+        } else if (code === "KeyI") {
+          if (params.get("show_feed")) {
+            set_isInstagramDate(false);
+            set_showInstagramContent(false);
+            setShowFeed(false);
+
+            params.delete("show_feed");
+            params.delete("instagram_date");
+            params.delete("show_content");
+          } else {
+            set_isInstagramDate(true);
+            set_showInstagramContent(true);
+            setShowFeed(true);
+
+            params.set("instagram_date", "true");
+            params.set("show_content", "true");
+            params.set("show_feed", "true");
+          }
+          setSearchParams(params);
+        }
+      }
+    }
+
+    document.addEventListener("keydown", keyDown);
+
+    setCategoryFilter([]);
+
+    return () => document.removeEventListener("keydown", keyDown);
+  }, []);
+
+  useEffect(() => {
+    setResponsiblesFilter(partner.users_ids);
+  }, [partner]);
+
+  useEffect(() => {
+    let _params = params.get("categories")?.split("-");
+    let _categories = categories.filter((category) =>
+      _params?.find((_p) => _p === category.slug),
+    );
+
+    setCategoryFilter(_categories);
+  }, [searchParams]);
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    const date = over?.id as string;
+    const actionDate = isInstagramDate
+      ? (active.data.current?.instagram_date as string)
+      : (active.data.current?.date as string);
+    const draggedAction = actions?.find((action) => action.id === active.id)!;
+
+    if (date !== format(actionDate, "yyyy-MM-dd")) {
+      submit(
+        {
+          ...draggedAction,
+          intent: INTENTS.updateAction,
+          [isInstagramDate && isInstagramFeed(active.data.current?.category)
+            ? "instagram_date"
+            : "date"]: date?.concat(` ${format(actionDate, "HH:mm:ss")}`),
+          ...getNewDateValues(
+            draggedAction,
+            isInstagramDate,
+            0,
+            true,
+            new Date(date?.concat(` ${format(actionDate, "HH:mm:ss")}`)),
+          ),
+        },
+        {
+          action: "/handle-actions",
+          method: "POST",
+          navigate: false,
+          fetcherKey: `action:${active.id}:update:move:calendar`,
+        },
+      );
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
+  );
+
+  return (
+    <div className="flex overflow-hidden">
+      <div className={`flex h-full w-full flex-col overflow-hidden`}>
+        {/* Calendário Header */}
+
+        <div className="flex items-center justify-between border-b py-2 pr-4 md:px-8">
+          {/* Mês */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                const date = format(subMonths(currentDate, 1), "yyyy-MM-'15'");
+                setCurrentDate(date);
+                params.set("date", date);
+
+                setSearchParams(params);
+              }}
+            >
+              <ChevronLeftIcon />
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger className="outline-hidden" asChild>
+                <Button
+                  variant={"ghost"}
+                  className={`cursor-pointer text-xl font-medium`}
+                >
+                  <span className="shrink-0 capitalize">
+                    {format(currentDate, "MMMM", {
+                      locale: ptBR,
+                    })}
+                  </span>
+                  {!isSameYear(currentDate, new Date()) && (
+                    <span>
+                      {format(currentDate, " 'de' yyyy", { locale: ptBR })}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-content">
+                {eachMonthOfInterval({
+                  start: startOfYear(new Date()),
+                  end: endOfYear(new Date()),
+                }).map((month) => (
+                  <DropdownMenuItem
+                    className="bg-item capitalize"
+                    key={month.getMonth()}
+                    onSelect={() => {
+                      const date = format(
+                        new Date().setMonth(month.getMonth()),
+                        "yyyy-MM-'15'",
+                      );
+                      setCurrentDate(date);
+
+                      params.set("date", date);
+                      setSearchParams(params);
+                    }}
+                  >
+                    {format(month, "MMMM", {
+                      locale: ptBR,
+                    })}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                const date = format(addMonths(currentDate, 1), "yyyy-MM-'15'");
+                setCurrentDate(date);
+                params.set("date", date);
+
+                setSearchParams(params);
+              }}
+            >
+              <ChevronRightIcon />
+            </Button>
+          </div>
+          <div className="flex items-center gap-1 lg:gap-2">
+            <div className="relative">
+              <Input
+                placeholder="Procurar ação"
+                className="h-8 border pr-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <SearchIcon className="absolute top-1/2 right-2 size-4 -translate-y-1/2" />
+            </div>
+            {selectedActions.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={"ghost"}>
+                    <span>
+                      {selectedActions.length}
+                      {selectedActions.length === 1 ? " ação" : " ações"}
+                      <span className="hidden md:inline">
+                        {selectedActions.length === 1
+                          ? " selecionada"
+                          : " selecionadas"}
+                      </span>
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-content">
+                  {/* Mudar State */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="bg-item">
+                      Mudar Status
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {states.map((state) => (
+                          <DropdownMenuItem
+                            key={state.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  state: state.slug,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:state`,
+                                },
+                              );
+                            }}
+                          >
+                            <div
+                              className={`h-2 w-2 rounded-full`}
+                              style={{ backgroundColor: state.color }}
+                            ></div>
+                            <div>{state.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  {/* Mudar Categoria */}
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="bg-item">
+                      Mudar Categoria
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {categories.map((category) => (
+                          <DropdownMenuItem
+                            key={category.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  category: category.slug,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:category`,
+                                },
+                              );
+                            }}
+                          >
+                            <Icons className="size-3" id={category.slug} />
+                            <div>{category.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="bg-item">
+                      Mudar Responsável
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent className="bg-content">
+                        {partnerResponsibles.map((person) => (
+                          <DropdownMenuItem
+                            key={person.id}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  responsibles: person.user_id,
+                                  ids: selectedActions.join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:responsible`,
+                                },
+                              );
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar
+                                item={{
+                                  image: person.image || undefined,
+                                  short: person.initials!,
+                                }}
+                              />
+                              <div>
+                                {person.name} {person.surname}
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="bg-item"
+                    onSelect={() => {
+                      setSelectedActions([]);
+                    }}
+                  >
+                    Limpar Seleção
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            <Button
+              size={"sm"}
+              variant={selectMultiple ? "secondary" : "ghost"}
+              onClick={() => {
+                document.addEventListener("keydown", (event) => {
+                  if (event.metaKey && event.code === "KeyA") {
+                    let actionsToBeSelected: string[] = [];
+                    event.preventDefault();
+                    calendar.map((day) => {
+                      day.actions?.map((action) => {
+                        actionsToBeSelected.push(action.id);
+                      });
+                    });
+                    setSelectedActions(actionsToBeSelected);
+                  }
+                });
+                if (selectMultiple) {
+                  setSelectedActions([]);
+                  set_selectMultiple(false);
+                  params.delete("select_multiple");
+                } else {
+                  set_selectMultiple(true);
+                  params.set("select_multiple", "true");
+                }
+                setSearchParams(params);
+              }}
+              title={"Selecionar múltiplas ações"}
+            >
+              <CopyCheckIcon className="size-4" />{" "}
+            </Button>
+            <Button
+              size={"sm"}
+              variant={isInstagramDate ? "secondary" : "ghost"}
+              onClick={() => {
+                if (isInstagramDate) {
+                  set_isInstagramDate(false);
+                  set_showInstagramContent(false);
+
+                  params.delete("instagram_date");
+                  params.delete("show_content");
+                } else {
+                  set_isInstagramDate(true);
+                  set_showInstagramContent(true);
+
+                  params.set("instagram_date", "true");
+                  params.set("show_content", "true");
+                }
+                setSearchParams(params);
+              }}
+              title={"Organizar ações pelas datas do Instagram ( ⇧ + ⌥ + I )"}
+            >
+              <SiInstagram className="size-4" />
+            </Button>
+            <Button
+              size={"sm"}
+              variant={showInstagramContent ? "secondary" : "ghost"}
+              onClick={() => {
+                if (showInstagramContent) {
+                  set_showInstagramContent(false);
+                  params.delete("show_content");
+                } else {
+                  set_showInstagramContent(true);
+                  params.set("show_content", "true");
+                }
+                setSearchParams(params);
+              }}
+              title={
+                showInstagramContent
+                  ? "Mostrar conteúdo das postagens (⇧ + ⌥ + C)"
+                  : "Mostrar apenas os títulos (⇧ + ⌥ + C)"
+              }
+            >
+              <ImageIcon className="size-4" />
+            </Button>
+            <Button
+              size={"sm"}
+              variant={showResponsibles ? "secondary" : "ghost"}
+              onClick={() => {
+                if (showResponsibles) {
+                  set_showResponsibles(false);
+                  params.delete("show_responsibles");
+                } else {
+                  set_showResponsibles(true);
+                  params.set("show_responsibles", "true");
+                }
+
+                setSearchParams(params);
+              }}
+              title={
+                showResponsibles
+                  ? "Todos os responsáveis (⇧ + ⌥ + R) "
+                  : "'Eu' como responsável (⇧ + ⌥ + R) "
+              }
+            >
+              {showResponsibles ? (
+                <UsersIcon className="size-4" />
+              ) : (
+                <UserIcon className="size-4" />
+              )}
+            </Button>
+            <Button
+              variant={short ? "secondary" : "ghost"}
+              size={"sm"}
+              onClick={() => {
+                if (params.get("short")) {
+                  set_short(false);
+                  params.delete("short");
+                } else {
+                  set_short(true);
+                  params.set("short", "true");
+                }
+                setSearchParams(params);
+              }}
+              title={
+                short
+                  ? "Aumentar o tamanho da ação"
+                  : "Diminuir o tamanho da ação"
+              }
+            >
+              {short ? (
+                <ChevronsUpDownIcon className="size-4" />
+              ) : (
+                <ChevronsDownUpIcon className="size-4" />
+              )}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size={"sm"}
+                  variant={
+                    partner.users_ids.length !== responsiblesFilter.length
+                      ? "secondary"
+                      : "ghost"
+                  }
+                  className={`outline-none`}
+                >
+                  {
+                    <AvatarGroup
+                      avatars={getResponsibles(people, responsiblesFilter).map(
+                        (person) => ({
+                          item: {
+                            short: person.short,
+                            image: person.image || undefined,
+                            title: `${person.name} ${person.surname}`,
+                          },
+                          className:
+                            partner.users_ids.length !==
+                            responsiblesFilter.length
+                              ? "ring-secondary"
+                              : "ring-background",
+                        }),
+                      )}
+                    />
+                  }
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuContent className="bg-content">
+                  <DropdownMenuCheckboxItem
+                    className="bg-select-item flex items-center gap-2"
+                    checked={
+                      responsiblesFilter.length ===
+                      getResponsibles(people, partner.users_ids).length
+                    }
+                    onClick={() => {
+                      setResponsiblesFilter(partner.users_ids);
+                    }}
+                  >
+                    Todos os Responsáveis
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuSeparator className="border-foreground/20" />
+                  {getResponsibles(people, partner.users_ids).map((person) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={person.id}
+                        className="bg-select-item flex items-center gap-2"
+                        checked={
+                          responsiblesFilter?.find(
+                            (user_id) => user_id === person.user_id,
+                          )
+                            ? true
+                            : false
+                        }
+                        onClick={(event) => {
+                          const checked = responsiblesFilter.includes(
+                            person.user_id,
+                          );
+
+                          // Se so tiver um e ele for desmarcado, mostra todos
+
+                          if (checked && responsiblesFilter.length === 1) {
+                            setResponsiblesFilter(partner.users_ids);
+                          }
+                          // Se o shift estiver sendo pressionado, mostra apenas aquele usuário
+                          if (event.shiftKey) {
+                            setResponsiblesFilter([person.user_id]);
+                          } else {
+                            const tempResponsibles = checked
+                              ? responsiblesFilter.filter(
+                                  (id) => id !== person.user_id,
+                                )
+                              : [...responsiblesFilter, person.user_id];
+                            setResponsiblesFilter(tempResponsibles);
+                          }
+                        }}
+                      >
+                        <Avatar
+                          item={{
+                            image: person.image || undefined,
+                            short: person.initials!,
+                          }}
+                          size="sm"
+                        />
+                        {`${person.name} ${person.surname}`}
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size={"sm"}
+                  variant={"ghost"}
+                  className={`border-2 text-xs font-bold`}
+                  style={{
+                    borderColor: stateFilter
+                      ? stateFilter.color
+                      : "transparent",
+                  }}
+                >
+                  {stateFilter ? (
+                    stateFilter.title
+                  ) : (
+                    <>
+                      <span className="-mr-1 hidden font-normal md:inline">
+                        Filtrar pelo
+                      </span>
+                      Status
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-content">
+                <DropdownMenuItem
+                  className="bg-item"
+                  onSelect={() => {
+                    setStateFilter(undefined);
+                  }}
+                >
+                  <div className={`size-2 rounded-full bg-gray-500`}></div>
+                  <div>Todos os Status</div>
+                </DropdownMenuItem>
+                {states.map((state) => (
+                  <DropdownMenuItem
+                    className="bg-item"
+                    key={state.slug}
+                    onSelect={() => setStateFilter(state)}
+                  >
+                    <div
+                      className={`h-2 w-2 rounded-full`}
+                      style={{
+                        backgroundColor: state.color,
+                      }}
+                    ></div>
+                    <div>{state.title}</div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size={"sm"}
+                  variant={categoryFilter.length > 0 ? "secondary" : "ghost"}
+                  className={`text-xs font-bold`}
+                >
+                  {categoryFilter.length > 0 ? (
+                    <>
+                      <div>
+                        {categoryFilter
+                          .map((category) => category.title)
+                          .join(", ")}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="-mr-1 hidden font-normal md:inline">
+                        Filtrar pela
+                      </span>
+                      Categoria
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-content">
+                <DropdownMenuCheckboxItem
+                  className="bg-select-item flex gap-2"
+                  checked={categoryFilter?.length == 0}
+                  onCheckedChange={() => {
+                    params.delete("categories");
+                    setSearchParams(params);
+                    setCategoryFilter([]);
+                  }}
+                >
+                  <Icons className="h-3 w-3" id="all" />
+                  <div>Todas as Categorias</div>
+                </DropdownMenuCheckboxItem>
+                {/* Mostra apenas as categorias de feed */}
+                <DropdownMenuCheckboxItem
+                  className="bg-select-item flex gap-2"
+                  checked={
+                    categoryFilter
+                      ? categoryFilter.filter((cf) => isInstagramFeed(cf.id))
+                          .length === 3
+                      : false
+                  }
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      let _categories = categories.filter((category) =>
+                        isInstagramFeed(category.slug),
+                      );
+                      params.set(
+                        "categories",
+                        _categories.map((_c) => _c.slug).join("-"),
+                      );
+                      setSearchParams(params);
+                      setCategoryFilter(_categories);
+                    } else {
+                      params.delete("categories");
+                      setSearchParams(params);
+                    }
+                  }}
+                >
+                  <Grid3x3Icon className="h-3 w-3" />
+                  <div>Feed do Instagram</div>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator className="border-t" />
+                {categories.map((category) => (
+                  <DropdownMenuCheckboxItem
+                    className="bg-select-item flex gap-2"
+                    key={category.slug}
+                    checked={
+                      categoryFilter
+                        ? categoryFilter?.findIndex(
+                            (c) => category.slug === c.slug,
+                          ) >= 0
+                        : false
+                    }
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        params.set(
+                          "categories",
+                          getCategoriesQueryString(category.slug),
+                        );
+                      } else {
+                        let _categories_slugs = getCategoriesQueryString();
+                        _categories_slugs = _categories_slugs
+                          .split("-")
+                          .filter((c) => c !== category.slug && c !== "")
+                          .join("-");
+                        params.set("categories", _categories_slugs);
+
+                        setCategoryFilter(
+                          categories.filter((c) =>
+                            _categories_slugs
+                              .split("-")
+                              .find((_c) => _c === c.slug),
+                          ),
+                        );
+                      }
+                      setSearchParams(params);
+                    }}
+                  >
+                    <Icons id={category.slug} className="h-3 w-3" />
+                    <div>{category.title}</div>
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Calendário */}
+        <DndContext onDragEnd={handleDragEnd} sensors={sensors} id={id}>
+          <div className="overflow-x-auto overflow-y-hidden">
+            <div
+              className="main-container flex h-full w-full min-w-[1200px] flex-col"
+              id="calendar-full"
+            >
+              {/* Dias do Calendário */}
+              <div
+                className={`grid grid-cols-7 border-b px-4 py-2 text-xs font-bold tracking-wider uppercase md:px-8`}
+              >
+                {eachDayOfInterval({
+                  start: startOfWeek(new Date()),
+                  end: endOfWeek(new Date()),
+                }).map((day, j) => {
+                  return (
+                    <div
+                      key={j}
+                      className={
+                        day.getDay() === new Date().getDay()
+                          ? ""
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {format(day, "EEE", {
+                        locale: ptBR,
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Calendário Content */}
+              <div
+                id="calendar"
+                className={`grid grid-cols-7 overflow-y-auto pb-32`}
+              >
+                {calendar.map((day, i) => (
+                  <CalendarDay
+                    currentDate={currentDate}
+                    day={day}
+                    person={person}
+                    short={short}
+                    showResponsibles={showResponsibles}
+                    showInstagramContent={showInstagramContent}
+                    key={i}
+                    index={i}
+                    selectMultiple={selectMultiple}
+                    selectedActions={selectedActions}
+                    setSelectedActions={setSelectedActions}
+                    editingAction={editingAction}
+                    setEditingAction={setEditingAction}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </DndContext>
+      </div>
+
+      {editingAction && !showFeed && (
+        <EditAction
+          partner={partner}
+          action={fullEditingAction!}
+          setClose={() => {
+            setEditingAction(null);
+            params.delete("editing_action");
+            setSearchParams(params);
+          }}
+        />
+      )}
+
+      {/* Instagram Grid */}
+      {showFeed && !editingAction && (
+        <div
+          className="relative flex w-full max-w-[480px] min-w-96 flex-col"
+          id="instagram-grid"
+        >
+          {/* Instagram Grid Header */}
+          <div className="flex items-center justify-between border-b px-4 py-2.5 leading-none">
+            <div className="flex items-center gap-2">
+              <div>
+                <Avatar
+                  item={{
+                    short: partner.short,
+                    bg: partner.colors[0],
+                    fg: partner.colors[1],
+                  }}
+                  size="md"
+                />
+              </div>
+              <div>
+                <div className="font-medium">{partner.title}</div>
+                <div className="text-xs">@{partner.slug}</div>
+              </div>
+            </div>
+            <div>
+              <Button
+                size={"sm"}
+                title={
+                  showAllActions
+                    ? "Mostrar apenas ações deste período"
+                    : "Mostrar todas as ações"
+                }
+                variant={showAllActions ? "default" : "ghost"}
+                onClick={() => {
+                  if (showAllActions) {
+                    params.delete("show_all_actions");
+                    set_showAllActions(false);
+                  } else {
+                    params.set("show_all_actions", "true");
+                    set_showAllActions(true);
+                  }
+
+                  setSearchParams(params);
+                }}
+              >
+                {showAllActions ? <CalendarDaysIcon /> : <CalendarIcon />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Instagram Grid Content */}
+          <div className="overflow-hidden border-l px-3 py-3">
+            <GridOfActions
+              partner={partner}
+              actions={
+                showAllActions
+                  ? (instagramActions as Action[])
+                  : (instagramActions as Action[]).filter(
+                      (action) =>
+                        isAfter(
+                          action.instagram_date,
+                          startOfWeek(startOfMonth(currentDate)),
+                        ) &&
+                        isBefore(
+                          action.instagram_date,
+                          endOfWeek(endOfMonth(currentDate)),
+                        ),
+                    )
+              }
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export const CalendarDay = ({
+  day,
+  currentDate,
+  short,
+  showResponsibles,
+  showInstagramContent,
+  index,
+  setSelectedActions,
+  selectMultiple,
+  editingAction,
+  setEditingAction,
+  selectedActions,
+}: {
+  day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
+  currentDate: Date | string;
+  person: Person;
+  short?: boolean;
+  showResponsibles?: boolean;
+  showInstagramContent?: boolean;
+  index?: string | number;
+  selectMultiple?: boolean;
+  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  editingAction?: string | null;
+  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedActions?: string[];
+}) => {
+  const matches = useMatches();
+  const { categories } = matches[1].data as DashboardRootType;
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${format(parseISO(day.date), "yyyy-MM-dd")}`,
+  });
+
+  const today = isToday(parseISO(day.date));
+
+  return (
+    <div
+      ref={setNodeRef}
+      id={`day_${format(parseISO(day.date), "yyyy-MM-dd")}`}
+      className={`group/day hover:bg-secondary/20 relative flex h-full flex-col border-b py-2 transition ${
+        Math.floor(Number(index) / 7) % 2 === 0 ? "item-even" : "item-odd"
+      } ${isOver ? "dragover" : ""} ${today && "bg-secondary/50 border-t-foreground border-t"}`}
+      data-date={format(parseISO(day.date), "yyyy-MM-dd")}
+    >
+      {/* Date */}
+      <div className="mb-4 flex items-center justify-between px-4">
+        <div
+          className={`grid place-content-center rounded-full text-xl ${
+            today
+              ? "text-primary font-medium"
+              : `font-light ${
+                  !isSameMonth(parseISO(day.date), currentDate)
+                    ? "text-muted"
+                    : ""
+                } `
+          }`}
+        >
+          {parseISO(day.date).getDate()}
+        </div>
+        <div className="scale-50 opacity-0 group-hover/day:scale-100 group-hover/day:opacity-100 focus-within:scale-100 focus-within:opacity-100">
+          <CreateAction mode="day" date={day.date} />
+        </div>
+      </div>
+      {/* Actions and Celebration */}
+      <div className="flex h-full flex-col justify-between px-2">
+        <div className="relative flex h-full grow flex-col gap-3">
+          {/* Se for par amostrar o conteúdo estilo Instagram */}
+          {showInstagramContent ? (
+            <div className="flex flex-col gap-3">
+              {day.actions?.filter((action) => isInstagramFeed(action.category))
+                .length !== 0 && (
+                <>
+                  <div className="mb-2 flex items-center gap-1 text-sm font-medium">
+                    <Grid3x3Icon className="size-3" />
+                    <div>Feed</div>
+                  </div>
+                  <div className="mb-4 flex flex-col gap-3">
+                    {day.actions
+                      ?.sort((a, b) =>
+                        isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
+                      )
+                      ?.filter((action) => isInstagramFeed(action.category))
+                      .map((action) => (
+                        <ActionItem
+                          variant={"content"}
+                          selectedActions={selectedActions}
+                          editingAction={editingAction}
+                          setEditingAction={setEditingAction}
+                          selectMultiple={selectMultiple}
+                          short={short}
+                          showResponsibles={showResponsibles}
+                          setSelectedActions={setSelectedActions}
+                          showDelay
+                          action={action}
+                          key={action.id}
+                          date={{
+                            timeFormat: 1,
+                          }}
+                        />
+                      ))}
+                  </div>
+                </>
+              )}
+              <div className="flex flex-col gap-3">
+                {categories
+                  .filter((category) => !isInstagramFeed(category.slug))
+                  .map((category) => ({
+                    category,
+                    actions: day.actions?.filter(
+                      (action) => category.slug === action.category,
+                    ),
+                  }))
+                  .map(({ category, actions }) => (
+                    <CategoryActions
+                      selectedActions={selectedActions}
+                      editingAction={editingAction}
+                      setEditingAction={setEditingAction}
+                      selectMultiple={selectMultiple}
+                      showResponsibles={showResponsibles}
+                      category={category}
+                      actions={actions}
+                      short={short}
+                      variant="line"
+                      key={category.id}
+                      setSelectedActions={setSelectedActions}
+                    />
+                  ))}
+              </div>
+            </div>
+          ) : (
+            categories
+              .map((category) => ({
+                category,
+                actions: day.actions?.filter(
+                  (action) => category.slug === action.category,
+                ),
+              }))
+              .map(
+                ({ category, actions }, i) =>
+                  actions &&
+                  actions.length > 0 && (
+                    <CategoryActions
+                      selectedActions={selectedActions}
+                      editingAction={editingAction}
+                      setEditingAction={setEditingAction}
+                      selectMultiple={selectMultiple}
+                      showResponsibles={showResponsibles}
+                      category={category}
+                      actions={actions}
+                      short={short}
+                      key={category.id}
+                      setSelectedActions={setSelectedActions}
+                    />
+                  ),
+              )
+          )}
+        </div>
+
+        {day.celebrations && day.celebrations.length > 0 && (
+          <div className="mt-4 space-y-2 text-[10px] opacity-50">
+            {day.celebrations?.map((celebration) => (
+              <div key={celebration.id} className="leading-none">
+                {celebration.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+function CategoryActions({
+  category,
+  actions,
+  variant,
+  short,
+  showResponsibles,
+  setSelectedActions,
+  selectMultiple = false,
+  editingAction,
+  setEditingAction,
+  selectedActions,
+}: {
+  category: Category;
+  actions?: Action[];
+  variant?: "line" | "content";
+  short?: boolean;
+  showResponsibles?: boolean;
+  selectMultiple?: boolean;
+  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  editingAction?: string | null;
+  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedActions?: string[];
+}) {
+  actions = actions?.sort((a, b) =>
+    isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
+  );
+
+  return actions && actions.length > 0 ? (
+    <div key={category.slug} className="flex flex-col gap-3">
+      {!(variant === "content" && isInstagramFeed(category.slug)) && (
+        <div className="mt-2 flex items-center gap-1 text-[8px] font-bold tracking-widest uppercase">
+          {/* <div
+            className={`size-1.5 rounded-full`}
+            style={{ backgroundColor: category.color }}
+          ></div> */}
+          <div>{category.title}</div>
+        </div>
+      )}
+
+      <div className={`flex flex-col gap-1`}>
+        {actions?.map((action) => (
+          <ActionItem
+            variant={variant}
+            selectedActions={selectedActions}
+            editingAction={editingAction}
+            setEditingAction={setEditingAction}
+            selectMultiple={selectMultiple}
+            short={short}
+            showResponsibles={showResponsibles}
+            showDelay
+            action={action}
+            key={action.id}
+            date={{
+              timeFormat: 1,
+            }}
+            setSelectedActions={setSelectedActions}
+          />
+        ))}
+      </div>
+    </div>
+  ) : null;
+}

@@ -1,0 +1,39 @@
+@font-face {
+    font-family: "PP Object Sans";
+    src:
+      url("./subset-PPObjectSans-Light.woff2") format("woff2"),
+      url("./subset-PPObjectSans-Light.woff") format("woff");
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "PP Object Sans";
+    src:
+      url("./subset-PPObjectSans-Regular.woff2") format("woff2"),
+      url("./subset-PPObjectSans-Regular.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "PP Object Sans";
+    src:
+      url("./subset-PPObjectSans-Medium.woff2") format("woff2"),
+      url("./subset-PPObjectSans-Medium.woff") format("woff");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: "PP Object Sans";
+    src:
+      url("./subset-PPObjectSans-Bold.woff2") format("woff2"),
+      url("./subset-PPObjectSans-Bold.woff") format("woff");
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+  }

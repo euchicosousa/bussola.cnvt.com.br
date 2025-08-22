@@ -1,0 +1,2 @@
+// Templates
+export * from './simple';

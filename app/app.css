@@ -1,0 +1,503 @@
+@import "tailwindcss";
+@import "./styles/_variables.scss";
+@import "./styles/_keyframe-animations.scss";
+
+@layer base {
+  :root {
+    --background: 200 5% 96%;
+    --foreground: 200 10% 10%;
+
+    --card: 220 20% 98%;
+    --card-foreground: 200 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 10% 10%;
+
+    --muted: 210 10% 75%;
+    --muted-foreground: 200 10% 50%;
+
+    --primary: 220 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 10% 85%;
+    --secondary-foreground: 200 10% 10%;
+
+    --accent: 220 10% 90%;
+    --accent-foreground: 200 10% 10%;
+
+    --destructive: 355 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --highlight: 0 0% 100%;
+    --border: 200 10% 40%;
+    --input: 200 10% 98%;
+    --ring: var(--primary);
+    --radius: 12px;
+
+    --success: theme(--color-lime-700);
+    --alert: theme(--color-yellow-800);
+    --error: theme(--color-rose-600);
+  }
+
+  .dark {
+    --background: 210 10% 2%;
+    --foreground: 210 10% 98%;
+
+    --card: 200 10% 8%;
+    --card-foreground: 210 10% 98%;
+
+    --popover: 200 10% 12%;
+    --popover-foreground: 210 10% 98%;
+
+    --muted: 200 10% 25%;
+    --muted-foreground: 200 12% 60%;
+
+    /* --primary: 220 90% 50%;
+    --primary-foreground: 0 0% 100%; */
+
+    --secondary: 200 10% 18%;
+    --secondary-foreground: 200 10% 98%;
+
+    --accent: 200 10% 20%;
+    --accent-foreground: 200 10% 98%;
+
+    --destructive: 350 85% 55%;
+    --destructive-foreground: 250 20% 98%;
+
+    --highlight: 200 10% 30%;
+    --border: 200 10% 100%;
+    --input: 200 10% 16%;
+    /* --ring: 200 10% 90%; */
+
+    --error: theme(--color-rose-400);
+  }
+
+  * {
+    @apply border-border;
+  }
+}
+
+@theme {
+  --color-border: hsl(var(--border) / 0.2);
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-success: var(--success);
+  --color-alert: var(--alert);
+  --color-error: var(--error);
+
+  --color-highlight: hsl(var(--highlight));
+
+  --radius-xs: calc(var(--radius) - 8px);
+  /*  4 */
+  --radius-sm: calc(var(--radius) - 4px);
+  /*  8 */
+  --radius-md: calc(var(--radius) + 2px);
+  /* 14 */
+  --radius: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  /* 16  */
+  --radius-xl: calc(var(--radius) + 8px);
+  /* 20 */
+
+  --breakpoint-3xl: 120rem;
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  --font-sans:
+    "PP Object Sans", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: "0";
+    }
+  }
+}
+
+body {
+  @apply bg-background text-foreground antialiased;
+}
+
+.bg-content {
+  @apply bg-popover rounded-xl border-0 shadow-2xl ring ring-black/10;
+}
+
+.dark .bg-content {
+  @apply ring-border shadow-black;
+}
+
+.bg-label {
+  @apply text-foreground flex gap-2 px-4 text-xl font-medium tracking-tighter;
+}
+
+.bg-label-small {
+  @apply flex gap-2 px-4 text-xs font-medium tracking-wider uppercase opacity-50;
+}
+
+.bg-item {
+  @apply flex gap-2 rounded-md px-4;
+}
+
+.bg-select-item {
+  @apply rounded-md pr-4 pl-8;
+}
+
+.debug-1 {
+  @apply border-2 border-[#f00];
+}
+
+.debug-2 {
+  @apply border-2 border-[#ff0];
+}
+
+.debug-3 {
+  @apply border-2 border-[#0f0];
+}
+
+.debug-4 {
+  @apply border-2 border-[#0ff];
+}
+
+.debug-5 {
+  @apply border-2 border-[#00f];
+}
+
+.debug-6 {
+  @apply border-2 border-[#f0f];
+}
+
+.action-item {
+  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full cursor-pointer rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
+}
+
+.action-item-short {
+  @apply text-xs;
+}
+
+.action-item-block {
+  @apply isolate rounded-lg px-6 py-4;
+}
+
+.dark .action-item {
+  @apply shadow-black;
+}
+
+.action-sprint {
+  @apply bg-foreground text-background hover:bg-foreground/80;
+}
+
+.action-item.action-delayed {
+  @apply border-rose-300 bg-rose-50 text-rose-700 shadow-rose-700/20;
+}
+
+.dark .action-item.action-delayed {
+  @apply border-rose-900 bg-rose-950 text-rose-100;
+}
+
+.action-content-delayed > .late-border {
+  @apply block;
+}
+
+.editor-tiptap {
+  @apply flex h-full min-h-[30vh] flex-col overflow-y-auto;
+}
+
+.editor-tiptap > div:nth-child(2) {
+  @apply flex flex-1 shrink-0 flex-col;
+}
+
+.tiptap {
+  @apply flex-1 shrink-0 text-xl outline-hidden;
+}
+
+.tiptap > * {
+  @apply mb-2;
+}
+
+.tiptap h1 {
+  @apply text-5xl font-bold tracking-tight;
+}
+
+.tiptap h2 {
+  @apply text-3xl font-bold tracking-tight;
+}
+
+.tiptap h3 {
+  @apply text-2xl font-bold tracking-wide uppercase;
+}
+
+.tiptap h4 {
+  @apply text-2xl font-bold tracking-tight;
+}
+
+.tiptap h5 {
+  @apply text-xl font-bold tracking-wider uppercase;
+}
+
+.tiptap ul,
+ol {
+  padding: 0 2rem;
+}
+
+.tiptap ul {
+  list-style: disc;
+}
+
+.tiptap ol {
+  list-style: decimal;
+}
+
+.tiptap hr {
+  @apply my-4 border-t;
+}
+
+/* 
+.tiptap blockquote {
+  @apply bg-accent rounded-md px-6 py-4;
+}
+
+.tiptap blockquote h5 {
+  @apply mt-2 text-right text-xs font-medium tracking-widest opacity-50;
+} */
+
+.tiptap table {
+  @apply text-base;
+}
+
+.tiptap table tr {
+  @apply divide-x;
+}
+
+.tiptap table tbody {
+  @apply divide-y;
+}
+
+.tiptap table td,
+th {
+  @apply p-2;
+}
+
+/* 
+.tiptap table td,
+th {
+  border: 1px solid var(--gray-3);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 6px 8px;
+  position: relative;
+  vertical-align: top;
+}
+
+.tiptap table > * {
+  margin-bottom: 0;
+}
+.tiptap table th {
+  background-color: var(--gray-1);
+  font-weight: bold;
+  text-align: left;
+}
+
+.tiptap table .selectedCell:after {
+  background: var(--gray-2);
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.tiptap table .column-resize-handle {
+  background-color: var(--purple);
+  bottom: -2px;
+  pointer-events: none;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+}
+
+.tiptap table .tableWrapper {
+  margin: 1.5rem 0;
+  overflow-x: auto;
+}
+
+.tiptap table.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+} */
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.animate-colors {
+  animation: AnimateColors 1s linear infinite;
+}
+
+@keyframes AnimateColors {
+  0% {
+    color: #fc0;
+  }
+
+  10% {
+    color: #f64;
+  }
+
+  30% {
+    color: #e6a;
+  }
+
+  50% {
+    color: #90f;
+  }
+
+  60% {
+    color: #06f;
+  }
+
+  90% {
+    color: #0e9;
+  }
+
+  100% {
+    color: #fc0;
+  }
+}
+
+.button-trigger {
+  @apply ring-ring ring-offset-background hover:bg-accent cursor-pointer rounded-md border-none bg-transparent px-3 py-2 text-sm font-medium ring-offset-2 outline-hidden focus:ring-2;
+}
+
+.button-trigger__squared {
+  @apply px-2;
+}
+
+.timer-circle {
+  stroke-dasharray: 44;
+  /* Aproximadamente 2 * PI * raio */
+  stroke-dashoffset: 44;
+  animation: timer 15s linear forwards;
+}
+
+@keyframes timer {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.no-scrollbars::-webkit-scrollbar {
+  @apply w-0 appearance-none;
+}
+
+.dragover {
+  @apply bg-accent z-0;
+}
+
+.scrollbars-h {
+  @apply mb-1 h-full overflow-x-auto overflow-y-hidden py-1;
+}
+
+.scrollbars-v {
+  @apply h-full overflow-x-hidden overflow-y-auto;
+}
+
+.scrollbars-v::-webkit-scrollbar {
+  @apply block w-1;
+}
+
+.scrollbars-v::-webkit-scrollbar-button {
+  @apply hidden;
+}
+
+.scrollbars-v::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbars-v::-webkit-scrollbar-track-piece {
+  @apply bg-transparent;
+}
+
+.scrollbars-v::-webkit-scrollbar-thumb {
+  @apply rounded-full;
+}
+
+.scrollbars-h::-webkit-scrollbar {
+  @apply block h-2;
+}
+
+.scrollbars-h::-webkit-scrollbar-button {
+  @apply hidden;
+}
+
+.scrollbars-h::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.scrollbars-h::-webkit-scrollbar-track-piece {
+  @apply mx-1 bg-transparent;
+}
+
+.scrollbars-h::-webkit-scrollbar-thumb {
+  @apply h-2 rounded-full;
+}
+
+.scrollbars-h::-webkit-scrollbar-thumb,
+.scrollbars-v::-webkit-scrollbar-thumb {
+  @apply bg-foreground/15;
+}
+
+/*  ---break--- */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
