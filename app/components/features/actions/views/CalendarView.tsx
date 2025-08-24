@@ -12,12 +12,20 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, FilterIcon } from "lucide-react";
 import { useState } from "react";
+import { useMatches } from "react-router";
 
 import { ListOfActions } from "~/components/features/actions";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +33,8 @@ import {
 } from "~/components/ui/popover";
 
 export function CalendarView({ actions }: { actions: Action[] | null }) {
+  const { categories } = useMatches()[1].data as DashboardRootType;
+
   if (!actions) return null;
 
   const [currentDate, setCurrentDate] = useState(
@@ -47,11 +57,18 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
           end: endOfWeek(currentDate),
         });
 
+  const [categoryFilter, setCategoryFilter] = useState<Category[]>([]);
+
   const calendar = days.map((day) => {
     return {
       date: format(day, "yyyy-MM-dd", { locale: ptBR }),
-      actions: actions?.filter((action) =>
-        isSameDay(parseISO(action.date), day),
+      actions: actions?.filter(
+        (action) =>
+          isSameDay(parseISO(action.date), day) &&
+          (categoryFilter.length === 0 ||
+            categoryFilter.some((category) =>
+              action.category.includes(category.slug),
+            )),
       ),
     };
   });
@@ -111,6 +128,39 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
             >
               Semana
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant={"ghost"}>
+                  <FilterIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-content">
+                <DropdownMenuCheckboxItem
+                  className="bg-select-item"
+                  checked={categoryFilter.length === 0}
+                >
+                  Todos os itens
+                </DropdownMenuCheckboxItem>
+                {categories.map((category) => (
+                  <DropdownMenuCheckboxItem
+                    key={category.id}
+                    className="bg-select-item"
+                    checked={categoryFilter.includes(category)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setCategoryFilter((prev) => [...prev, category]);
+                      } else {
+                        setCategoryFilter((prev) =>
+                          prev.filter((c) => c.id !== category.id),
+                        );
+                      }
+                    }}
+                  >
+                    {category.title}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         {/* Calendar Header */}
