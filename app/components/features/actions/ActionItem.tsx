@@ -327,7 +327,7 @@ export const ActionItem = React.memo(function ActionItem({
       case "grid":
         return (
           <div
-            className="group/action @container cursor-pointer overflow-hidden rounded-lg"
+            className="group/action @container cursor-pointer overflow-hidden"
             onClick={() => {
               navigate(
                 `/dashboard/action/${action.id}/${(partner || actionPartner).slug}${getQueryString()}`,
@@ -339,7 +339,7 @@ export const ActionItem = React.memo(function ActionItem({
               action={action}
               partner={partner || actionPartner!}
               showInfo
-              className="action-grid aspect-square overflow-hidden rounded-lg"
+              className="action-grid aspect-[3/4] overflow-hidden"
             />
           </div>
         );
