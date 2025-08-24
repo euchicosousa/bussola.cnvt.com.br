@@ -59,32 +59,6 @@ export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: font },
 ];
 
-export function App({ children }: { children: React.ReactNode }) {
-  const data = useLoaderData<typeof loader>();
-
-  return (
-    <html lang="pt-br">
-      <head>
-        <meta charSet="utf-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1"
-        ></meta>
-        <PreventFlashOnWrongTheme ssrTheme={Boolean(data.theme)} />
-        <link rel="icon" href="/favicon.ico" />
-
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        {children}
-
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function AppWithTheme({ children }: { children: React.ReactNode }) {
   const [theme] = useTheme();
@@ -113,33 +87,39 @@ function AppWithTheme({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AppWithProviders() {
-  const [searchParams] = useSearchParams();
-
-  const [showFeed, setShowFeed] = useState(!!searchParams.get("show_feed"));
-  const [isTransitioning, setTransitioning] = useState(false);
-  const [stateFilter, setStateFilter] = useState<State>();
-  const [categoryFilter, setCategoryFilter] = useState<Category[]>([]);
-
+export default function App() {
   const data = useLoaderData<typeof loader>();
 
   return (
     <ThemeProvider specifiedTheme={data.theme} themeAction="/set-theme">
       <AppWithTheme>
-        <Outlet
-          context={{
-            showFeed,
-            isTransitioning,
-            stateFilter,
-            categoryFilter,
-            setShowFeed,
-            setTransitioning,
-            setStateFilter,
-            setCategoryFilter,
-          }}
-        />
+        <AppWithProviders />
       </AppWithTheme>
     </ThemeProvider>
+  );
+}
+
+function AppWithProviders() {
+  const [searchParams] = useSearchParams();
+
+  const [showFeed, setShowFeed] = useState(!!searchParams.get("show_feed"));
+  const [isTransitioning, setTransitioning] = useState(false);
+  const [stateFilter, setStateFilter] = useState<State | undefined>();
+  const [categoryFilter, setCategoryFilter] = useState<Category[]>([]);
+
+  return (
+    <Outlet
+      context={{
+        showFeed,
+        isTransitioning,
+        stateFilter,
+        categoryFilter,
+        setShowFeed,
+        setTransitioning,
+        setStateFilter,
+        setCategoryFilter,
+      }}
+    />
   );
 }
 

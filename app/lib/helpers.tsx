@@ -180,6 +180,10 @@ export function ShortText({
   );
 }
 
+{
+  /* <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale"></div>; */
+}
+
 export function AvatarGroup({
   avatars,
   people,
@@ -308,9 +312,9 @@ export function Avatar({
               : size === "lg"
                 ? "size-12"
                 : "size-16",
-        ring ? "ring-2 ring-white" : "",
+        ring ? "ring-2" : "",
 
-        "block border",
+        "ring-background block",
 
         className,
       ])}

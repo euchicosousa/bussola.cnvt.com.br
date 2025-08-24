@@ -166,7 +166,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
           <ContextMenuShortcut className="pl-2">⇧+E</ContextMenuShortcut>
         </Link>
       </ContextMenuItem>
-      
+
       {/* Sprint */}
       <ContextMenuItem
         className="bg-item flex items-center gap-2"
@@ -190,7 +190,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         )}
         <ContextMenuShortcut className="pl-2">⇧+U</ContextMenuShortcut>
       </ContextMenuItem>
-      
+
       {/* Duplicar */}
       <ContextMenuItem className="bg-item flex items-center gap-2">
         <CopyIcon className="size-3" />
@@ -212,53 +212,21 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         <span>Mudar Data</span>
       </ChangeDatePopover>
 
-      <ChangeDatePopover
-        date={action.instagram_date}
-        onChangeDate={(date) => {
-          handleActions({
-            ...action,
-            instagram_date: format(date, "yyyy-MM-dd HH:mm:ss"),
-            intent: INTENTS.updateAction,
-          });
-        }}
-      >
-        <CalendarClock className="size-3" />
-        <span>Mudar Data do Instagram</span>
-      </ChangeDatePopover>
-
-      {/* Hora */}
-      <ContextMenuSub>
-        <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
-          <TimerIcon className="size-3" />
-          <span>Mudar horário</span>
-        </ContextMenuSubTrigger>
-        <ContextMenuPortal>
-          <ContextMenuSubContent className="bg-content font-medium">
-            {Array(12)
-              .fill(1)
-              .map((_, i) => (
-                <ContextMenuItem
-                  className="bg-item"
-                  key={i}
-                  onSelect={() => {
-                    handleActions({
-                      intent: INTENTS.updateAction,
-                      ...action,
-                      [isInstagramDate ? "instagram_date" : "date"]: format(
-                        new Date(
-                          isInstagramDate ? action.instagram_date : action.date,
-                        ).setHours(i + 6, 0),
-                        "yyyy-MM-dd HH:mm:ss",
-                      ),
-                    });
-                  }}
-                >
-                  {`${i + 6}h`}
-                </ContextMenuItem>
-              ))}
-          </ContextMenuSubContent>
-        </ContextMenuPortal>
-      </ContextMenuSub>
+      {isInstagramFeed(action.partners[0]) && (
+        <ChangeDatePopover
+          date={action.instagram_date}
+          onChangeDate={(date) => {
+            handleActions({
+              ...action,
+              instagram_date: format(date, "yyyy-MM-dd HH:mm:ss"),
+              intent: INTENTS.updateAction,
+            });
+          }}
+        >
+          <CalendarClock className="size-3" />
+          <span>Mudar Data do Instagram</span>
+        </ChangeDatePopover>
+      )}
 
       {/* Deletar */}
       <ContextMenuItem
@@ -285,9 +253,9 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         )}
         <ContextMenuShortcut className="pl-2">⇧+X</ContextMenuShortcut>
       </ContextMenuItem>
-      
+
       <ContextMenuSeparator className="bg-border" />
-      
+
       {/* Parceiros */}
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item">
@@ -372,7 +340,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
           </ContextMenuSubContent>
         </ContextMenuPortal>
       </ContextMenuSub>
-      
+
       {/* States */}
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
@@ -464,7 +432,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
           </ContextMenuSubContent>
         </ContextMenuPortal>
       </ContextMenuSub>
-      
+
       {/* Responsibles - Responsáveis  */}
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item">
@@ -551,7 +519,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
           </ContextMenuSubContent>
         </ContextMenuPortal>
       </ContextMenuSub>
-      
+
       {/* Color */}
       {isInstagramFeed(action.category) && (
         <ContextMenuSub>
