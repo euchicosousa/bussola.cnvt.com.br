@@ -131,6 +131,11 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant={"ghost"}>
+                  {categoryFilter.length > 0
+                    ? categoryFilter
+                        .map((category) => category.title)
+                        .join(", ")
+                    : "Filtros"}
                   <FilterIcon />
                 </Button>
               </DropdownMenuTrigger>
@@ -138,6 +143,9 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
                 <DropdownMenuCheckboxItem
                   className="bg-select-item"
                   checked={categoryFilter.length === 0}
+                  onCheckedChange={() => {
+                    setCategoryFilter([]);
+                  }}
                 >
                   Todos os itens
                 </DropdownMenuCheckboxItem>

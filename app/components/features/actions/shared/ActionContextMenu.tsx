@@ -212,7 +212,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         <span>Mudar Data</span>
       </ChangeDatePopover>
 
-      {isInstagramFeed(action.partners[0]) && (
+      {isInstagramFeed(action.category) && (
         <ChangeDatePopover
           date={action.instagram_date}
           onChangeDate={(date) => {
