@@ -90,7 +90,6 @@ const ChangeDatePopover = ({
                 <Input
                   type="time"
                   step="1"
-                  defaultValue={time}
                   value={time}
                   onChange={(e) => {
                     setTime(e.target.value);

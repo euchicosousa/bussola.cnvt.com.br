@@ -2,10 +2,8 @@ import React, { useState } from "react";
 import { useMatches } from "react-router";
 import { ExpandIcon, ShrinkIcon } from "lucide-react";
 import { Toggle } from "~/components/ui/toggle";
-import { 
-  getActionsByState, 
-  getActionsByPriority, 
-  getActionsByTime 
+import {
+  sortActions,
 } from "~/lib/helpers";
 import { ActionItem } from "../ActionItem";
 
@@ -13,30 +11,29 @@ const FOLD_MULTIPLIER = 4;
 
 interface ActionsContainerProps {
   actions?: Action[] | null;
-  
+
   // Layout options
   variant?: "line" | "block" | "hair";
   columns?: 1 | 2 | 3 | 6;
   max?: number; // Substitui o max={1|2} do BlockOfActions
-  
+
   // Ordering options
   orderBy?: "state" | "priority" | "time";
   descending?: boolean;
-  
+
   // Display options
   showCategory?: boolean;
   showPartner?: boolean;
   showResponsibles?: boolean;
   showDelay?: boolean;
   date?: { dateFormat?: 0 | 1 | 2 | 3 | 4; timeFormat?: 0 | 1 };
-  short?: boolean;
   long?: boolean;
-  
+
   // Interaction options
   scroll?: boolean;
   isFoldable?: boolean;
   sprint?: boolean;
-  
+
   // Selection (para dashboard.partner.tsx)
   selectMultiple?: boolean;
   selectedActions?: string[];
@@ -57,7 +54,6 @@ export function ActionsContainer({
   showResponsibles,
   showDelay,
   date,
-  short,
   long,
   scroll,
   isFoldable,
@@ -73,13 +69,7 @@ export function ActionsContainer({
 
   // Ordenação unificada
   actions = actions
-    ? orderBy === "state"
-      ? getActionsByState(actions, states, descending)
-      : orderBy === "priority"
-        ? getActionsByPriority(actions, descending)
-        : orderBy === "time"
-          ? getActionsByTime(actions, descending)
-          : actions
+    ? sortActions(actions, orderBy as any, descending ? "desc" : "asc", states) || []
     : [];
 
   // Limitação por max (funcionalidade do BlockOfActions)
@@ -99,7 +89,7 @@ export function ActionsContainer({
       }
       return max === 2 ? "grid grid-cols-2" : "flex flex-col";
     }
-    
+
     // Layout do antigo ListOfActions
     if (columns === 1) {
       return "flex flex-col";
@@ -111,31 +101,39 @@ export function ActionsContainer({
         : "grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6";
   };
 
-  const gapClass = variant === "hair" ? "gap-y-[1px]" : variant === "block" ? "gap-2" : "gap-y-1";
+  const gapClass =
+    variant === "hair"
+      ? "gap-y-[1px]"
+      : variant === "block"
+        ? "gap-2"
+        : "gap-y-1";
   const paddingClass = variant === "block" ? "p-1 pb-8" : "";
-  const scrollClass = scroll ? "scrollbars-v pt-1 pb-8" : variant === "block" ? "scrollbars-v" : "";
+  const scrollClass = scroll
+    ? "scrollbars-v pt-1 pb-8"
+    : variant === "block"
+      ? "scrollbars-v"
+      : "";
 
   if (!finalActions || finalActions.length === 0) {
     return null;
   }
 
   return (
-    <div className={variant === "block" ? "@container -mx-1 h-full overflow-hidden" : "group"}>
+    <div
+      className={
+        variant === "block"
+          ? "@container -mx-1 h-full overflow-hidden"
+          : "group"
+      }
+    >
       <div
-        className={`
-          ${getContainerClasses()} 
-          ${scrollClass} 
-          ${gapClass} 
-          ${paddingClass}
-          @container h-full gap-x-4
-        `}
+        className={` ${getContainerClasses()} ${scrollClass} ${gapClass} ${paddingClass} @container h-full gap-x-4`}
       >
         {finalActions.map((action) => (
           <ActionItem
             key={action.id}
             action={action}
             variant={variant}
-            short={short}
             long={long}
             showCategory={showCategory}
             showPartner={showPartner}
@@ -151,9 +149,12 @@ export function ActionsContainer({
           />
         ))}
       </div>
-      
+
       {/* Fold toggle (apenas para ListOfActions behavior) */}
-      {actions && isFoldable && actions.length > foldCount && variant !== "block" ? (
+      {actions &&
+      isFoldable &&
+      actions.length > foldCount &&
+      variant !== "block" ? (
         <div className="p-4 text-center opacity-0 group-hover:opacity-100">
           <Toggle
             size="sm"
@@ -180,4 +181,6 @@ export function ActionsContainer({
 
 // Aliases para backward compatibility
 export const ListOfActions = (props: any) => <ActionsContainer {...props} />;
-export const BlockOfActions = (props: any) => <ActionsContainer {...props} variant="block" />;
+export const BlockOfActions = (props: any) => (
+  <ActionsContainer {...props} variant="block" />
+);

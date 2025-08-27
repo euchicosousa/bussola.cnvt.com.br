@@ -12,17 +12,61 @@ import {
 
 export function sortActions(
   actions?: Action[] | null,
+  orderActionsBy: ORDER_ACTIONS_BY = "date",
   order: "asc" | "desc" = "asc",
+  states?: State[],
 ) {
-  return actions
-    ? actions
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-        .sort((a, b) =>
-          order === "desc"
-            ? Number(b.state) - Number(a.state)
-            : Number(a.state) - Number(b.state),
-        )
-    : null;
+  if (!actions) return null;
+
+  // console.log("orderActionsBy", orderActionsBy);
+  // console.log("order", order);
+
+  switch (orderActionsBy) {
+    case "state":
+      if (!states) {
+        console.log("Você não mandou states");
+        return actions;
+      }
+      let sortedStates = order === "desc" ? [...states].reverse() : states;
+      let _sorted: Action[][] = [];
+      sortedStates.forEach((state) => {
+        _sorted.push(actions.filter((action) => action.state === state.slug));
+      });
+
+      return _sorted.flat();
+
+    case "priority":
+      const PRIORITIES = { low: "low", mid: "mid", high: "high" };
+      let sortedPriorities =
+        order === "desc"
+          ? Object.values(PRIORITIES).reverse()
+          : Object.values(PRIORITIES);
+      let _sortedByPriority: Action[][] = [];
+      sortedPriorities.forEach((priority) => {
+        _sortedByPriority.push(
+          actions.filter((action) => action.priority === priority),
+        );
+      });
+
+      return _sortedByPriority.flat();
+
+    case "date":
+      return actions.sort((a, b) => {
+        const comparison = isBefore(parseISO(a.date), parseISO(b.date))
+          ? -1
+          : 1;
+        return order === "desc" ? -comparison : comparison;
+      });
+
+    case "title":
+      return actions.sort((a, b) => {
+        const comparison = a.title.localeCompare(b.title, "pt-BR");
+        return order === "desc" ? -comparison : comparison;
+      });
+
+    default:
+      return actions;
+  }
 }
 
 export function getDelayedActions({
@@ -65,17 +109,6 @@ export function getUrgentActions(actions: Action[] | null) {
     : [];
 }
 
-export function getActionsByPriority(actions: Action[], descending?: boolean) {
-  let _sorted: Action[][] = [];
-
-  const PRIORITIES = { low: "low", mid: "mid", high: "high" };
-  Object.entries(PRIORITIES).map(([, value]) => {
-    _sorted.push(actions.filter((action) => action.priority === value));
-  });
-
-  return descending ? _sorted.reverse().flat() : _sorted.flat();
-}
-
 export function getActionsByState(
   actions: Action[],
   states: State[],
@@ -87,12 +120,6 @@ export function getActionsByState(
   });
 
   return descending ? _sorted.reverse().flat() : _sorted.flat();
-}
-
-export function getActionsByTime(actions: Action[], descending?: boolean) {
-  let _sorted = actions.sort((a, b) => (isBefore(a.date, b.date) ? -1 : 1));
-
-  return descending ? _sorted.reverse() : _sorted;
 }
 
 export function getActionsForThisDay({

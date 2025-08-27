@@ -21,6 +21,7 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
+  ArrowDownAZIcon,
   CalendarDaysIcon,
   CalendarIcon,
   ChevronLeftIcon,
@@ -30,7 +31,12 @@ import {
   CopyCheckIcon,
   Grid3x3Icon,
   ImageIcon,
+  ListCheckIcon,
+  Rows2Icon,
+  Rows3Icon,
+  Rows4Icon,
   SearchIcon,
+  TimerIcon,
   UserIcon,
   UsersIcon,
 } from "lucide-react";
@@ -47,7 +53,7 @@ import {
   useSubmit,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { ActionItem } from "~/components/features/actions";
+import { ActionItem, type ActionVariant } from "~/components/features/actions";
 import { GridOfActions } from "~/components/features/actions/containers/GridOfActions";
 import CreateAction from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
@@ -210,7 +216,6 @@ export default function Partner() {
   const [showInstagramContent, set_showInstagramContent] = useState(
     !!searchParams.get("show_content"),
   );
-  const [short, set_short] = useState(!!searchParams.get("short"));
   const [showResponsibles, set_showResponsibles] = useState(
     !!searchParams.get("show_responsibles"),
   );
@@ -222,8 +227,11 @@ export default function Partner() {
   );
 
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
-
   const [currentDate, setCurrentDate] = useState(date);
+  const [orderActionsBy, setOrderActionsBy] =
+    useState<ORDER_ACTIONS_BY>("date");
+
+  const [actionVariant, setActionVariant] = useState<ActionVariant>("line");
 
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
@@ -334,16 +342,6 @@ export default function Partner() {
             params.set("show_responsibles", "true");
           }
           setSearchParams(params);
-        } else if (code === "KeyS") {
-          if (params.get("short")) {
-            set_short(false);
-            params.delete("short");
-          } else {
-            set_short(true);
-            params.set("short", "true");
-          }
-          setSearchParams(params);
-          // setShort((value) => !value);
         } else if (code === "KeyI") {
           if (params.get("show_feed")) {
             set_isInstagramDate(false);
@@ -510,6 +508,7 @@ export default function Partner() {
             </Button>
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
+            {/* Procurar ação */}
             <div className="relative">
               <Input
                 placeholder="Procurar ação"
@@ -519,272 +518,320 @@ export default function Partner() {
               />
               <SearchIcon className="absolute top-1/2 right-2 size-4 -translate-y-1/2" />
             </div>
-            {selectedActions.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant={"ghost"}>
-                    <span>
-                      {selectedActions.length}
-                      {selectedActions.length === 1 ? " ação" : " ações"}
-                      <span className="hidden md:inline">
-                        {selectedActions.length === 1
-                          ? " selecionada"
-                          : " selecionadas"}
+            <div className="flex gap-1 px-2">
+              {/* Selecione ações */}
+              {selectedActions.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant={"ghost"}>
+                      <span>
+                        {selectedActions.length}
+                        {selectedActions.length === 1 ? " ação" : " ações"}
+                        <span className="hidden md:inline">
+                          {selectedActions.length === 1
+                            ? " selecionada"
+                            : " selecionadas"}
+                        </span>
                       </span>
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-content">
-                  {/* Mudar State */}
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="bg-item">
-                      Mudar Status
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent className="bg-content">
-                        {states.map((state) => (
-                          <DropdownMenuItem
-                            key={state.slug}
-                            className="bg-item"
-                            onSelect={() => {
-                              submit(
-                                {
-                                  intent: INTENTS.updateActions,
-                                  state: state.slug,
-                                  ids: selectedActions.join(","),
-                                },
-                                {
-                                  action: "/handle-actions",
-                                  method: "POST",
-                                  navigate: false,
-                                  fetcherKey: `action:update:state`,
-                                },
-                              );
-                            }}
-                          >
-                            <div
-                              className={`h-2 w-2 rounded-full`}
-                              style={{ backgroundColor: state.color }}
-                            ></div>
-                            <div>{state.title}</div>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                  {/* Mudar Categoria */}
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="bg-item">
-                      Mudar Categoria
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent className="bg-content">
-                        {categories.map((category) => (
-                          <DropdownMenuItem
-                            key={category.slug}
-                            className="bg-item"
-                            onSelect={() => {
-                              submit(
-                                {
-                                  intent: INTENTS.updateActions,
-                                  category: category.slug,
-                                  ids: selectedActions.join(","),
-                                },
-                                {
-                                  action: "/handle-actions",
-                                  method: "POST",
-                                  navigate: false,
-                                  fetcherKey: `action:update:category`,
-                                },
-                              );
-                            }}
-                          >
-                            <Icons className="size-3" id={category.slug} />
-                            <div>{category.title}</div>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger className="bg-item">
-                      Mudar Responsável
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent className="bg-content">
-                        {partnerResponsibles.map((person) => (
-                          <DropdownMenuItem
-                            key={person.id}
-                            className="bg-item"
-                            onSelect={() => {
-                              submit(
-                                {
-                                  intent: INTENTS.updateActions,
-                                  responsibles: person.user_id,
-                                  ids: selectedActions.join(","),
-                                },
-                                {
-                                  action: "/handle-actions",
-                                  method: "POST",
-                                  navigate: false,
-                                  fetcherKey: `action:update:responsible`,
-                                },
-                              );
-                            }}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Avatar
-                                item={{
-                                  image: person.image || undefined,
-                                  short: person.initials!,
-                                }}
-                              />
-                              <div>
-                                {person.name} {person.surname}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-content">
+                    {/* Mudar State */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="bg-item">
+                        Mudar Status
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="bg-content">
+                          {states.map((state) => (
+                            <DropdownMenuItem
+                              key={state.slug}
+                              className="bg-item"
+                              onSelect={() => {
+                                submit(
+                                  {
+                                    intent: INTENTS.updateActions,
+                                    state: state.slug,
+                                    ids: selectedActions.join(","),
+                                  },
+                                  {
+                                    action: "/handle-actions",
+                                    method: "POST",
+                                    navigate: false,
+                                    fetcherKey: `action:update:state`,
+                                  },
+                                );
+                              }}
+                            >
+                              <div
+                                className={`h-2 w-2 rounded-full`}
+                                style={{ backgroundColor: state.color }}
+                              ></div>
+                              <div>{state.title}</div>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    {/* Mudar Categoria */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="bg-item">
+                        Mudar Categoria
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="bg-content">
+                          {categories.map((category) => (
+                            <DropdownMenuItem
+                              key={category.slug}
+                              className="bg-item"
+                              onSelect={() => {
+                                submit(
+                                  {
+                                    intent: INTENTS.updateActions,
+                                    category: category.slug,
+                                    ids: selectedActions.join(","),
+                                  },
+                                  {
+                                    action: "/handle-actions",
+                                    method: "POST",
+                                    navigate: false,
+                                    fetcherKey: `action:update:category`,
+                                  },
+                                );
+                              }}
+                            >
+                              <Icons className="size-3" id={category.slug} />
+                              <div>{category.title}</div>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="bg-item">
+                        Mudar Responsável
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent className="bg-content">
+                          {partnerResponsibles.map((person) => (
+                            <DropdownMenuItem
+                              key={person.id}
+                              className="bg-item"
+                              onSelect={() => {
+                                submit(
+                                  {
+                                    intent: INTENTS.updateActions,
+                                    responsibles: person.user_id,
+                                    ids: selectedActions.join(","),
+                                  },
+                                  {
+                                    action: "/handle-actions",
+                                    method: "POST",
+                                    navigate: false,
+                                    fetcherKey: `action:update:responsible`,
+                                  },
+                                );
+                              }}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar
+                                  item={{
+                                    image: person.image || undefined,
+                                    short: person.initials!,
+                                  }}
+                                />
+                                <div>
+                                  {person.name} {person.surname}
+                                </div>
                               </div>
-                            </div>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="bg-item"
-                    onSelect={() => {
-                      setSelectedActions([]);
-                    }}
-                  >
-                    Limpar Seleção
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-            <Button
-              size={"sm"}
-              variant={selectMultiple ? "secondary" : "ghost"}
-              onClick={() => {
-                document.addEventListener("keydown", (event) => {
-                  if (event.metaKey && event.code === "KeyA") {
-                    let actionsToBeSelected: string[] = [];
-                    event.preventDefault();
-                    calendar.map((day) => {
-                      day.actions?.map((action) => {
-                        actionsToBeSelected.push(action.id);
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="bg-item"
+                      onSelect={() => {
+                        setSelectedActions([]);
+                      }}
+                    >
+                      Limpar Seleção
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {/* Botão de seleção de ações */}
+              <Button
+                size={"sm"}
+                variant={selectMultiple ? "secondary" : "ghost"}
+                onClick={() => {
+                  document.addEventListener("keydown", (event) => {
+                    if (event.metaKey && event.code === "KeyA") {
+                      let actionsToBeSelected: string[] = [];
+                      event.preventDefault();
+                      calendar.map((day) => {
+                        day.actions?.map((action) => {
+                          actionsToBeSelected.push(action.id);
+                        });
                       });
-                    });
-                    setSelectedActions(actionsToBeSelected);
+                      setSelectedActions(actionsToBeSelected);
+                    }
+                  });
+                  if (selectMultiple) {
+                    setSelectedActions([]);
+                    set_selectMultiple(false);
+                    params.delete("select_multiple");
+                  } else {
+                    set_selectMultiple(true);
+                    params.set("select_multiple", "true");
                   }
-                });
-                if (selectMultiple) {
-                  setSelectedActions([]);
-                  set_selectMultiple(false);
-                  params.delete("select_multiple");
-                } else {
-                  set_selectMultiple(true);
-                  params.set("select_multiple", "true");
-                }
-                setSearchParams(params);
-              }}
-              title={"Selecionar múltiplas ações"}
-            >
-              <CopyCheckIcon className="size-4" />{" "}
-            </Button>
-            <Button
-              size={"sm"}
-              variant={isInstagramDate ? "secondary" : "ghost"}
-              onClick={() => {
-                if (isInstagramDate) {
-                  set_isInstagramDate(false);
-                  set_showInstagramContent(false);
+                  setSearchParams(params);
+                }}
+                title={"Selecionar múltiplas ações"}
+              >
+                <CopyCheckIcon className="size-4" />{" "}
+              </Button>
+            </div>
 
-                  params.delete("instagram_date");
-                  params.delete("show_content");
-                } else {
-                  set_isInstagramDate(true);
-                  set_showInstagramContent(true);
+            <div className="flex gap-1 px-2">
+              <Button
+                size={"sm"}
+                variant={isInstagramDate ? "secondary" : "ghost"}
+                onClick={() => {
+                  if (isInstagramDate) {
+                    set_isInstagramDate(false);
+                    set_showInstagramContent(false);
+                    setActionVariant("line");
 
-                  params.set("instagram_date", "true");
-                  params.set("show_content", "true");
-                }
-                setSearchParams(params);
-              }}
-              title={"Organizar ações pelas datas do Instagram ( ⇧ + ⌥ + I )"}
-            >
-              <SiInstagram className="size-4" />
-            </Button>
-            <Button
-              size={"sm"}
-              variant={showInstagramContent ? "secondary" : "ghost"}
-              onClick={() => {
-                if (showInstagramContent) {
-                  set_showInstagramContent(false);
-                  params.delete("show_content");
-                } else {
-                  set_showInstagramContent(true);
-                  params.set("show_content", "true");
-                }
-                setSearchParams(params);
-              }}
-              title={
-                showInstagramContent
-                  ? "Mostrar conteúdo das postagens (⇧ + ⌥ + C)"
-                  : "Mostrar apenas os títulos (⇧ + ⌥ + C)"
-              }
-            >
-              <ImageIcon className="size-4" />
-            </Button>
-            <Button
-              size={"sm"}
-              variant={showResponsibles ? "secondary" : "ghost"}
-              onClick={() => {
-                if (showResponsibles) {
-                  set_showResponsibles(false);
-                  params.delete("show_responsibles");
-                } else {
-                  set_showResponsibles(true);
-                  params.set("show_responsibles", "true");
-                }
+                    params.delete("instagram_date");
+                    // params.delete("show_content");
+                  } else {
+                    set_isInstagramDate(true);
+                    set_showInstagramContent(true);
+                    setActionVariant("content");
 
-                setSearchParams(params);
-              }}
-              title={
-                showResponsibles
-                  ? "Todos os responsáveis (⇧ + ⌥ + R) "
-                  : "'Eu' como responsável (⇧ + ⌥ + R) "
-              }
-            >
-              {showResponsibles ? (
-                <UsersIcon className="size-4" />
-              ) : (
-                <UserIcon className="size-4" />
-              )}
-            </Button>
-            <Button
-              variant={short ? "secondary" : "ghost"}
-              size={"sm"}
-              onClick={() => {
-                if (params.get("short")) {
-                  set_short(false);
-                  params.delete("short");
-                } else {
-                  set_short(true);
-                  params.set("short", "true");
+                    params.set("instagram_date", "true");
+                    // params.set("show_content", "true");
+                  }
+                  setSearchParams(params);
+                }}
+                title={"Organizar ações pelas datas do Instagram ( ⇧ + ⌥ + I )"}
+              >
+                <SiInstagram className="size-4" />
+              </Button>
+            </div>
+
+            <div className="flex gap-1 px-2">
+              <Button
+                size={"sm"}
+                variant={actionVariant === "content" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setActionVariant("content");
+                  // if (showInstagramContent) {
+                  //   set_showInstagramContent(false);
+                  //   params.delete("show_content");
+                  // } else {
+                  //   set_showInstagramContent(true);
+                  //   params.set("show_content", "true");
+                  // }
+                  // setSearchParams(params);
+                }}
+                title={
+                  showInstagramContent
+                    ? "Mostrar conteúdo das postagens (⇧ + ⌥ + C)"
+                    : "Mostrar apenas os títulos (⇧ + ⌥ + C)"
                 }
-                setSearchParams(params);
-              }}
-              title={
-                short
-                  ? "Aumentar o tamanho da ação"
-                  : "Diminuir o tamanho da ação"
-              }
-            >
-              {short ? (
-                <ChevronsUpDownIcon className="size-4" />
-              ) : (
-                <ChevronsDownUpIcon className="size-4" />
-              )}
-            </Button>
+              >
+                <ImageIcon className="size-4" />
+              </Button>
+              <Button
+                size={"sm"}
+                variant={actionVariant === "block" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setActionVariant("block");
+                }}
+              >
+                <Rows2Icon className="size-4" />
+              </Button>
+              <Button
+                size={"sm"}
+                variant={actionVariant === "line" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setActionVariant("line");
+                }}
+              >
+                <Rows3Icon className="size-4" />
+              </Button>
+              <Button
+                size={"sm"}
+                variant={actionVariant === "hair" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setActionVariant("hair");
+                }}
+              >
+                <Rows4Icon className="size-4" />
+              </Button>
+            </div>
+
+            <div className="flex gap-1 px-2">
+              <Button
+                size={"sm"}
+                variant={showResponsibles ? "secondary" : "ghost"}
+                onClick={() => {
+                  if (showResponsibles) {
+                    set_showResponsibles(false);
+                    params.delete("show_responsibles");
+                  } else {
+                    set_showResponsibles(true);
+                    params.set("show_responsibles", "true");
+                  }
+
+                  setSearchParams(params);
+                }}
+                title={
+                  showResponsibles
+                    ? "Todos os responsáveis (⇧ + ⌥ + R) "
+                    : "'Eu' como responsável (⇧ + ⌥ + R) "
+                }
+              >
+                {showResponsibles ? (
+                  <UsersIcon className="size-4" />
+                ) : (
+                  <UserIcon className="size-4" />
+                )}
+              </Button>
+            </div>
+            <div className="flex gap-1 px-2">
+              <Button
+                size={"sm"}
+                variant={orderActionsBy === "title" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setOrderActionsBy("title");
+                }}
+              >
+                <ArrowDownAZIcon className="size-4" />
+              </Button>
+              <Button
+                size={"sm"}
+                variant={orderActionsBy === "date" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setOrderActionsBy("date");
+                }}
+              >
+                <TimerIcon className="size-4" />
+              </Button>
+              <Button
+                size={"sm"}
+                variant={orderActionsBy === "state" ? "secondary" : "ghost"}
+                onClick={() => {
+                  setOrderActionsBy("state");
+                }}
+              >
+                <ListCheckIcon className="size-4" />
+              </Button>
+            </div>
+            {/* Filtrar por Responsáveis */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -880,6 +927,7 @@ export default function Partner() {
                 </DropdownMenuContent>
               </DropdownMenuPortal>
             </DropdownMenu>
+            {/* Filtrar pelo Status */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -931,6 +979,7 @@ export default function Partner() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            {/* Filtrar por Categorias */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -1082,10 +1131,11 @@ export default function Partner() {
               >
                 {calendar.map((day, i) => (
                   <CalendarDay
+                    actionVariant={actionVariant}
+                    orderActionsBy={orderActionsBy}
                     currentDate={currentDate}
                     day={day}
                     person={person}
-                    short={short}
                     showResponsibles={showResponsibles}
                     showInstagramContent={showInstagramContent}
                     key={i}
@@ -1195,7 +1245,6 @@ export default function Partner() {
 export const CalendarDay = ({
   day,
   currentDate,
-  short,
   showResponsibles,
   showInstagramContent,
   index,
@@ -1204,11 +1253,12 @@ export const CalendarDay = ({
   editingAction,
   setEditingAction,
   selectedActions,
+  orderActionsBy,
+  actionVariant,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
   currentDate: Date | string;
   person: Person;
-  short?: boolean;
   showResponsibles?: boolean;
   showInstagramContent?: boolean;
   index?: string | number;
@@ -1217,9 +1267,11 @@ export const CalendarDay = ({
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
   selectedActions?: string[];
+  orderActionsBy?: ORDER_ACTIONS_BY;
+  actionVariant?: ActionVariant;
 }) => {
   const matches = useMatches();
-  const { categories } = matches[1].data as DashboardRootType;
+  const { categories, states } = matches[1].data as DashboardRootType;
 
   const { setNodeRef, isOver } = useDroppable({
     id: `${format(parseISO(day.date), "yyyy-MM-dd")}`,
@@ -1269,29 +1321,30 @@ export const CalendarDay = ({
                     <div>Feed</div>
                   </div>
                   <div className="mb-4 flex flex-col gap-3">
-                    {day.actions
-                      ?.sort((a, b) =>
-                        isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
-                      )
-                      ?.filter((action) => isInstagramFeed(action.category))
-                      .map((action) => (
-                        <ActionItem
-                          variant={"content"}
-                          selectedActions={selectedActions}
-                          editingAction={editingAction}
-                          setEditingAction={setEditingAction}
-                          selectMultiple={selectMultiple}
-                          short={short}
-                          showResponsibles={showResponsibles}
-                          setSelectedActions={setSelectedActions}
-                          showDelay
-                          action={action}
-                          key={action.id}
-                          date={{
-                            timeFormat: 1,
-                          }}
-                        />
-                      ))}
+                    {sortActions(
+                      day.actions?.filter((action) =>
+                        isInstagramFeed(action.category),
+                      ),
+                      orderActionsBy,
+                      "asc",
+                      states,
+                    )?.map((action) => (
+                      <ActionItem
+                        variant={"content"}
+                        selectedActions={selectedActions}
+                        editingAction={editingAction}
+                        setEditingAction={setEditingAction}
+                        selectMultiple={selectMultiple}
+                        showResponsibles={showResponsibles}
+                        setSelectedActions={setSelectedActions}
+                        showDelay
+                        action={action}
+                        key={action.id}
+                        date={{
+                          timeFormat: 1,
+                        }}
+                      />
+                    ))}
                   </div>
                 </>
               )}
@@ -1306,6 +1359,7 @@ export const CalendarDay = ({
                   }))
                   .map(({ category, actions }) => (
                     <CategoryActions
+                      orderActionsBy={orderActionsBy}
                       selectedActions={selectedActions}
                       editingAction={editingAction}
                       setEditingAction={setEditingAction}
@@ -1313,7 +1367,6 @@ export const CalendarDay = ({
                       showResponsibles={showResponsibles}
                       category={category}
                       actions={actions}
-                      short={short}
                       variant="line"
                       key={category.id}
                       setSelectedActions={setSelectedActions}
@@ -1334,6 +1387,7 @@ export const CalendarDay = ({
                   actions &&
                   actions.length > 0 && (
                     <CategoryActions
+                      orderActionsBy={orderActionsBy}
                       selectedActions={selectedActions}
                       editingAction={editingAction}
                       setEditingAction={setEditingAction}
@@ -1341,9 +1395,9 @@ export const CalendarDay = ({
                       showResponsibles={showResponsibles}
                       category={category}
                       actions={actions}
-                      short={short}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
+                      variant={actionVariant}
                     />
                   ),
               )
@@ -1368,37 +1422,37 @@ function CategoryActions({
   category,
   actions,
   variant,
-  short,
   showResponsibles,
   setSelectedActions,
   selectMultiple = false,
   editingAction,
   setEditingAction,
   selectedActions,
+  orderActionsBy,
 }: {
   category: Category;
   actions?: Action[];
-  variant?: "line" | "content";
-  short?: boolean;
+  variant?: ActionVariant;
   showResponsibles?: boolean;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
   selectedActions?: string[];
+  orderActionsBy?: ORDER_ACTIONS_BY;
 }) {
-  actions = actions?.sort((a, b) =>
-    isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
-  );
+  // actions = actions?.sort((a, b) =>
+  //   isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
+  // );
+
+  const { states } = useMatches()[1].data as DashboardRootType;
+
+  actions = sortActions(actions, orderActionsBy, "asc", states) as Action[];
 
   return actions && actions.length > 0 ? (
     <div key={category.slug} className="flex flex-col gap-3">
       {!(variant === "content" && isInstagramFeed(category.slug)) && (
         <div className="mt-2 flex items-center gap-1 text-[8px] font-bold tracking-widest uppercase">
-          {/* <div
-            className={`size-1.5 rounded-full`}
-            style={{ backgroundColor: category.color }}
-          ></div> */}
           <div>{category.title}</div>
         </div>
       )}
@@ -1411,7 +1465,6 @@ function CategoryActions({
             editingAction={editingAction}
             setEditingAction={setEditingAction}
             selectMultiple={selectMultiple}
-            short={short}
             showResponsibles={showResponsibles}
             showDelay
             action={action}

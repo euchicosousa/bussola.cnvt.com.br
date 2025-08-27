@@ -39,7 +39,7 @@ import {
 import { Toggle } from "~/components/ui/toggle";
 import {
   Avatar,
-  getActionsByState,
+  sortActions,
   getActionsForThisDay,
   getInstagramFeed,
   Icons,
@@ -224,12 +224,14 @@ export function TodayView({
               <HoursView actions={currentActions} />
             ) : todayView === "feed" ? (
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-                {getActionsByState(
+                {(sortActions(
                   getInstagramFeed({
                     actions: currentActions,
                   }) as Action[],
+                  "state",
+                  "asc",
                   states,
-                ).map((action) => {
+                ) || []).map((action) => {
                   const partner = partners.filter(
                     (p) => p.slug === action.partners[0],
                   )[0];

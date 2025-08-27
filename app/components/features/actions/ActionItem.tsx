@@ -44,7 +44,6 @@ interface NewActionProps {
   variant?: ActionVariant;
   // Props comuns para todas as variantes
   date?: dateTimeFormat;
-  short?: boolean;
   long?: boolean;
   showResponsibles?: boolean;
   showCategory?: boolean;
@@ -71,7 +70,6 @@ export const ActionItem = React.memo(function ActionItem({
   variant = "line",
   partner,
   date,
-  short,
   long,
   showResponsibles,
   showCategory,
@@ -82,7 +80,6 @@ export const ActionItem = React.memo(function ActionItem({
   selectedActions,
   editingAction,
   setEditingAction,
-  sprint,
 }: NewActionProps) {
   // Shared state
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -97,9 +94,9 @@ export const ActionItem = React.memo(function ActionItem({
   const [isHover, setHover] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  const isInstagramDate = isHydrated
-    ? searchParams.get("instagram_date")
-    : null;
+  // const isInstagramDate = isHydrated
+  //   ? searchParams.get("instagram_date")
+  //   : null;
 
   // Shared data from matches
   const { categories, states, sprints, partners, people, priorities, person } =
@@ -285,11 +282,7 @@ export const ActionItem = React.memo(function ActionItem({
                     }}
                   />
                 )}
-                {isSprint(action.id, sprints) && (
-                  <div className="border-background bg-primary text-primary-foreground grid size-6 place-content-center rounded-md border-2">
-                    <RabbitIcon className="size-4" />
-                  </div>
-                )}
+                {isSprint(action.id, sprints) && <SprintIcon />}
 
                 {showResponsibles && (
                   <AvatarGroup
@@ -352,7 +345,7 @@ export const ActionItem = React.memo(function ActionItem({
               suppressHydrationWarning
               className={`action group/action action-item action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm ${
                 isDragging ? "z-[100]" : "z-0"
-              } ${isSprint(action.id, sprints) && sprint ? "action-sprint" : ""}`}
+              }`}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -441,6 +434,8 @@ export const ActionItem = React.memo(function ActionItem({
                     className="size-2 shrink-0 rounded-full"
                     style={{ backgroundColor: state.color }}
                   ></div>
+                  {/* Sprint */}
+                  {isSprint(action.id, sprints) && <SprintIcon />}
                   {/* Partners | Clientes  */}
                   <AvatarGroup
                     partners={actionPartners}
@@ -508,17 +503,17 @@ export const ActionItem = React.memo(function ActionItem({
             {...listeners}
             {...attributes}
             style={style}
-            className={`action group/action action-item items-center gap-2 hover:z-100 [&>*]:border-red-500 ${
+            // [&>*]:border-red-500
+            // estava aqui sem eu ver necessidade
+            className={`action group/action action-item items-center gap-2 hover:z-100 ${
               isDragging ? "z-[100]" : "z-0"
-            } ${
-              short ? "action-item-short px-2 py-1" : long ? "px-4 py-3" : "p-3"
-            } font-base @container md:text-sm ${
+            } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${
               showDelay &&
               isBefore(parseISO(action.date), new Date()) &&
               state.slug !== "finished"
                 ? "action-delayed"
                 : ""
-            } ${isSprint(action.id, sprints) ? "action-sprint" : ""}`}
+            }`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -577,6 +572,9 @@ export const ActionItem = React.memo(function ActionItem({
               className="absolute top-0 bottom-0 left-0 -ml-[1px] w-1 shrink-0 rounded-l-full"
               style={{ backgroundColor: state.color }}
             ></div>
+
+            {/* Sprint */}
+            {isSprint(action.id, sprints) && <SprintIcon />}
 
             {/* Title */}
             <div
@@ -840,48 +838,7 @@ export const ActionItem = React.memo(function ActionItem({
                       })}
                     </span>
                   )}
-
-                  {/* {isInstagramFeed(action.category) ? (
-                    <div className="flex items-center gap-1">
-                      <SiInstagram className="size-3" />
-                      <span>
-                        {formatActionDatetime({
-                          date: action.instagram_date,
-                          dateFormat: 2,
-                          timeFormat: 1,
-                        })}
-                      </span>
-                    </div>
-                  ) : null} */}
                 </div>
-                // <div
-                //     className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block"
-                //     suppressHydrationWarning
-                //   >
-                //     {isHydrated && isInstagramDate
-                //       ? formatActionDatetime({
-                //           date: isInstagramFeed(action.category, true)
-                //             ? action.instagram_date
-                //             : action.date,
-                //           dateFormat: date.dateFormat,
-                //           timeFormat: date.timeFormat,
-                //         })
-                //       : formatActionDatetime({
-                //           date: action.date,
-                //           dateFormat: date.dateFormat,
-                //           timeFormat: date.timeFormat,
-                //         }).concat(
-                //           isInstagramFeed(action.category, true)
-                //             ? " ––– ".concat(
-                //                 formatActionDatetime({
-                //                   date: action.instagram_date,
-                //                   dateFormat: 2,
-                //                   timeFormat: 1,
-                //                 }),
-                //               )
-                //             : "",
-                //         )}
-                //   </div>
               )
             )}
           </div>
@@ -897,3 +854,11 @@ export const ActionItem = React.memo(function ActionItem({
     </ContextMenu>
   );
 });
+
+function SprintIcon() {
+  return (
+    <div className="border-background bg-primary text-primary-foreground grid size-6 shrink-0 place-content-center rounded-md border-2">
+      <RabbitIcon className="size-4" />
+    </div>
+  );
+}
