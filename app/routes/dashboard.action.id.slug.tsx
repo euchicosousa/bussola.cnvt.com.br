@@ -23,7 +23,7 @@ import {
   useSubmit,
 } from "react-router";
 
-import { ptBR } from "date-fns/locale";
+import { is, ptBR } from "date-fns/locale";
 import {
   ChevronDownIcon,
   ChevronsUpDownIcon,
@@ -31,6 +31,7 @@ import {
   ImageIcon,
   LightbulbIcon,
   Link2Icon,
+  Loader2Icon,
   SaveIcon,
   SlidersIcon,
   SparklesIcon,
@@ -665,8 +666,26 @@ function RightSide({
     previews: { type: string; preview: string }[];
     files: string[];
   } | null>(null);
-  const navigate = useNavigate();
+  const navigation = useNavigation();
+  const [shouldSubmitFiles, setShouldSubmitFiles] = useState(false);
+  const isUploadingFiles =
+    navigation.state !== "idle" &&
+    navigation.formData?.get("intent") === "files";
+
+  useEffect(() => {
+    console.log(navigation.formData);
+  }, [navigation.formData]);
+
   const [length, setLength] = useState([120]);
+  const formFilesRef = useRef<HTMLFormElement>(null);
+
+  // Submit form after files state is updated
+  useEffect(() => {
+    if (shouldSubmitFiles && files) {
+      formFilesRef.current?.submit();
+      setShouldSubmitFiles(false);
+    }
+  }, [files, shouldSubmitFiles]);
 
   const fetcher = useFetcher({ key: "action-page" });
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
@@ -678,6 +697,7 @@ function RightSide({
         })),
         files: acceptedFiles.map((f) => f.name),
       });
+      setShouldSubmitFiles(true);
     },
   });
 
@@ -686,7 +706,7 @@ function RightSide({
       {/* Arquivo */}
       {action.category !== "stories" && (
         <>
-          <Form method="post" encType="multipart/form-data">
+          <Form method="post" encType="multipart/form-data" ref={formFilesRef}>
             <div className="relative min-h-[50px] overflow-hidden rounded">
               <Content
                 action={{
@@ -699,8 +719,10 @@ function RightSide({
 
               <div
                 {...getRootProps()}
-                className="absolute top-0 h-[calc(100%-60px)] w-full"
+                className="absolute top-0 h-full w-full"
+                // className="absolute top-0 h-[calc(100%-60px)] w-full"
               >
+                <input name="intent" hidden defaultValue="files" />
                 <input name="partner" hidden defaultValue={partner.slug} />
                 <input name="filenames" hidden defaultValue={files?.files} />
                 <input
@@ -712,6 +734,10 @@ function RightSide({
                     .replace(/[^0-9a-z-]/g, "")}
                 />
                 <input {...getInputProps()} name="files" multiple />
+
+                {isUploadingFiles && (
+                  <Loader2Icon className="text-background absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2 animate-spin" />
+                )}
 
                 {isDragActive ? (
                   <div className="from-background/80 grid h-full w-full place-content-center bg-linear-to-b">
@@ -726,20 +752,6 @@ function RightSide({
                   >
                     {action.files || files ? (
                       <>
-                        {action.files && action.files.length && (
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              event.preventDefault();
-
-                              const fileUrl = action.files![0];
-                              window.open(fileUrl, "_blank");
-                            }}
-                            className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white text-shadow-black hover:bg-black/10"
-                          >
-                            <DownloadIcon className="size-4" />
-                          </button>
-                        )}
                         <button
                           onClick={(event) => {
                             event.stopPropagation();
@@ -750,20 +762,34 @@ function RightSide({
                             });
                             setFiles(null);
                           }}
-                          className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white text-shadow-black hover:bg-black/10"
-                          // className="bg-foreground/25 hover:bg-foreground/50 text-background grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1"
+                          className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
                         >
                           <TrashIcon className="size-4" />
                         </button>
-                        <button
-                          type="submit"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                          }}
-                          className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white text-shadow-black hover:bg-black/10"
-                        >
-                          <SaveIcon className="size-4" />
-                        </button>
+                        {action.files && action.files.length ? (
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              event.preventDefault();
+
+                              const fileUrl = action.files![0];
+                              window.open(fileUrl, "_blank");
+                            }}
+                            className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
+                          >
+                            <DownloadIcon className="size-4" />
+                          </button>
+                        ) : (
+                          <button
+                            type="submit"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                            }}
+                            className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
+                          >
+                            <SaveIcon className="size-4" />
+                          </button>
+                        )}
                       </>
                     ) : (
                       "Arraste seus arquivos para cá."

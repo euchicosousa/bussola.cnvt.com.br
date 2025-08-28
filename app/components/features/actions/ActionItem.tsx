@@ -219,7 +219,7 @@ export const ActionItem = React.memo(function ActionItem({
                     );
                   } else {
                     setEditingAction(action.id);
-                    params.set("editing_action", action.id);
+                    // params.set("editing_action", action.id);
                     params.delete("show_feed");
                     setSearchParams(params);
                   }
@@ -526,7 +526,7 @@ export const ActionItem = React.memo(function ActionItem({
                     );
                   } else {
                     setEditingAction(action.id);
-                    params.set("editing_action", action.id);
+                    // params.set("editing_action", action.id);
                     params.delete("show_feed");
                     setSearchParams(params);
                   }
@@ -857,7 +857,7 @@ export const ActionItem = React.memo(function ActionItem({
 
 function SprintIcon() {
   return (
-    <div className="border-background bg-primary text-primary-foreground grid size-6 shrink-0 place-content-center rounded-md border-2">
+    <div className="text-foreground grid size-5 shrink-0 animate-pulse place-content-center rounded-md">
       <RabbitIcon className="size-4" />
     </div>
   );

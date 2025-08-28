@@ -26,8 +26,6 @@ import {
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ChevronsDownUpIcon,
-  ChevronsUpDownIcon,
   CopyCheckIcon,
   Grid3x3Icon,
   ImageIcon,
@@ -214,7 +212,7 @@ export default function Partner() {
     !!searchParams.get("instagram_date"),
   );
   const [showInstagramContent, set_showInstagramContent] = useState(
-    !!searchParams.get("show_content"),
+    !!searchParams.get("instagram_date") && !!searchParams.get("show_feed"),
   );
   const [showResponsibles, set_showResponsibles] = useState(
     !!searchParams.get("show_responsibles"),
@@ -231,7 +229,9 @@ export default function Partner() {
   const [orderActionsBy, setOrderActionsBy] =
     useState<ORDER_ACTIONS_BY>("date");
 
-  const [actionVariant, setActionVariant] = useState<ActionVariant>("line");
+  const [variant, setVariant] = useState<ActionVariant>(
+    showInstagramContent ? "content" : "line",
+  );
 
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
@@ -702,14 +702,16 @@ export default function Partner() {
                   if (isInstagramDate) {
                     set_isInstagramDate(false);
                     set_showInstagramContent(false);
-                    setActionVariant("line");
+                    setVariant("line");
 
                     params.delete("instagram_date");
                     // params.delete("show_content");
                   } else {
                     set_isInstagramDate(true);
                     set_showInstagramContent(true);
-                    setActionVariant("content");
+                    setVariant("content");
+
+                    console.log("Instagram Date");
 
                     params.set("instagram_date", "true");
                     // params.set("show_content", "true");
@@ -725,9 +727,9 @@ export default function Partner() {
             <div className="flex gap-1 px-2">
               <Button
                 size={"sm"}
-                variant={actionVariant === "content" ? "secondary" : "ghost"}
+                variant={variant === "content" ? "secondary" : "ghost"}
                 onClick={() => {
-                  setActionVariant("content");
+                  setVariant("content");
                   // if (showInstagramContent) {
                   //   set_showInstagramContent(false);
                   //   params.delete("show_content");
@@ -747,27 +749,27 @@ export default function Partner() {
               </Button>
               <Button
                 size={"sm"}
-                variant={actionVariant === "block" ? "secondary" : "ghost"}
+                variant={variant === "block" ? "secondary" : "ghost"}
                 onClick={() => {
-                  setActionVariant("block");
+                  setVariant("block");
                 }}
               >
                 <Rows2Icon className="size-4" />
               </Button>
               <Button
                 size={"sm"}
-                variant={actionVariant === "line" ? "secondary" : "ghost"}
+                variant={variant === "line" ? "secondary" : "ghost"}
                 onClick={() => {
-                  setActionVariant("line");
+                  setVariant("line");
                 }}
               >
                 <Rows3Icon className="size-4" />
               </Button>
               <Button
                 size={"sm"}
-                variant={actionVariant === "hair" ? "secondary" : "ghost"}
+                variant={variant === "hair" ? "secondary" : "ghost"}
                 onClick={() => {
-                  setActionVariant("hair");
+                  setVariant("hair");
                 }}
               >
                 <Rows4Icon className="size-4" />
@@ -1131,7 +1133,7 @@ export default function Partner() {
               >
                 {calendar.map((day, i) => (
                   <CalendarDay
-                    actionVariant={actionVariant}
+                    variant={variant}
                     orderActionsBy={orderActionsBy}
                     currentDate={currentDate}
                     day={day}
@@ -1159,7 +1161,7 @@ export default function Partner() {
           action={fullEditingAction!}
           setClose={() => {
             setEditingAction(null);
-            params.delete("editing_action");
+            // params.delete("editing_action");
             setSearchParams(params);
           }}
         />
@@ -1254,7 +1256,7 @@ export const CalendarDay = ({
   setEditingAction,
   selectedActions,
   orderActionsBy,
-  actionVariant,
+  variant,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
   currentDate: Date | string;
@@ -1268,7 +1270,7 @@ export const CalendarDay = ({
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
   selectedActions?: string[];
   orderActionsBy?: ORDER_ACTIONS_BY;
-  actionVariant?: ActionVariant;
+  variant?: ActionVariant;
 }) => {
   const matches = useMatches();
   const { categories, states } = matches[1].data as DashboardRootType;
@@ -1317,7 +1319,7 @@ export const CalendarDay = ({
                 .length !== 0 && (
                 <>
                   <div className="mb-2 flex items-center gap-1 text-sm font-medium">
-                    <Grid3x3Icon className="size-3" />
+                    <Grid3x3Icon className="size-4" />
                     <div>Feed</div>
                   </div>
                   <div className="mb-4 flex flex-col gap-3">
@@ -1330,7 +1332,7 @@ export const CalendarDay = ({
                       states,
                     )?.map((action) => (
                       <ActionItem
-                        variant={"content"}
+                        variant={variant}
                         selectedActions={selectedActions}
                         editingAction={editingAction}
                         setEditingAction={setEditingAction}
@@ -1367,7 +1369,7 @@ export const CalendarDay = ({
                       showResponsibles={showResponsibles}
                       category={category}
                       actions={actions}
-                      variant="line"
+                      variant={variant === "content" ? "line" : variant}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
                     />
@@ -1397,7 +1399,7 @@ export const CalendarDay = ({
                       actions={actions}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
-                      variant={actionVariant}
+                      variant={variant}
                     />
                   ),
               )
