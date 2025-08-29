@@ -158,19 +158,21 @@ export const ActionItem = React.memo(function ActionItem({
       : variant;
 
   // Unified delay logic
-  const isDelayed = showDelay && 
-    state.slug !== "finished" && 
-    (isBefore(parseISO(action.instagram_date), new Date()) || 
-     isBefore(parseISO(action.date), new Date()));
+  const isDelayed =
+    showDelay &&
+    state.slug !== "finished" &&
+    ((isInstagramFeed(action.category) &&
+      isBefore(parseISO(action.instagram_date), new Date())) ||
+      isBefore(parseISO(action.date), new Date()));
 
   const getDelayClasses = (variantType: string) => {
     if (!isDelayed) return "";
-    
+
     switch (variantType) {
       case "content":
         return "action-content-delayed";
       case "block":
-      case "line": 
+      case "line":
       case "hair":
         return "action-delayed";
       default:
