@@ -17,6 +17,7 @@ export const INTENTS = {
   updatePerson: "person-update",
   updatePartner: "partner-update",
   createTopic: "topic-create",
+  uploadFiles: "files-upload",
 };
 
 export const AI_INTENTS = {

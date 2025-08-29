@@ -8,12 +8,9 @@ import {
   subHours,
 } from "date-fns";
 import {
-  type ActionFunctionArgs,
-  Form,
   Link,
   type LoaderFunctionArgs,
   type MetaFunction,
-  useActionData,
   useFetcher,
   useFetchers,
   useLoaderData,
@@ -23,7 +20,7 @@ import {
   useSubmit,
 } from "react-router";
 
-import { is, ptBR } from "date-fns/locale";
+import { ptBR } from "date-fns/locale";
 import {
   ChevronDownIcon,
   ChevronsUpDownIcon,
@@ -104,7 +101,6 @@ import { cn } from "~/lib/ui/utils";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
 
 export const config = { runtime: "edge" };
-const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
@@ -135,67 +131,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   return { action, partner, topics };
 };
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const formData = await request.formData();
-  const files = formData.getAll("files") as File[];
-  const filenames = String(formData.get("filenames")).split(",");
-  const partner = formData.get("partner") as string;
-
-  // Security validations
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-  const ALLOWED_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "application/pdf",
-    "text/plain",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  ];
-
-  for (const file of files) {
-    if (file.size > MAX_FILE_SIZE) {
-      throw new Error(`File ${file.name} is too large. Max size: 10MB`);
-    }
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      throw new Error(`File type ${file.type} not allowed`);
-    }
-  }
-
-  try {
-    const urls = await Promise.all(
-      files.map(async (file, i) => {
-        const arrayBuffer = await file.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const fileUrl = `${partner}/${new Date().getFullYear()}/${
-          new Date().getMonth() + 1
-        }/${format(new Date(), "yyyy-MM-dd_hh-mm-ss")}_${i}${filenames[
-          i
-        ].substring(filenames[i].lastIndexOf("."))}`;
-        const url = `https://br.storage.bunnycdn.com/agencia-cnvt/${fileUrl}`;
-        const downloadUrl = `https://agenciacnvt.b-cdn.net/${fileUrl}`;
-
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            AccessKey: ACCESS_KEY!,
-            "Content-Type": "application/octet-stream",
-          },
-          body: buffer,
-        });
-
-        return { downloadUrl, status: response.statusText };
-      }),
-    );
-
-    return { urls: urls.map((url) => url.downloadUrl) };
-  } catch (error) {
-    console.log(error);
-  }
-
-  return {};
-};
+// File upload now handled by /handle-actions endpoint
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
@@ -211,14 +147,12 @@ export default function ActionPage() {
     partner,
     topics,
   } = useLoaderData<typeof loader>();
-  const data = useActionData<{ urls: string[] }>();
 
   const [action, setAction] = useState(baseAction);
-  const [trigger, setTrigger] = useState("Autoridade");
 
   const matches = useMatches();
 
-  const { partners, people } = matches[1].data as DashboardRootType;
+  const { people } = matches[1].data as DashboardRootType;
 
   const responsibles: Person[] = [];
   action.responsibles?.filter((user_id: string) =>
@@ -285,13 +219,6 @@ export default function ActionPage() {
       }
     }
   }, [fetcher.data]);
-
-  // insere as urls
-  useEffect(() => {
-    if (data) {
-      setAction({ ...action, files: data.urls });
-    }
-  }, [data]);
 
   return (
     <div
@@ -666,38 +593,91 @@ function RightSide({
     previews: { type: string; preview: string }[];
     files: string[];
   } | null>(null);
-  const navigation = useNavigation();
-  const [shouldSubmitFiles, setShouldSubmitFiles] = useState(false);
-  const isUploadingFiles =
-    navigation.state !== "idle" &&
-    navigation.formData?.get("intent") === "files";
-
-  useEffect(() => {
-    console.log(navigation.formData);
-  }, [navigation.formData]);
-
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  
   const [length, setLength] = useState([120]);
-  const formFilesRef = useRef<HTMLFormElement>(null);
-
-  // Submit form after files state is updated
-  useEffect(() => {
-    if (shouldSubmitFiles && files) {
-      formFilesRef.current?.submit();
-      setShouldSubmitFiles(false);
-    }
-  }, [files, shouldSubmitFiles]);
 
   const fetcher = useFetcher({ key: "action-page" });
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
+      // Clear previous errors and start upload
+      setUploadError(null);
+      setIsUploading(true);
+
+      // Client-side validation
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx'];
+      
+      for (const file of acceptedFiles) {
+        const fileName = file.name || 'unknown';
+        
+        if (file.size > MAX_FILE_SIZE) {
+          setUploadError(`Arquivo ${fileName} é muito grande. Tamanho máximo: 10MB`);
+          setIsUploading(false);
+          return;
+        }
+        
+        const extension = fileName.toLowerCase().split('.').pop();
+        if (!extension || !allowedExtensions.includes(extension)) {
+          setUploadError(`Tipo de arquivo não permitido: ${fileName}. Tipos aceitos: ${allowedExtensions.join(', ')}`);
+          setIsUploading(false);
+          return;
+        }
+      }
+
+      const previews = acceptedFiles.map((f) => ({
+        preview: URL.createObjectURL(f),
+        type: getTypeOfTheContent(f.name || 'unknown'),
+      }));
+      const filenames = acceptedFiles.map((f) => f.name || 'unknown');
+      
       setFiles({
-        previews: acceptedFiles.map((f) => ({
-          preview: URL.createObjectURL(f),
-          type: getTypeOfTheContent(f.name),
-        })),
-        files: acceptedFiles.map((f) => f.name),
+        previews,
+        files: filenames,
       });
-      setShouldSubmitFiles(true);
+
+      // Create FormData and submit
+      const formData = new FormData();
+      acceptedFiles.forEach((file) => formData.append("files", file));
+      formData.append("intent", INTENTS.uploadFiles);
+      formData.append("partner", partner.slug);
+      formData.append("actionId", action.id);
+      formData.append("filenames", filenames.join(","));
+      formData.append(
+        "title",
+        action.title
+          .toLocaleLowerCase()
+          .replace(/\s/g, "-")
+          .replace(/[^0-9a-z-]/g, "")
+      );
+
+      // Use handle-actions endpoint
+      fetch("/handle-actions", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setAction(data.data);
+          setFiles(null);
+          setUploadError(null);
+          setUploadSuccess(true);
+          
+          // Hide success message after 2 seconds
+          setTimeout(() => setUploadSuccess(false), 2000);
+        } else if (data.error) {
+          setUploadError(data.error);
+        }
+      })
+      .catch(error => {
+        setUploadError(error.message);
+      })
+      .finally(() => {
+        setIsUploading(false);
+      });
     },
   });
 
@@ -706,40 +686,56 @@ function RightSide({
       {/* Arquivo */}
       {action.category !== "stories" && (
         <>
-          <Form method="post" encType="multipart/form-data" ref={formFilesRef}>
-            <div className="relative min-h-[50px] overflow-hidden rounded">
-              <Content
-                action={{
-                  ...action,
-                  previews: files ? files.previews : null,
-                }}
-                aspect="full"
-                partner={partner}
-              />
+          <div className="relative min-h-[50px] overflow-hidden rounded">
+            <Content
+              action={{
+                ...action,
+                previews: files ? files.previews : null,
+              }}
+              aspect="full"
+              partner={partner}
+            />
 
-              <div
-                {...getRootProps()}
-                className="absolute top-0 h-full w-full"
-                // className="absolute top-0 h-[calc(100%-60px)] w-full"
-              >
-                <input name="intent" hidden defaultValue="files" />
-                <input name="partner" hidden defaultValue={partner.slug} />
-                <input name="filenames" hidden defaultValue={files?.files} />
-                <input
-                  name="title"
-                  hidden
-                  defaultValue={action.title
-                    .toLocaleLowerCase()
-                    .replace(/\s/g, "-")
-                    .replace(/[^0-9a-z-]/g, "")}
-                />
-                <input {...getInputProps()} name="files" multiple />
+            <div
+              {...getRootProps()}
+              className="absolute top-0 h-full w-full"
+            >
+              <input {...getInputProps()} multiple />
 
-                {isUploadingFiles && (
-                  <Loader2Icon className="text-background absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2 animate-spin" />
+                {isUploading && (
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded">
+                    <Loader2Icon className="size-8 animate-spin mb-2" />
+                    <span className="text-sm font-medium">Enviando arquivo...</span>
+                  </div>
                 )}
 
-                {isDragActive ? (
+                {uploadSuccess && (
+                  <div className="absolute inset-0 bg-green-500/90 flex items-center justify-center text-white rounded">
+                    <div className="flex items-center space-x-2">
+                      <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span className="font-medium">Arquivo enviado com sucesso!</span>
+                    </div>
+                  </div>
+                )}
+
+                {uploadError && (
+                  <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center p-4 text-white text-center text-sm rounded">
+                    <div>
+                      <p className="font-medium mb-2">Erro no upload:</p>
+                      <p>{uploadError}</p>
+                      <button 
+                        onClick={() => setUploadError(null)}
+                        className="mt-2 px-3 py-1 bg-white/20 rounded text-xs hover:bg-white/30"
+                      >
+                        Fechar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {isDragActive && !isUploading && !uploadError && !uploadSuccess ? (
                   <div className="from-background/80 grid h-full w-full place-content-center bg-linear-to-b">
                     <ImageIcon className="size-12 opacity-75" />
                   </div>
@@ -766,7 +762,7 @@ function RightSide({
                         >
                           <TrashIcon className="size-4" />
                         </button>
-                        {action.files && action.files.length ? (
+                        {action.files && action.files.length && (
                           <button
                             onClick={(event) => {
                               event.stopPropagation();
@@ -779,16 +775,6 @@ function RightSide({
                           >
                             <DownloadIcon className="size-4" />
                           </button>
-                        ) : (
-                          <button
-                            type="submit"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                            }}
-                            className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
-                          >
-                            <SaveIcon className="size-4" />
-                          </button>
                         )}
                       </>
                     ) : (
@@ -798,7 +784,6 @@ function RightSide({
                 )}
               </div>
             </div>
-          </Form>
           {/* <LikeFooter liked={action.state === "finished"} /> */}
         </>
       )}

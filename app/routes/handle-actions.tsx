@@ -1,8 +1,10 @@
+import { format } from "date-fns";
 import { type ActionFunctionArgs } from "react-router";
 import { INTENTS, PRIORITIES, TIMES } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
+const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { supabase } = createClient(request);
@@ -228,6 +230,109 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (error) console.log({ error });
 
     return { data, error };
+  } else if (intent === INTENTS.uploadFiles) {
+    // File upload logic
+    const files = formData.getAll("files") as File[];
+    const filenames = String(formData.get("filenames")).split(",");
+    const partner = formData.get("partner") as string;
+    const actionId = formData.get("actionId") as string;
+
+    // Security validations
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    const ALLOWED_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+      "text/plain",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fileName = file.name || filenames[i] || `file_${i}`;
+      
+      if (file.size > MAX_FILE_SIZE) {
+        return { 
+          error: `File ${fileName} is too large. Max size: 10MB`,
+          success: false
+        };
+      }
+      
+      // Get file extension for fallback validation
+      const extension = fileName.toLowerCase().split('.').pop();
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx'];
+      
+      // Check MIME type or file extension
+      const isValidType = file.type && ALLOWED_TYPES.includes(file.type);
+      const isValidExtension = extension && allowedExtensions.includes(extension);
+      
+      if (!isValidType && !isValidExtension) {
+        return { 
+          error: `File ${fileName} with type "${file.type || 'unknown'}" and extension "${extension || 'unknown'}" is not allowed`,
+          success: false
+        };
+      }
+    }
+
+    try {
+      // Upload files to CDN
+      const urls = await Promise.all(
+        files.map(async (file, i) => {
+          const fileName = file.name || filenames[i] || `file_${i}`;
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const fileUrl = `${partner}/${new Date().getFullYear()}/${
+            new Date().getMonth() + 1
+          }/${format(new Date(), "yyyy-MM-dd_hh-mm-ss")}_${i}${fileName.substring(fileName.lastIndexOf("."))}`;
+          const url = `https://br.storage.bunnycdn.com/agencia-cnvt/${fileUrl}`;
+          const downloadUrl = `https://agenciacnvt.b-cdn.net/${fileUrl}`;
+
+          const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+              AccessKey: ACCESS_KEY!,
+              "Content-Type": "application/octet-stream",
+            },
+            body: buffer,
+          });
+
+          return { downloadUrl, status: response.statusText };
+        }),
+      );
+
+      const fileUrls = urls.map((url) => url.downloadUrl);
+
+      // Save files to database
+      const { data: updatedAction, error } = await supabase
+        .from("actions")
+        .update({ files: fileUrls })
+        .eq("id", actionId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating action with files:", error);
+        return { 
+          error: "Failed to save files to action",
+          success: false
+        };
+      }
+
+      return { 
+        data: updatedAction,
+        urls: fileUrls,
+        success: true
+      };
+    } catch (uploadError) {
+      console.error("Upload error:", uploadError);
+      return { 
+        error: uploadError instanceof Error ? uploadError.message : "Upload failed",
+        success: false
+      };
+    }
   }
 
   return {};
