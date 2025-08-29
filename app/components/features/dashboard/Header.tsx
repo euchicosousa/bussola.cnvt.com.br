@@ -142,10 +142,13 @@ export default function Header({
                 onClick={() => {
                   if (showFeed) {
                     params.delete("show_feed");
+                    params.delete("instagram_date");
                     setShowFeed(false);
                   } else {
                     // params.delete("editing_action");
+
                     params.set("show_feed", "true");
+                    params.set("instagram_date", "true");
                     setShowFeed(true);
                   }
 

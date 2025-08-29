@@ -296,8 +296,9 @@ export default function Partner() {
     };
   });
 
+  // Scroll into the current day
+  // Atalhos
   useEffect(() => {
-    // Scroll into the day
     let date = params.get("date");
     date = date
       ? date.split("-").length === 3
@@ -377,13 +378,26 @@ export default function Partner() {
   }, [partner]);
 
   useEffect(() => {
+    // Categories filter
     let _params = params.get("categories")?.split("-");
     let _categories = categories.filter((category) =>
       _params?.find((_p) => _p === category.slug),
     );
-
     setCategoryFilter(_categories);
-  }, [searchParams]);
+
+    // Other URL parameters
+    setEditingAction(searchParams.get("editing_action"));
+    set_isInstagramDate(!!searchParams.get("instagram_date"));
+    set_showInstagramContent(!!searchParams.get("instagram_date") && !!searchParams.get("show_feed"));
+    set_showResponsibles(!!searchParams.get("show_responsibles"));
+    set_selectMultiple(!!searchParams.get("select_multiple"));
+    set_showAllActions(!!searchParams.get("show_all_actions"));
+
+    // Set variant based on showFeed parameter
+    if (searchParams.get("show_feed")) {
+      setVariant("content");
+    }
+  }, [searchParams, categories]);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const date = over?.id as string;

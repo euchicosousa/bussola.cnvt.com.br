@@ -152,6 +152,32 @@ export const ActionItem = React.memo(function ActionItem({
     return null;
   }
 
+  variant =
+    variant === "content" && !isInstagramFeed(action.category)
+      ? "block"
+      : variant;
+
+  // Unified delay logic
+  const isDelayed = showDelay && 
+    state.slug !== "finished" && 
+    (isBefore(parseISO(action.instagram_date), new Date()) || 
+     isBefore(parseISO(action.date), new Date()));
+
+  const getDelayClasses = (variantType: string) => {
+    if (!isDelayed) return "";
+    
+    switch (variantType) {
+      case "content":
+        return "action-content-delayed";
+      case "block":
+      case "line": 
+      case "hair":
+        return "action-delayed";
+      default:
+        return "";
+    }
+  };
+
   const renderActionVariant = () => {
     switch (variant) {
       case "hair":
@@ -237,14 +263,7 @@ export const ActionItem = React.memo(function ActionItem({
             className="outline-none"
           >
             <div
-              className={`ring-ring group/action ring-offset-background relative cursor-pointer rounded-md ring-offset-2 outline-hidden focus-within:ring-3 ${
-                showDelay &&
-                state.slug !== "finished" &&
-                (isBefore(parseISO(action.instagram_date), new Date()) ||
-                  isBefore(parseISO(action.date), new Date()))
-                  ? "action-content-delayed"
-                  : ""
-              }`}
+              className={`ring-ring group/action ring-offset-background relative cursor-pointer rounded-md ring-offset-2 outline-hidden focus-within:ring-3 ${getDelayClasses("content")}`}
               onMouseEnter={() => {
                 setHover(true);
               }}
@@ -282,7 +301,7 @@ export const ActionItem = React.memo(function ActionItem({
                     }}
                   />
                 )}
-                {isSprint(action.id, sprints) && <SprintIcon />}
+                {isSprint(action.id, sprints) && <SprintIcon hasBackground />}
 
                 {showResponsibles && (
                   <AvatarGroup
@@ -507,13 +526,7 @@ export const ActionItem = React.memo(function ActionItem({
             // estava aqui sem eu ver necessidade
             className={`action group/action action-item items-center gap-2 hover:z-100 ${
               isDragging ? "z-[100]" : "z-0"
-            } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${
-              showDelay &&
-              isBefore(parseISO(action.date), new Date()) &&
-              state.slug !== "finished"
-                ? "action-delayed"
-                : ""
-            }`}
+            } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${getDelayClasses(variant)}`}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -574,7 +587,9 @@ export const ActionItem = React.memo(function ActionItem({
             ></div>
 
             {/* Sprint */}
-            {isSprint(action.id, sprints) && <SprintIcon />}
+            {isSprint(action.id, sprints) && (
+              <SprintIcon hasBackground={long} />
+            )}
 
             {/* Title */}
             <div
@@ -855,9 +870,11 @@ export const ActionItem = React.memo(function ActionItem({
   );
 });
 
-function SprintIcon() {
+function SprintIcon({ hasBackground }: { hasBackground?: boolean }) {
   return (
-    <div className="text-foreground grid size-5 shrink-0 animate-pulse place-content-center rounded-md">
+    <div
+      className={`grid size-5 shrink-0 place-content-center rounded-md ${hasBackground ? "bg-primary text-primary-foreground ring-background ring-2" : "text-foreground animate-pulse"}`}
+    >
       <RabbitIcon className="size-4" />
     </div>
   );
