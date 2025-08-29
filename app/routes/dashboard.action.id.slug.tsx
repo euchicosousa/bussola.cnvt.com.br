@@ -596,7 +596,7 @@ function RightSide({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  
+
   const [length, setLength] = useState([120]);
 
   const fetcher = useFetcher({ key: "action-page" });
@@ -608,20 +608,34 @@ function RightSide({
 
       // Client-side validation
       const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx'];
-      
+      const allowedExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "pdf",
+        "txt",
+        "doc",
+        "docx",
+      ];
+
       for (const file of acceptedFiles) {
-        const fileName = file.name || 'unknown';
-        
+        const fileName = file.name || "unknown";
+
         if (file.size > MAX_FILE_SIZE) {
-          setUploadError(`Arquivo ${fileName} é muito grande. Tamanho máximo: 10MB`);
+          setUploadError(
+            `Arquivo ${fileName} é muito grande. Tamanho máximo: 10MB`,
+          );
           setIsUploading(false);
           return;
         }
-        
-        const extension = fileName.toLowerCase().split('.').pop();
+
+        const extension = fileName.toLowerCase().split(".").pop();
         if (!extension || !allowedExtensions.includes(extension)) {
-          setUploadError(`Tipo de arquivo não permitido: ${fileName}. Tipos aceitos: ${allowedExtensions.join(', ')}`);
+          setUploadError(
+            `Tipo de arquivo não permitido: ${fileName}. Tipos aceitos: ${allowedExtensions.join(", ")}`,
+          );
           setIsUploading(false);
           return;
         }
@@ -629,10 +643,10 @@ function RightSide({
 
       const previews = acceptedFiles.map((f) => ({
         preview: URL.createObjectURL(f),
-        type: getTypeOfTheContent(f.name || 'unknown'),
+        type: getTypeOfTheContent(f.name || "unknown"),
       }));
-      const filenames = acceptedFiles.map((f) => f.name || 'unknown');
-      
+      const filenames = acceptedFiles.map((f) => f.name || "unknown");
+
       setFiles({
         previews,
         files: filenames,
@@ -650,34 +664,34 @@ function RightSide({
         action.title
           .toLocaleLowerCase()
           .replace(/\s/g, "-")
-          .replace(/[^0-9a-z-]/g, "")
+          .replace(/[^0-9a-z-]/g, ""),
       );
 
       // Use handle-actions endpoint
       fetch("/handle-actions", {
         method: "POST",
-        body: formData
+        body: formData,
       })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.data) {
-          setAction(data.data);
-          setFiles(null);
-          setUploadError(null);
-          setUploadSuccess(true);
-          
-          // Hide success message after 2 seconds
-          setTimeout(() => setUploadSuccess(false), 2000);
-        } else if (data.error) {
-          setUploadError(data.error);
-        }
-      })
-      .catch(error => {
-        setUploadError(error.message);
-      })
-      .finally(() => {
-        setIsUploading(false);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setAction(data.data);
+            setFiles(null);
+            setUploadError(null);
+            setUploadSuccess(true);
+
+            // Hide success message after 2 seconds
+            setTimeout(() => setUploadSuccess(false), 2000);
+          } else if (data.error) {
+            setUploadError(data.error);
+          }
+        })
+        .catch((error) => {
+          setUploadError(error.message);
+        })
+        .finally(() => {
+          setIsUploading(false);
+        });
     },
   });
 
@@ -696,94 +710,108 @@ function RightSide({
               partner={partner}
             />
 
-            <div
-              {...getRootProps()}
-              className="absolute top-0 h-full w-full"
-            >
+            <div {...getRootProps()} className="absolute top-0 h-full w-full">
               <input {...getInputProps()} multiple />
 
-                {isUploading && (
-                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white rounded">
-                    <Loader2Icon className="size-8 animate-spin mb-2" />
-                    <span className="text-sm font-medium">Enviando arquivo...</span>
-                  </div>
-                )}
+              {isUploading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center rounded bg-black/50 text-white">
+                  <Loader2Icon className="mb-2 size-8 animate-spin" />
+                  <span className="text-sm font-medium">
+                    Enviando arquivo...
+                  </span>
+                </div>
+              )}
 
-                {uploadSuccess && (
-                  <div className="absolute inset-0 bg-green-500/90 flex items-center justify-center text-white rounded">
-                    <div className="flex items-center space-x-2">
-                      <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="font-medium">Arquivo enviado com sucesso!</span>
-                    </div>
+              {uploadSuccess && (
+                <div className="absolute inset-0 flex items-center justify-center rounded bg-green-500/90 text-white">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="size-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span className="font-medium">
+                      Arquivo enviado com sucesso!
+                    </span>
                   </div>
-                )}
+                </div>
+              )}
 
-                {uploadError && (
-                  <div className="absolute inset-0 bg-red-500/80 flex items-center justify-center p-4 text-white text-center text-sm rounded">
-                    <div>
-                      <p className="font-medium mb-2">Erro no upload:</p>
-                      <p>{uploadError}</p>
-                      <button 
-                        onClick={() => setUploadError(null)}
-                        className="mt-2 px-3 py-1 bg-white/20 rounded text-xs hover:bg-white/30"
+              {uploadError && (
+                <div className="absolute inset-0 flex items-center justify-center rounded bg-red-500/80 p-4 text-center text-sm text-white">
+                  <div>
+                    <p className="mb-2 font-medium">Erro no upload:</p>
+                    <p>{uploadError}</p>
+                    <button
+                      onClick={() => setUploadError(null)}
+                      className="mt-2 rounded bg-white/20 px-3 py-1 text-xs hover:bg-white/30"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isDragActive &&
+              !isUploading &&
+              !uploadError &&
+              !uploadSuccess ? (
+                <div className="from-background/80 grid h-full w-full place-content-center bg-linear-to-b">
+                  <ImageIcon className="size-12 opacity-75" />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center justify-end gap-2 p-2 text-right text-xs text-white"
+                  style={{
+                    textShadow: "rgba(0,0,0,0.5) 0px 1px 3px",
+                  }}
+                >
+                  {action.files || files ? (
+                    <>
+                      <button
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.preventDefault();
+                          setAction({
+                            ...action,
+                            files: null,
+                          });
+                          setFiles(null);
+                        }}
+                        className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
                       >
-                        Fechar
+                        <TrashIcon className="size-4" />
                       </button>
-                    </div>
-                  </div>
-                )}
-
-                {isDragActive && !isUploading && !uploadError && !uploadSuccess ? (
-                  <div className="from-background/80 grid h-full w-full place-content-center bg-linear-to-b">
-                    <ImageIcon className="size-12 opacity-75" />
-                  </div>
-                ) : (
-                  <div
-                    className="flex items-center justify-end gap-2 p-2 text-right text-xs text-white"
-                    style={{
-                      textShadow: "rgba(0,0,0,0.5) 0px 1px 3px",
-                    }}
-                  >
-                    {action.files || files ? (
-                      <>
+                      {action.files && action.files.length && (
                         <button
                           onClick={(event) => {
                             event.stopPropagation();
                             event.preventDefault();
-                            setAction({
-                              ...action,
-                              files: null,
-                            });
-                            setFiles(null);
+
+                            const fileUrl = action.files![0];
+                            window.open(fileUrl, "_blank");
                           }}
                           className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
                         >
-                          <TrashIcon className="size-4" />
+                          <DownloadIcon className="size-4" />
                         </button>
-                        {action.files && action.files.length && (
-                          <button
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              event.preventDefault();
-
-                              const fileUrl = action.files![0];
-                              window.open(fileUrl, "_blank");
-                            }}
-                            className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
-                          >
-                            <DownloadIcon className="size-4" />
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      "Arraste seus arquivos para cá."
-                    )}
-                  </div>
-                )}
-              </div>
+                      )}
+                    </>
+                  ) : (
+                    "Arraste seus arquivos para cá."
+                  )}
+                </div>
+              )}
             </div>
+          </div>
           {/* <LikeFooter liked={action.state === "finished"} /> */}
         </>
       )}
