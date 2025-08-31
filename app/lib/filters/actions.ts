@@ -9,12 +9,14 @@ import {
   isThisWeek,
   isSameMonth,
 } from "date-fns";
+import { isInstagramFeed } from "~/shared/utils/validation/contentValidation";
 
 export function sortActions(
   actions?: Action[] | null,
   orderActionsBy: ORDER_ACTIONS_BY = "date",
   order: "asc" | "desc" = "asc",
   states?: State[],
+  useInstagramDate?: boolean,
 ) {
   if (!actions) return null;
 
@@ -52,7 +54,15 @@ export function sortActions(
 
     case "date":
       return actions.sort((a, b) => {
-        const comparison = isBefore(parseISO(a.date), parseISO(b.date))
+        // Determine which date to use for each action
+        const aDate = useInstagramDate && isInstagramFeed(a.category, true) 
+          ? a.instagram_date 
+          : a.date;
+        const bDate = useInstagramDate && isInstagramFeed(b.category, true) 
+          ? b.instagram_date 
+          : b.date;
+        
+        const comparison = isBefore(parseISO(aDate), parseISO(bDate))
           ? -1
           : 1;
         return order === "desc" ? -comparison : comparison;
@@ -177,14 +187,3 @@ export function getMonthsActions(actions: Action[], date = new Date()) {
   ) as Action[];
 }
 
-// Helper function that needs to be defined or imported
-function isInstagramFeed(category: string, stories?: boolean): boolean {
-  const instagramCategories = ["post", "carousel", "reels"];
-  const storiesCategories = ["stories"];
-
-  if (stories) {
-    return storiesCategories.includes(category);
-  }
-
-  return instagramCategories.includes(category);
-}

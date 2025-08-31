@@ -36,8 +36,8 @@ interface ActionsContainerProps {
 
   // Selection (para dashboard.partner.tsx)
   selectMultiple?: boolean;
-  selectedActions?: string[];
-  setSelectedActions?: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedActions?: Action[];
+  setSelectedActions?: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
   setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
 }

@@ -483,6 +483,7 @@ export const Content = ({
   showInfo,
   showFinished,
   date,
+  currentFileIndex = 0,
 }: {
   action:
     | Action
@@ -495,6 +496,7 @@ export const Content = ({
   showInfo?: boolean;
   showFinished?: boolean;
   date?: dateTimeFormat;
+  currentFileIndex?: number;
 }) => {
   let files =
     "previews" in action && action.previews
@@ -507,30 +509,16 @@ export const Content = ({
         : undefined;
 
   let isPreview = !(action.files !== null && action.files[0] !== "");
-  let isFile = files && !["", "null", null].find((p) => p === files[0].preview);
+  let currentFile = files && files.length > currentFileIndex ? files[currentFileIndex] : files?.[0];
+  let isFile = currentFile && !["", "null", null].find((p) => p === currentFile.preview);
 
   return (
     <div className="group/action relative">
-      {files && !["", "null", null].find((p) => p === files[0].preview) ? (
-        // Se for carrossel ou Stories
-        files.length > 1 && aspect != "feed" ? (
-          <div
-            className={clsx(
-              `flex snap-x snap-mandatory gap-[1px] overflow-hidden overflow-x-auto transition-opacity ${
-                isPreview && "opacity-50"
-              } `,
-              className,
-            )}
-          >
-            {files.map((file: any, i: number) => (
-              <div className="w-full shrink-0 snap-center" key={i}>
-                <img src={`${file.preview}`} />
-              </div>
-            ))}
-          </div>
-        ) : files[0].type === "image" ? (
+      {currentFile && !["", "null", null].find((p) => p === currentFile.preview) ? (
+        // Show current file based on index
+        currentFile?.type === "image" ? (
           <img
-            src={`${files[0].preview}`}
+            src={`${currentFile.preview}`}
             className={cn(
               `object-cover transition-opacity ${isPreview && "opacity-50"}`,
               className,
@@ -539,7 +527,7 @@ export const Content = ({
           />
         ) : (
           <video
-            src={files[0].preview}
+            src={currentFile?.preview || ""}
             className={clsx(
               `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
               className,

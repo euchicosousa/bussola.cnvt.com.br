@@ -22,6 +22,7 @@ import {
 import { ptBR } from "date-fns/locale";
 import {
   ArrowDownAZIcon,
+  CalendarClock,
   CalendarDaysIcon,
   CalendarIcon,
   ChevronLeftIcon,
@@ -68,6 +69,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { getNewDateValues } from "~/lib/helpers";
+import { isInstagramFeed } from "~/shared/utils/validation/contentValidation";
 
 import {
   DndContext,
@@ -89,11 +91,11 @@ import {
   getCategoriesQueryString,
   getInstagramFeed,
   getResponsibles,
-  isInstagramFeed,
   sortActions,
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
+import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 
 export const config = { runtime: "edge" };
 
@@ -224,13 +226,15 @@ export default function Partner() {
     !!searchParams.get("show_all_actions"),
   );
 
-  const [selectedActions, setSelectedActions] = useState<string[]>([]);
+  const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [currentDate, setCurrentDate] = useState(date);
   const [orderActionsBy, setOrderActionsBy] =
     useState<ORDER_ACTIONS_BY>("date");
 
   const [variant, setVariant] = useState<ActionVariant>(
-    showInstagramContent ? "content" : "line",
+    showInstagramContent || !!searchParams.get("instagram_date")
+      ? "content"
+      : "line",
   );
 
   const { actions: pendingActions } = usePendingDataSafe();
@@ -388,7 +392,9 @@ export default function Partner() {
     // Other URL parameters
     setEditingAction(searchParams.get("editing_action"));
     set_isInstagramDate(!!searchParams.get("instagram_date"));
-    set_showInstagramContent(!!searchParams.get("instagram_date") && !!searchParams.get("show_feed"));
+    set_showInstagramContent(
+      !!searchParams.get("instagram_date") && !!searchParams.get("show_feed"),
+    );
     set_showResponsibles(!!searchParams.get("show_responsibles"));
     set_selectMultiple(!!searchParams.get("select_multiple"));
     set_showAllActions(!!searchParams.get("show_all_actions"));
@@ -555,113 +561,182 @@ export default function Partner() {
                       <DropdownMenuSubTrigger className="bg-item">
                         Mudar Status
                       </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="bg-content">
-                          {states.map((state) => (
-                            <DropdownMenuItem
-                              key={state.slug}
-                              className="bg-item"
-                              onSelect={() => {
-                                submit(
-                                  {
-                                    intent: INTENTS.updateActions,
-                                    state: state.slug,
-                                    ids: selectedActions.join(","),
-                                  },
-                                  {
-                                    action: "/handle-actions",
-                                    method: "POST",
-                                    navigate: false,
-                                    fetcherKey: `action:update:state`,
-                                  },
-                                );
-                              }}
-                            >
-                              <div
-                                className={`h-2 w-2 rounded-full`}
-                                style={{ backgroundColor: state.color }}
-                              ></div>
-                              <div>{state.title}</div>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
+                      {/* <DropdownMenuPortal> */}
+                      <DropdownMenuSubContent className="bg-content">
+                        {states.map((state) => (
+                          <DropdownMenuItem
+                            key={state.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  state: state.slug,
+                                  ids: selectedActions
+                                    .map((a) => a.id)
+                                    .join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:state`,
+                                },
+                              );
+                            }}
+                          >
+                            <div
+                              className={`h-2 w-2 rounded-full`}
+                              style={{ backgroundColor: state.color }}
+                            ></div>
+                            <div>{state.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                      {/* </DropdownMenuPortal> */}
                     </DropdownMenuSub>
                     {/* Mudar Categoria */}
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="bg-item">
                         Mudar Categoria
                       </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="bg-content">
-                          {categories.map((category) => (
-                            <DropdownMenuItem
-                              key={category.slug}
-                              className="bg-item"
-                              onSelect={() => {
-                                submit(
-                                  {
-                                    intent: INTENTS.updateActions,
-                                    category: category.slug,
-                                    ids: selectedActions.join(","),
-                                  },
-                                  {
-                                    action: "/handle-actions",
-                                    method: "POST",
-                                    navigate: false,
-                                    fetcherKey: `action:update:category`,
-                                  },
-                                );
-                              }}
-                            >
-                              <Icons className="size-3" id={category.slug} />
-                              <div>{category.title}</div>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
+                      {/* <DropdownMenuPortal> */}
+                      <DropdownMenuSubContent className="bg-content">
+                        {categories.map((category) => (
+                          <DropdownMenuItem
+                            key={category.slug}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  category: category.slug,
+                                  ids: selectedActions
+                                    .map((a) => a.id)
+                                    .join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:category`,
+                                },
+                              );
+                            }}
+                          >
+                            <Icons className="size-3" id={category.slug} />
+                            <div>{category.title}</div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                      {/* </DropdownMenuPortal> */}
                     </DropdownMenuSub>
+                    {/* Mudar a Data */}
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger className="bg-item">
+                        Mudar Data
+                      </DropdownMenuSubTrigger>
+
+                      <DropdownMenuSubContent className="bg-content">
+                        <DateTimePicker
+                          onSave={(selected) => {
+                            submit(
+                              {
+                                intent: INTENTS.updateActions,
+                                date: format(selected, "yyyy-MM-dd HH:mm:ss"),
+                                ids: selectedActions.map((a) => a.id).join(","),
+                              },
+                              {
+                                action: "/handle-actions",
+                                method: "POST",
+                                navigate: false,
+                                fetcherKey: `action:update:category`,
+                              },
+                            );
+                          }}
+                        />
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    {/* Mudar a data do Instagram */}
+
+                    {selectedActions.filter((action) =>
+                      isInstagramFeed(action.category, true),
+                    ).length === selectedActions.length && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="bg-item">
+                          Mudar Data do Instagram
+                        </DropdownMenuSubTrigger>
+
+                        <DropdownMenuSubContent className="bg-content">
+                          <DateTimePicker
+                            onSave={(selected) => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  instagram_date: format(
+                                    selected,
+                                    "yyyy-MM-dd HH:mm:ss",
+                                  ),
+                                  ids: selectedActions
+                                    .map((a) => a.id)
+                                    .join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:category`,
+                                },
+                              );
+                            }}
+                          />
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    )}
+                    {/* Mudar Responsável */}
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger className="bg-item">
                         Mudar Responsável
                       </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent className="bg-content">
-                          {partnerResponsibles.map((person) => (
-                            <DropdownMenuItem
-                              key={person.id}
-                              className="bg-item"
-                              onSelect={() => {
-                                submit(
-                                  {
-                                    intent: INTENTS.updateActions,
-                                    responsibles: person.user_id,
-                                    ids: selectedActions.join(","),
-                                  },
-                                  {
-                                    action: "/handle-actions",
-                                    method: "POST",
-                                    navigate: false,
-                                    fetcherKey: `action:update:responsible`,
-                                  },
-                                );
-                              }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <Avatar
-                                  item={{
-                                    image: person.image || undefined,
-                                    short: person.initials!,
-                                  }}
-                                />
-                                <div>
-                                  {person.name} {person.surname}
-                                </div>
+                      {/* <DropdownMenuPortal> */}
+                      <DropdownMenuSubContent className="bg-content">
+                        {partnerResponsibles.map((person) => (
+                          <DropdownMenuItem
+                            key={person.id}
+                            className="bg-item"
+                            onSelect={() => {
+                              submit(
+                                {
+                                  intent: INTENTS.updateActions,
+                                  responsibles: person.user_id,
+                                  ids: selectedActions
+                                    .map((a) => a.id)
+                                    .join(","),
+                                },
+                                {
+                                  action: "/handle-actions",
+                                  method: "POST",
+                                  navigate: false,
+                                  fetcherKey: `action:update:responsible`,
+                                },
+                              );
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Avatar
+                                item={{
+                                  image: person.image || undefined,
+                                  short: person.initials!,
+                                }}
+                              />
+                              <div>
+                                {person.name} {person.surname}
                               </div>
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
+                            </div>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                      {/* </DropdownMenuPortal> */}
                     </DropdownMenuSub>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
@@ -682,11 +757,11 @@ export default function Partner() {
                 onClick={() => {
                   document.addEventListener("keydown", (event) => {
                     if (event.metaKey && event.code === "KeyA") {
-                      let actionsToBeSelected: string[] = [];
+                      let actionsToBeSelected: Action[] = [];
                       event.preventDefault();
                       calendar.map((day) => {
                         day.actions?.map((action) => {
-                          actionsToBeSelected.push(action.id);
+                          actionsToBeSelected.push(action);
                         });
                       });
                       setSelectedActions(actionsToBeSelected);
@@ -1161,6 +1236,7 @@ export default function Partner() {
                     setSelectedActions={setSelectedActions}
                     editingAction={editingAction}
                     setEditingAction={setEditingAction}
+                    isInstagramDate={isInstagramDate}
                   />
                 ))}
               </div>
@@ -1271,6 +1347,7 @@ export const CalendarDay = ({
   selectedActions,
   orderActionsBy,
   variant,
+  isInstagramDate,
 }: {
   day: { date: string; actions?: Action[]; celebrations?: Celebration[] };
   currentDate: Date | string;
@@ -1279,12 +1356,13 @@ export const CalendarDay = ({
   showInstagramContent?: boolean;
   index?: string | number;
   selectMultiple?: boolean;
-  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
-  selectedActions?: string[];
+  selectedActions?: Action[];
   orderActionsBy?: ORDER_ACTIONS_BY;
   variant?: ActionVariant;
+  isInstagramDate?: boolean;
 }) => {
   const matches = useMatches();
   const { categories, states } = matches[1].data as DashboardRootType;
@@ -1344,6 +1422,7 @@ export const CalendarDay = ({
                       orderActionsBy,
                       "asc",
                       states,
+                      isInstagramDate,
                     )?.map((action) => (
                       <ActionItem
                         variant={variant}
@@ -1359,6 +1438,7 @@ export const CalendarDay = ({
                         date={{
                           timeFormat: 1,
                         }}
+                        isInstagramDate={isInstagramDate}
                       />
                     ))}
                   </div>
@@ -1384,6 +1464,7 @@ export const CalendarDay = ({
                       category={category}
                       actions={actions}
                       variant={variant === "content" ? "line" : variant}
+                      isInstagramDate={isInstagramDate}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
                     />
@@ -1410,6 +1491,7 @@ export const CalendarDay = ({
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
                       category={category}
+                      isInstagramDate={isInstagramDate}
                       actions={actions}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
@@ -1445,17 +1527,19 @@ function CategoryActions({
   setEditingAction,
   selectedActions,
   orderActionsBy,
+  isInstagramDate,
 }: {
   category: Category;
   actions?: Action[];
   variant?: ActionVariant;
   showResponsibles?: boolean;
   selectMultiple?: boolean;
-  setSelectedActions: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
   setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
-  selectedActions?: string[];
+  selectedActions?: Action[];
   orderActionsBy?: ORDER_ACTIONS_BY;
+  isInstagramDate?: boolean;
 }) {
   // actions = actions?.sort((a, b) =>
   //   isAfter(a.instagram_date, b.instagram_date) ? 1 : -1,
@@ -1463,7 +1547,13 @@ function CategoryActions({
 
   const { states } = useMatches()[1].data as DashboardRootType;
 
-  actions = sortActions(actions, orderActionsBy, "asc", states) as Action[];
+  actions = sortActions(
+    actions,
+    orderActionsBy,
+    "asc",
+    states,
+    isInstagramDate,
+  ) as Action[];
 
   return actions && actions.length > 0 ? (
     <div key={category.slug} className="flex flex-col gap-3">
@@ -1489,6 +1579,7 @@ function CategoryActions({
               timeFormat: 1,
             }}
             setSelectedActions={setSelectedActions}
+            isInstagramDate={isInstagramDate}
           />
         ))}
       </div>

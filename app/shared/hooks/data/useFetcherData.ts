@@ -64,11 +64,15 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           instagram_caption: String(fetcher.formData?.get("instagram_caption")),
           color: String(fetcher.formData?.get("color")),
           files: String(fetcher.formData?.get("files")).split(","),
-          archived: Boolean(fetcher.formData?.get("archived")),
+          archived: fetcher.formData?.has("archived") 
+            ? Boolean(fetcher.formData.get("archived")) 
+            : null,
           partners: String(fetcher.formData?.get("partners")).split(","),
           topics: String(fetcher.formData?.get("topics"))
             .split(",")
             .map(Number),
+          caption: String(fetcher.formData?.get("caption")) || null,
+          instagram_content: String(fetcher.formData?.get("instagram_content")) || null,
         };
 
         return { ...action };

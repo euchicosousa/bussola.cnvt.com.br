@@ -23,6 +23,8 @@ import {
 import { ptBR } from "date-fns/locale";
 import {
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   ChevronsUpDownIcon,
   DownloadIcon,
   ImageIcon,
@@ -596,8 +598,12 @@ function RightSide({
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
   const [length, setLength] = useState([120]);
+
+  const hasMultipleFiles = (action.files?.length || 0) > 1 || (files?.files?.length || 0) > 1;
+  const totalFiles = (action.files?.length || 0) + (files?.files?.length || 0);
 
   const fetcher = useFetcher({ key: "action-page" });
   const { getInputProps, getRootProps, isDragActive } = useDropzone({
@@ -679,6 +685,7 @@ function RightSide({
             setFiles(null);
             setUploadError(null);
             setUploadSuccess(true);
+            setCurrentFileIndex(0); // Reset carousel index
 
             // Hide success message after 2 seconds
             setTimeout(() => setUploadSuccess(false), 2000);
@@ -708,6 +715,7 @@ function RightSide({
               }}
               aspect="full"
               partner={partner}
+              currentFileIndex={currentFileIndex}
             />
 
             <div {...getRootProps()} className="absolute top-0 h-full w-full">
@@ -760,6 +768,51 @@ function RightSide({
                 </div>
               )}
 
+              {/* Carousel Navigation - Center positioned */}
+              {hasMultipleFiles && (
+                <>
+                  {/* Left Navigation Button */}
+                  {currentFileIndex > 0 && (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        setCurrentFileIndex((prev) => prev - 1);
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid h-8 w-8 cursor-pointer place-content-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                    >
+                      <ChevronLeftIcon className="size-5" />
+                    </button>
+                  )}
+                  
+                  {/* Right Navigation Button */}
+                  {currentFileIndex < totalFiles - 1 && (
+                    <button
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        setCurrentFileIndex((prev) => prev + 1);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid h-8 w-8 cursor-pointer place-content-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                    >
+                      <ChevronRightIcon className="size-5" />
+                    </button>
+                  )}
+                  
+                  {/* Dots indicator */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+                    {Array.from({ length: totalFiles }).map((_, index) => (
+                      <div
+                        key={index}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${
+                          index === currentFileIndex ? 'bg-white' : 'bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
               {isDragActive &&
               !isUploading &&
               !uploadError &&
@@ -785,6 +838,7 @@ function RightSide({
                             files: null,
                           });
                           setFiles(null);
+                          setCurrentFileIndex(0);
                         }}
                         className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
                       >
@@ -796,7 +850,7 @@ function RightSide({
                             event.stopPropagation();
                             event.preventDefault();
 
-                            const fileUrl = action.files![0];
+                            const fileUrl = action.files![currentFileIndex] || action.files![0];
                             window.open(fileUrl, "_blank");
                           }}
                           className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
@@ -806,7 +860,9 @@ function RightSide({
                       )}
                     </>
                   ) : (
-                    "Arraste seus arquivos para cá."
+                    <>
+                      Arraste seus arquivos para cá.
+                    </>
                   )}
                 </div>
               )}

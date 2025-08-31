@@ -29,6 +29,73 @@ import {
 import { Calendar } from "~/components/ui/calendar";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+
+// Componente interno para seleção de data e hora
+interface DateTimePickerProps {
+  selected?: Date;
+  onDateChange?: (date: Date) => void;
+  onSave: (date: Date) => void;
+}
+
+export const DateTimePicker: React.FC<DateTimePickerProps> = ({
+  selected,
+  onDateChange,
+  onSave,
+}) => {
+  const [selectedDate, setSelectedDate] = useState(selected || new Date());
+  const time = format(selectedDate, "HH:mm:ss");
+
+  const handleTimeChange = (timeValue: string) => {
+    // Parse the time value (HH:mm:ss)
+    const [hours, minutes, seconds] = timeValue.split(":").map(Number);
+
+    // Create new date with updated time
+    const newDate = new Date(selectedDate);
+    newDate.setHours(hours, minutes, seconds || 0);
+    setSelectedDate(newDate);
+    onDateChange?.(newDate);
+  };
+
+  return (
+    <>
+      <div className="px-2 pt-4">
+        <Calendar
+          locale={ptBR}
+          mode="single"
+          selected={selectedDate}
+          onSelect={(date) => {
+            if (date) {
+              // Preserve the current time when selecting a new date
+              const newDate = new Date(date);
+              newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds());
+              setSelectedDate(newDate);
+              onDateChange?.(newDate);
+            }
+          }}
+        />
+      </div>
+      <div className="border-t p-3">
+        <div className="flex items-center gap-3">
+          <div className="relative grow">
+            <Input
+              type="time"
+              step="1"
+              value={time}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              className="w-full pl-9 text-right [&::-webkit-calendar-picker-indicator]:hidden"
+            />
+            <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
+              <ClockIcon className="size-4" aria-hidden="true" />
+            </div>
+          </div>
+          <Button onClick={() => onSave(selectedDate)}>
+            <SaveIcon className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+};
 import { toast } from "~/components/ui/use-toast";
 import { INTENTS } from "~/lib/constants";
 import {
@@ -48,7 +115,7 @@ interface ActionContextMenuProps {
   handleActions: (data: HandleActionsDataType) => void;
 }
 
-const ChangeDatePopover = ({
+export const ChangeDatePopover = ({
   date,
   onChangeDate,
   children,
@@ -61,7 +128,6 @@ const ChangeDatePopover = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(new Date(date));
-  const [time, setTime] = useState(format(selected, "HH:mm:ss"));
 
   return (
     <ContextMenuSub open={open} onOpenChange={setOpen}>
@@ -72,56 +138,14 @@ const ChangeDatePopover = ({
       </ContextMenuSubTrigger>
       <ContextMenuPortal>
         <ContextMenuSubContent className="bg-content">
-          <div className="px-2 pt-4">
-            <Calendar
-              locale={ptBR}
-              mode="single"
-              selected={selected}
-              onSelect={(date) => {
-                if (date) {
-                  setSelected(date);
-                }
-              }}
-            />
-          </div>
-          <div className="border-t p-3">
-            <div className="flex items-center gap-3">
-              <div className="relative grow">
-                <Input
-                  type="time"
-                  step="1"
-                  value={time}
-                  onChange={(e) => {
-                    setTime(e.target.value);
-
-                    // Parse the time value (HH:mm:ss)
-                    const [hours, minutes, seconds] = e.target.value
-                      .split(":")
-                      .map(Number);
-
-                    // Create new date with updated time
-                    const newDate = new Date(selected);
-                    newDate.setHours(hours, minutes, seconds || 0);
-
-                    setSelected(newDate);
-                  }}
-                  className="w-full pl-9 text-right [&::-webkit-calendar-picker-indicator]:hidden"
-                />
-                <div className="text-muted-foreground/80 pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 peer-disabled:opacity-50">
-                  <ClockIcon className="size-4" aria-hidden="true" />
-                </div>
-              </div>
-
-              <Button
-                onClick={() => {
-                  onChangeDate(selected);
-                  setOpen(false);
-                }}
-              >
-                <SaveIcon className="size-4" />
-              </Button>
-            </div>
-          </div>
+          <DateTimePicker
+            selected={selected}
+            onDateChange={setSelected}
+            onSave={() => {
+              onChangeDate(selected);
+              setOpen(false);
+            }}
+          />
         </ContextMenuSubContent>
       </ContextMenuPortal>
     </ContextMenuSub>
@@ -211,7 +235,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         <span>Mudar Data</span>
       </ChangeDatePopover>
 
-      {isInstagramFeed(action.category) && (
+      {isInstagramFeed(action.category, true) && (
         <ChangeDatePopover
           date={action.instagram_date}
           onChangeDate={(date) => {
