@@ -1,21 +1,17 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useMemo,
-  useCallback,
-} from "react";
-import { parseISO, isBefore, format } from "date-fns";
+import { useDraggable } from "@dnd-kit/core";
+import { SiInstagram } from "@icons-pack/react-simple-icons";
+import { format, isBefore, parseISO } from "date-fns";
+import { HeartHandshakeIcon, RabbitIcon } from "lucide-react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  useNavigate,
   useMatches,
+  useNavigate,
   useSearchParams,
   useSubmit,
 } from "react-router";
-import { useDraggable } from "@dnd-kit/core";
-import { flushSync } from "react-dom";
-import { HeartHandshakeIcon, RabbitIcon } from "lucide-react";
-import { Checkbox } from "~/components/ui/checkbox";
+import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
+import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
+import { EditableTitle } from "~/components/ui/editable-title";
 import { INTENTS, PRIORITIES } from "~/lib/constants";
 import {
   amIResponsible,
@@ -30,11 +26,10 @@ import {
   isInstagramFeed,
   isSprint,
 } from "~/lib/helpers";
+import { cn } from "~/lib/ui";
+import { ActionContextMenu } from "./shared/ActionContextMenu";
 import { formatActionDatetime } from "./shared/formatActionDatetime";
 import { ShortcutActions } from "./shared/ShortcutActions";
-import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
-import { ActionContextMenu } from "./shared/ActionContextMenu";
-import { SiInstagram } from "@icons-pack/react-simple-icons";
 
 // Tipos de variantes
 export type ActionVariant = "hair" | "line" | "content" | "block" | "grid";
@@ -50,12 +45,13 @@ interface NewActionProps {
   showDelay?: boolean;
   showPartner?: boolean;
   selectMultiple?: boolean;
-  setSelectedActions?: React.Dispatch<React.SetStateAction<string[]>>;
-  selectedActions?: string[];
+  setSelectedActions?: React.Dispatch<React.SetStateAction<Action[]>>;
+  selectedActions?: Action[];
   editingAction?: string | null;
   setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
   sprint?: boolean;
   partner?: Partner; // Para ActionGrid
+  isInstagramDate?: boolean; // Para usar instagram_date quando appropriado
 }
 
 /**
@@ -80,10 +76,9 @@ export const ActionItem = React.memo(function ActionItem({
   selectedActions,
   editingAction,
   setEditingAction,
+  isInstagramDate,
 }: NewActionProps) {
   // Shared state
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const submit = useSubmit();
   const navigate = useNavigate();
   const matches = useMatches();
@@ -152,6 +147,10 @@ export const ActionItem = React.memo(function ActionItem({
     return null;
   }
 
+  // Use passed prop to determine if should use instagram_date
+  const shouldUseInstagramDate =
+    isInstagramDate && isInstagramFeed(action.category, true);
+
   variant =
     variant === "content" && !isInstagramFeed(action.category)
       ? "block"
@@ -188,9 +187,11 @@ export const ActionItem = React.memo(function ActionItem({
             title={action.title}
             suppressHydrationWarning
             onClick={() => {
-              navigate(
-                `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
-              );
+              if (!selectMultiple) {
+                navigate(
+                  `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
+                );
+              }
             }}
             ref={setNodeRef}
             {...listeners}
@@ -215,6 +216,17 @@ export const ActionItem = React.memo(function ActionItem({
                   className="h-6 w-1 shrink-0"
                   style={{ backgroundColor: state.color }}
                 />
+                {selectMultiple && setSelectedActions && (
+                  <SelectionCheckbox
+                    className="size-4"
+                    isSelected={
+                      selectedActions?.some((a) => a.id === action.id) || false
+                    }
+                    action={action}
+                    onSelectionChange={setSelectedActions}
+                    currentSelection={selectedActions || []}
+                  />
+                )}
                 <div className="overflow-hidden text-xs tracking-tight text-ellipsis whitespace-nowrap">
                   {action.title}
                 </div>
@@ -286,24 +298,20 @@ export const ActionItem = React.memo(function ActionItem({
               <div className="late-border border-background ring-error absolute inset-0 hidden rounded-md border ring-2"></div>
 
               <div className="absolute -top-3 right-2 flex gap-2">
-                {selectMultiple && (
-                  <Checkbox
-                    checked={selectedActions?.includes(action.id)}
-                    className="bg-accent border-background size-6 rounded-full border-2"
-                    onCheckedChange={(state) => {
-                      if (setSelectedActions) {
-                        setSelectedActions((actions) => {
-                          if (state) {
-                            return [...actions, action.id];
-                          } else {
-                            return actions.filter((id) => id !== action.id);
-                          }
-                        });
-                      }
-                    }}
+                {selectMultiple && setSelectedActions && (
+                  <SelectionCheckbox
+                    className="border-background"
+                    isSelected={
+                      selectedActions?.some((a) => a.id === action.id) || false
+                    }
+                    action={action}
+                    onSelectionChange={setSelectedActions}
+                    currentSelection={selectedActions || []}
                   />
                 )}
-                {isSprint(action.id, sprints) && <SprintIcon hasBackground />}
+                {isSprint(action.id, sprints) && (
+                  <SprintIcon hasBackground className="size-6" />
+                )}
 
                 {showResponsibles && (
                   <AvatarGroup
@@ -343,9 +351,11 @@ export const ActionItem = React.memo(function ActionItem({
           <div
             className="group/action @container cursor-pointer overflow-hidden"
             onClick={() => {
-              navigate(
-                `/dashboard/action/${action.id}/${(partner || actionPartner).slug}${getQueryString()}`,
-              );
+              if (!selectMultiple) {
+                navigate(
+                  `/dashboard/action/${action.id}/${(partner || actionPartner).slug}${getQueryString()}`,
+                );
+              }
             }}
           >
             <Content
@@ -355,6 +365,19 @@ export const ActionItem = React.memo(function ActionItem({
               showInfo
               className="action-grid aspect-[3/4] overflow-hidden"
             />
+            <div className="absolute -top-3 right-3">
+              {selectMultiple && setSelectedActions && (
+                <SelectionCheckbox
+                  className="border-background"
+                  isSelected={
+                    selectedActions?.some((a) => a.id === action.id) || false
+                  }
+                  action={action}
+                  onSelectionChange={setSelectedActions}
+                  currentSelection={selectedActions || []}
+                />
+              )}
+            </div>
           </div>
         );
 
@@ -370,7 +393,7 @@ export const ActionItem = React.memo(function ActionItem({
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                if (!edit) {
+                if (!edit && !selectMultiple) {
                   navigate(
                     `/dashboard/action/${action.id}/${action.partners[0]}${getQueryString()}`,
                   );
@@ -386,68 +409,19 @@ export const ActionItem = React.memo(function ActionItem({
               {isHover && !edit ? <ShortcutActions action={action} /> : null}
 
               {/* Title */}
-              <div className="leading-tighter relative overflow-hidden text-xl font-medium tracking-tighter">
-                {edit ? (
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    defaultValue={action.title}
-                    className={`w-full overflow-hidden bg-transparent outline-hidden`}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        flushSync(() => {
-                          setEdit(() => false);
-                        });
-                        buttonRef.current?.focus();
-                      } else if (event.key === "Enter") {
-                        event.preventDefault();
-                        if (inputRef.current?.value !== action.title) {
-                          flushSync(() => {
-                            handleActions({
-                              intent: INTENTS.updateAction,
-                              ...action,
-                              title: String(inputRef.current?.value),
-                            });
-                          });
-
-                          buttonRef.current?.focus();
-                        }
-                        setEdit(() => false);
-                      }
-                    }}
-                    onBlur={() => {
-                      if (
-                        inputRef.current?.value !== undefined &&
-                        inputRef.current?.value !== action.title
-                      )
-                        handleActions({
-                          intent: INTENTS.updateAction,
-                          ...action,
-                          title: inputRef.current?.value,
-                        });
-
-                      setEdit(() => false);
-                    }}
-                  />
-                ) : (
-                  <button
-                    ref={buttonRef}
-                    className={`relative block max-w-full cursor-text items-center overflow-hidden text-left text-ellipsis whitespace-nowrap outline-hidden`}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      if (!edit) {
-                        flushSync(() => {
-                          setEdit(true);
-                        });
-                        inputRef.current?.focus();
-                      }
-                    }}
-                  >
-                    <span suppressHydrationWarning>{action.title}</span>
-                  </button>
-                )}
-              </div>
+              <EditableTitle
+                title={action.title}
+                isEditing={edit}
+                setIsEditing={setEdit}
+                onSave={(newTitle) => {
+                  handleActions({
+                    intent: INTENTS.updateAction,
+                    ...action,
+                    title: newTitle,
+                  });
+                }}
+                className="leading-tighter relative overflow-hidden text-xl font-medium tracking-tighter"
+              />
 
               <div className="flex items-center justify-between gap-4 overflow-x-hidden">
                 <div className="flex items-center gap-2">
@@ -487,27 +461,47 @@ export const ActionItem = React.memo(function ActionItem({
                 <div className="flex items-center justify-end gap-1 overflow-hidden text-right text-sm font-medium whitespace-nowrap opacity-50 md:text-xs">
                   <span className="@[240px]:hidden">
                     {formatActionDatetime({
-                      date: action.date,
+                      date: shouldUseInstagramDate
+                        ? action.instagram_date
+                        : action.date,
                       dateFormat: 2,
                       timeFormat: 1,
                     })}
                   </span>
                   <span className="hidden @[240px]:block @[360px]:hidden">
                     {formatActionDatetime({
-                      date: action.date,
+                      date: shouldUseInstagramDate
+                        ? action.instagram_date
+                        : action.date,
                       dateFormat: 3,
                       timeFormat: 1,
                     })}
                   </span>
                   <span className="hidden @[360px]:block">
                     {formatActionDatetime({
-                      date: action.date,
+                      date: shouldUseInstagramDate
+                        ? action.instagram_date
+                        : action.date,
                       dateFormat: 4,
                       timeFormat: 1,
                     })}
                   </span>
                   •<div>{action.time.toString().concat("m")}</div>
                 </div>
+              </div>
+
+              <div className="absolute -top-3 right-3">
+                {selectMultiple && setSelectedActions && (
+                  <SelectionCheckbox
+                    className="border-background"
+                    isSelected={
+                      selectedActions?.some((a) => a.id === action.id) || false
+                    }
+                    action={action}
+                    onSelectionChange={setSelectedActions}
+                    currentSelection={selectedActions || []}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -564,21 +558,14 @@ export const ActionItem = React.memo(function ActionItem({
             {/* Atalhos */}
             {isHover && !edit ? <ShortcutActions action={action} /> : null}
 
-            {selectMultiple && (
-              <Checkbox
-                checked={selectedActions?.includes(action.id)}
-                className="bg-accent border-0"
-                onCheckedChange={(state) => {
-                  if (setSelectedActions) {
-                    setSelectedActions((actions) => {
-                      if (state) {
-                        return [...actions, action.id];
-                      } else {
-                        return actions.filter((id) => id !== action.id);
-                      }
-                    });
-                  }
-                }}
+            {selectMultiple && setSelectedActions && (
+              <SelectionCheckbox
+                isSelected={
+                  selectedActions?.some((a) => a.id === action.id) || false
+                }
+                action={action}
+                onSelectionChange={setSelectedActions}
+                currentSelection={selectedActions || []}
               />
             )}
 
@@ -594,73 +581,21 @@ export const ActionItem = React.memo(function ActionItem({
             )}
 
             {/* Title */}
-            <div
+            <EditableTitle
+              title={action.title}
+              isEditing={edit}
+              setIsEditing={setEdit}
+              onSave={(newTitle) => {
+                handleActions({
+                  intent: INTENTS.updateAction,
+                  ...action,
+                  title: newTitle,
+                });
+              }}
               className={`relative flex w-full shrink overflow-hidden ${
                 long ? "text-base" : ""
               }`}
-            >
-              {edit ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  name="title"
-                  defaultValue={action.title}
-                  className="w-full bg-transparent outline-hidden"
-                  onKeyDown={(event) => {
-                    if (event.key === "Escape") {
-                      flushSync(() => {
-                        setEdit(() => false);
-                      });
-                      buttonRef.current?.focus();
-                    } else if (event.key === "Enter") {
-                      event.preventDefault();
-                      if (inputRef.current?.value !== action.title) {
-                        flushSync(() => {
-                          handleActions({
-                            intent: INTENTS.updateAction,
-                            ...action,
-                            title: String(inputRef.current?.value),
-                          });
-                        });
-
-                        buttonRef.current?.focus();
-                      }
-                      setEdit(() => false);
-                    }
-                  }}
-                  onBlur={(event) => {
-                    event.preventDefault();
-                    if (inputRef.current?.value !== action.title) {
-                      flushSync(() => {
-                        handleActions({
-                          intent: INTENTS.updateAction,
-                          ...action,
-                          title: String(inputRef.current?.value),
-                        });
-                      });
-                    }
-                    setEdit(() => false);
-                  }}
-                />
-              ) : (
-                <button
-                  ref={buttonRef}
-                  className={`relative w-full cursor-text items-center overflow-hidden text-left text-nowrap text-ellipsis outline-hidden select-none`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (!edit) {
-                      flushSync(() => {
-                        setEdit(true);
-                      });
-                      inputRef.current?.select();
-                    }
-                  }}
-                >
-                  <span suppressHydrationWarning>{action.title}</span>
-                </button>
-              )}
-            </div>
+            />
 
             {/* Categoria */}
             {showCategory && (
@@ -872,10 +807,22 @@ export const ActionItem = React.memo(function ActionItem({
   );
 });
 
-function SprintIcon({ hasBackground }: { hasBackground?: boolean }) {
+function SprintIcon({
+  hasBackground,
+  className,
+}: {
+  hasBackground?: boolean;
+  className?: string;
+}) {
   return (
     <div
-      className={`grid size-5 shrink-0 place-content-center rounded-md ${hasBackground ? "bg-primary text-primary-foreground ring-background ring-2" : "text-foreground animate-pulse"}`}
+      className={cn(
+        `grid size-5 shrink-0 place-content-center rounded-md`,
+        hasBackground
+          ? "bg-primary text-primary-foreground ring-background ring-2"
+          : "text-foreground animate-pulse",
+        className,
+      )}
     >
       <RabbitIcon className="size-4" />
     </div>
