@@ -10,7 +10,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
-import { Theme, ThemeColor } from "~/lib/theme/theme-provider";
+// Using remix-themes instead of custom theme provider
 
 //@ts-ignore
 import { useState } from "react";
@@ -29,8 +29,7 @@ import {
 import { themeSessionResolver } from "./lib/auth/session.server";
 
 export type LoaderData = {
-  theme: Theme | null;
-  themeColor: ThemeColor | null;
+  theme: string | null;
   env: {
     SUPABASE_URL: string;
     SUPABASE_KEY: string;

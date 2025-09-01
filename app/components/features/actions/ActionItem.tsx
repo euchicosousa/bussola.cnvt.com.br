@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useMatches,
   useNavigate,
-  useSearchParams,
   useSubmit,
 } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
@@ -48,7 +47,7 @@ interface NewActionProps {
   setSelectedActions?: React.Dispatch<React.SetStateAction<Action[]>>;
   selectedActions?: Action[];
   editingAction?: string | null;
-  setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
+  handleEditingAction?: (actionId: string, actionPartnerSlug: string) => void;
   sprint?: boolean;
   partner?: Partner; // Para ActionGrid
   isInstagramDate?: boolean; // Para usar instagram_date quando appropriado
@@ -75,15 +74,13 @@ export const ActionItem = React.memo(function ActionItem({
   setSelectedActions,
   selectedActions,
   editingAction,
-  setEditingAction,
+  handleEditingAction,
   isInstagramDate,
 }: NewActionProps) {
   // Shared state
   const submit = useSubmit();
   const navigate = useNavigate();
   const matches = useMatches();
-  const [searchParams, setSearchParams] = useSearchParams();
-  let params = new URLSearchParams(searchParams);
 
   const [edit, setEdit] = useState(false);
   const [isHover, setHover] = useState(false);
@@ -252,17 +249,8 @@ export const ActionItem = React.memo(function ActionItem({
               event.preventDefault();
               event.stopPropagation();
               if (!selectMultiple) {
-                if (setEditingAction) {
-                  if (editingAction === action.id) {
-                    navigate(
-                      `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
-                    );
-                  } else {
-                    setEditingAction(action.id);
-                    // params.set("editing_action", action.id);
-                    params.delete("show_feed");
-                    setSearchParams(params);
-                  }
+                if (handleEditingAction) {
+                  handleEditingAction(action.id, actionPartner.slug);
                 } else {
                   navigate(
                     `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
@@ -528,17 +516,8 @@ export const ActionItem = React.memo(function ActionItem({
               e.stopPropagation();
 
               if (!edit && !selectMultiple) {
-                if (setEditingAction) {
-                  if (editingAction === action.id) {
-                    navigate(
-                      `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
-                    );
-                  } else {
-                    setEditingAction(action.id);
-                    // params.set("editing_action", action.id);
-                    params.delete("show_feed");
-                    setSearchParams(params);
-                  }
+                if (handleEditingAction) {
+                  handleEditingAction(action.id, actionPartner.slug);
                 } else {
                   navigate(
                     `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,

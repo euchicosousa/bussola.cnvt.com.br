@@ -9,6 +9,7 @@ import {
   HexagonIcon,
   LogOutIcon,
   MenuIcon,
+  MonitorIcon,
   MoonIcon,
   PlusIcon,
   SearchIcon,
@@ -51,9 +52,13 @@ import {
 } from "~/components/ui/command";
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
@@ -75,7 +80,7 @@ export default function Header({
   const navigation = useNavigation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [theme, setTheme] = useTheme();
+  const [theme, setTheme, themeMetadata] = useTheme();
   const isLoading = navigation.state !== "idle";
 
   const { showFeed, setShowFeed } = useOutletContext() as ContextType;
@@ -241,24 +246,53 @@ export default function Header({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="bg-content mr-4">
-              {theme === Theme.LIGHT ? (
-                <DropdownMenuItem
-                  onSelect={() => setTheme(Theme.DARK)}
-                  className="bg-item"
-                >
-                  <SunIcon className="size-4 opacity-50" />
-                  <div>Dark Mode</div>
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  onSelect={() => setTheme(Theme.LIGHT)}
-                  className="bg-item"
-                >
-                  <MoonIcon className="size-4 opacity-50" />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className="bg-item">
+                  {theme === Theme.LIGHT && (
+                    <SunIcon className="size-4 opacity-50" />
+                  )}
+                  {theme === Theme.DARK && (
+                    <MoonIcon className="size-4 opacity-50" />
+                  )}
+                  {theme === null && (
+                    <MonitorIcon className="size-4 opacity-50" />
+                  )}
+                  <div>
+                    Tema{" "}
+                    <span className="font-medium uppercase">
+                      {theme || "system"}
+                    </span>
+                  </div>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="bg-content">
+                  <DropdownMenuCheckboxItem
+                    checked={theme === Theme.LIGHT}
+                    onCheckedChange={() => setTheme(Theme.LIGHT)}
+                    className="bg-select-item"
+                  >
+                    <SunIcon className="mr-2 size-4 opacity-50" />
+                    <div>Light Mode</div>
+                  </DropdownMenuCheckboxItem>
 
-                  <div>Light Mode</div>
-                </DropdownMenuItem>
-              )}
+                  <DropdownMenuCheckboxItem
+                    checked={theme === Theme.DARK}
+                    onCheckedChange={() => setTheme(Theme.DARK)}
+                    className="bg-select-item"
+                  >
+                    <MoonIcon className="mr-2 size-4 opacity-50" />
+                    <div>Dark Mode</div>
+                  </DropdownMenuCheckboxItem>
+
+                  <DropdownMenuCheckboxItem
+                    checked={theme === null}
+                    onCheckedChange={() => setTheme(null)}
+                    className="bg-select-item"
+                  >
+                    <MonitorIcon className="mr-2 size-4 opacity-50" />
+                    <div>System Mode</div>
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
 
               <DropdownMenuSeparator />
 

@@ -39,7 +39,7 @@ import {
   UserIcon,
   UsersIcon,
 } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 import {
   type LoaderFunctionArgs,
   type MetaFunction,
@@ -47,12 +47,14 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
+  useNavigate,
   useOutletContext,
   useSearchParams,
   useSubmit,
 } from "react-router";
 import invariant from "tiny-invariant";
 import { ActionItem, type ActionVariant } from "~/components/features/actions";
+import { getQueryString } from "~/lib/helpers";
 import { GridOfActions } from "~/components/features/actions/containers/GridOfActions";
 import CreateAction from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
@@ -177,6 +179,7 @@ export default function Partner() {
 
   const matches = useMatches();
   const submit = useSubmit();
+  const navigate = useNavigate();
   const id = useId();
   const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
   const [responsiblesFilter, setResponsiblesFilter] = useState<string[]>(
@@ -184,9 +187,27 @@ export default function Partner() {
   );
   const [search, setSearch] = useState<string>("");
 
+  // Hybrid approach: local state for instant UX + URL for persistence
   const [editingAction, setEditingAction] = useState<string | null>(
     searchParams.get("editing_action"),
   );
+
+  // Hybrid editing action handler: instant UX + background URL sync
+  const handleEditingAction = useCallback((actionId: string, actionPartnerSlug: string) => {
+    if (editingAction === actionId) {
+      // Same action clicked - navigate to full page immediately
+      navigate(`/dashboard/action/${actionId}/${actionPartnerSlug}${getQueryString()}`);
+    } else {
+      // Different action - update local state FIRST for instant UX
+      setEditingAction(actionId);
+      
+      // Then sync URL in background without blocking user
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("editing_action", actionId);
+      newParams.delete("show_feed");
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [editingAction, navigate, searchParams, setSearchParams, setEditingAction]);
 
   const fullEditingAction = (actions as Action[])?.find(
     (action) => action.id === editingAction,
@@ -389,8 +410,10 @@ export default function Partner() {
     );
     setCategoryFilter(_categories);
 
-    // Other URL parameters
+    // Sync local editingAction state when URL changes (back/forward navigation)
     setEditingAction(searchParams.get("editing_action"));
+    
+    // Other URL parameters
     set_isInstagramDate(!!searchParams.get("instagram_date"));
     set_showInstagramContent(
       !!searchParams.get("instagram_date") && !!searchParams.get("show_feed"),
@@ -1235,7 +1258,7 @@ export default function Partner() {
                     selectedActions={selectedActions}
                     setSelectedActions={setSelectedActions}
                     editingAction={editingAction}
-                    setEditingAction={setEditingAction}
+                    handleEditingAction={handleEditingAction}
                     isInstagramDate={isInstagramDate}
                   />
                 ))}
@@ -1250,9 +1273,13 @@ export default function Partner() {
           partner={partner}
           action={fullEditingAction!}
           setClose={() => {
+            // Close instantly for UX
             setEditingAction(null);
-            // params.delete("editing_action");
-            setSearchParams(params);
+            
+            // Sync URL in background
+            const newParams = new URLSearchParams(searchParams);
+            newParams.delete("editing_action");
+            setSearchParams(newParams, { replace: true });
           }}
         />
       )}
@@ -1343,7 +1370,7 @@ export const CalendarDay = ({
   setSelectedActions,
   selectMultiple,
   editingAction,
-  setEditingAction,
+  handleEditingAction,
   selectedActions,
   orderActionsBy,
   variant,
@@ -1358,7 +1385,7 @@ export const CalendarDay = ({
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
-  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  handleEditingAction?: (actionId: string, actionPartnerSlug: string) => void;
   selectedActions?: Action[];
   orderActionsBy?: ORDER_ACTIONS_BY;
   variant?: ActionVariant;
@@ -1428,7 +1455,7 @@ export const CalendarDay = ({
                         variant={variant}
                         selectedActions={selectedActions}
                         editingAction={editingAction}
-                        setEditingAction={setEditingAction}
+                        handleEditingAction={handleEditingAction}
                         selectMultiple={selectMultiple}
                         showResponsibles={showResponsibles}
                         setSelectedActions={setSelectedActions}
@@ -1458,7 +1485,7 @@ export const CalendarDay = ({
                       orderActionsBy={orderActionsBy}
                       selectedActions={selectedActions}
                       editingAction={editingAction}
-                      setEditingAction={setEditingAction}
+                      handleEditingAction={handleEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
                       category={category}
@@ -1487,7 +1514,7 @@ export const CalendarDay = ({
                       orderActionsBy={orderActionsBy}
                       selectedActions={selectedActions}
                       editingAction={editingAction}
-                      setEditingAction={setEditingAction}
+                      handleEditingAction={handleEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
                       category={category}
@@ -1524,7 +1551,7 @@ function CategoryActions({
   setSelectedActions,
   selectMultiple = false,
   editingAction,
-  setEditingAction,
+  handleEditingAction,
   selectedActions,
   orderActionsBy,
   isInstagramDate,
@@ -1536,7 +1563,7 @@ function CategoryActions({
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
-  setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+  handleEditingAction?: (actionId: string, actionPartnerSlug: string) => void;
   selectedActions?: Action[];
   orderActionsBy?: ORDER_ACTIONS_BY;
   isInstagramDate?: boolean;
@@ -1569,7 +1596,7 @@ function CategoryActions({
             variant={variant}
             selectedActions={selectedActions}
             editingAction={editingAction}
-            setEditingAction={setEditingAction}
+            handleEditingAction={handleEditingAction}
             selectMultiple={selectMultiple}
             showResponsibles={showResponsibles}
             showDelay

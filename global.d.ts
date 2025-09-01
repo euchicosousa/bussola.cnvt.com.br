@@ -2,7 +2,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import type { Database } from "database";
 import type { DateRange } from "react-day-picker";
 import type { Tables } from "types";
-import type { Theme, ThemeColor } from "~/lib/theme-provider";
+// Theme types now handled by remix-themes
 
 declare global {
   type Partner = Tables<"partners">;
@@ -31,8 +31,7 @@ declare global {
   };
 
   type RootType = {
-    theme: Theme | null;
-    themeColor: ThemeColor | null;
+    theme: string | null;
     env: {
       SUPABASE_URL: string;
       SUPABASE_KEY: string;

@@ -38,8 +38,8 @@ interface ActionsContainerProps {
   selectMultiple?: boolean;
   selectedActions?: Action[];
   setSelectedActions?: React.Dispatch<React.SetStateAction<Action[]>>;
+  handleEditingAction?: (actionId: string, actionPartnerSlug: string) => void;
   editingAction?: string | null;
-  setEditingAction?: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export function ActionsContainer({
@@ -62,7 +62,7 @@ export function ActionsContainer({
   selectedActions,
   setSelectedActions,
   editingAction,
-  setEditingAction,
+  handleEditingAction,
 }: ActionsContainerProps) {
   const matches = useMatches();
   const { states } = matches[1].data as DashboardRootType;
@@ -145,7 +145,7 @@ export function ActionsContainer({
             selectedActions={selectedActions}
             setSelectedActions={setSelectedActions}
             editingAction={editingAction}
-            setEditingAction={setEditingAction}
+            handleEditingAction={handleEditingAction}
           />
         ))}
       </div>

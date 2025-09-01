@@ -111,7 +111,6 @@ import { cn } from "~/lib/ui/utils";
 
 interface ActionContextMenuProps {
   action: Action;
-  isInstagramDate?: boolean;
   handleActions: (data: HandleActionsDataType) => void;
 }
 
@@ -159,7 +158,6 @@ export const ChangeDatePopover = ({
  */
 export const ActionContextMenu = React.memo(function ActionContextMenu({
   action,
-  isInstagramDate,
   handleActions,
 }: ActionContextMenuProps) {
   const matches = useMatches();
