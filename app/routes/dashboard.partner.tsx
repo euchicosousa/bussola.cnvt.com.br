@@ -230,14 +230,7 @@ export default function Partner() {
 
   let params = new URLSearchParams(searchParams);
 
-  for (const [key, value] of searchParams.entries()) {
-    params.set(key, value);
-  }
-
   const [isInstagramDate, set_isInstagramDate] = useState(
-    !!searchParams.get("instagram_date"),
-  );
-  const [showInstagramContent, set_showInstagramContent] = useState(
     !!searchParams.get("instagram_date"),
   );
   const [showResponsibles, set_showResponsibles] = useState(
@@ -250,15 +243,15 @@ export default function Partner() {
     !!searchParams.get("show_all_actions"),
   );
 
+  console.log({ isInstagramDate });
+
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [currentDate, setCurrentDate] = useState(date);
   const [orderActionsBy, setOrderActionsBy] =
     useState<ORDER_ACTIONS_BY>("date");
 
   const [variant, setVariant] = useState<ActionVariant>(
-    showInstagramContent || !!searchParams.get("instagram_date")
-      ? "content"
-      : "line",
+    isInstagramDate ? "content" : "line",
   );
 
   const { actions: pendingActions } = usePendingDataSafe();
@@ -355,10 +348,8 @@ export default function Partner() {
 
         if (code === "KeyC") {
           if (params.get("show_content")) {
-            set_showInstagramContent(false);
             params.delete("show_content");
           } else {
-            set_showInstagramContent(true);
             params.set("show_content", "true");
           }
           setSearchParams(params);
@@ -374,7 +365,6 @@ export default function Partner() {
         } else if (code === "KeyI") {
           if (params.get("show_feed")) {
             set_isInstagramDate(false);
-            set_showInstagramContent(false);
             setShowFeed(false);
 
             params.delete("show_feed");
@@ -382,7 +372,6 @@ export default function Partner() {
             params.delete("show_content");
           } else {
             set_isInstagramDate(true);
-            set_showInstagramContent(true);
             setShowFeed(true);
 
             params.set("instagram_date", "true");
@@ -405,31 +394,67 @@ export default function Partner() {
     setResponsiblesFilter(partner.users_ids);
   }, [partner]);
 
+  // Categories filter - only when categories param or categories data changes
   useEffect(() => {
-    // Categories filter
-    let _params = params.get("categories")?.split("-");
+    let _params = searchParams.get("categories")?.split("-");
     let _categories = categories.filter((category) =>
       _params?.find((_p) => _p === category.slug),
     );
     setCategoryFilter(_categories);
+  }, [searchParams.get("categories"), categories]);
 
-    // Sync local editingAction state when URL changes (back/forward navigation)
+  // EditingAction sync - only when editing_action param changes (back/forward navigation)
+  useEffect(() => {
     setEditingAction(searchParams.get("editing_action"));
+  }, [searchParams.get("editing_action")]);
 
-    // Other URL parameters
+  // Instagram date sync - only when instagram_date param changes
+  useEffect(() => {
     set_isInstagramDate(!!searchParams.get("instagram_date"));
-    set_showInstagramContent(
-      !!searchParams.get("instagram_date") && !!searchParams.get("show_feed"),
-    );
-    set_showResponsibles(!!searchParams.get("show_responsibles"));
-    set_selectMultiple(!!searchParams.get("select_multiple"));
-    set_showAllActions(!!searchParams.get("show_all_actions"));
+  }, [searchParams.get("instagram_date")]);
 
-    // Set variant based on showFeed parameter
+  // Show responsibles sync - only when show_responsibles param changes
+  useEffect(() => {
+    set_showResponsibles(!!searchParams.get("show_responsibles"));
+  }, [searchParams.get("show_responsibles")]);
+
+  // Select multiple sync - only when select_multiple param changes
+  useEffect(() => {
+    set_selectMultiple(!!searchParams.get("select_multiple"));
+  }, [searchParams.get("select_multiple")]);
+
+  // Show all actions sync - only when show_all_actions param changes
+  useEffect(() => {
+    set_showAllActions(!!searchParams.get("show_all_actions"));
+  }, [searchParams.get("show_all_actions")]);
+
+  // Variant sync - only when show_feed param changes
+  useEffect(() => {
     if (searchParams.get("show_feed")) {
       setVariant("content");
     }
-  }, [searchParams, categories]);
+  }, [searchParams.get("show_feed")]);
+
+  // Select all actions with Cmd+A when selectMultiple is active
+  useEffect(() => {
+    if (!selectMultiple) return;
+
+    const handleSelectAll = (event: KeyboardEvent) => {
+      if (event.metaKey && event.code === "KeyA") {
+        event.preventDefault();
+        let actionsToBeSelected: Action[] = [];
+        calendar.forEach((day) => {
+          day.actions?.forEach((action) => {
+            actionsToBeSelected.push(action);
+          });
+        });
+        setSelectedActions(actionsToBeSelected);
+      }
+    };
+
+    document.addEventListener("keydown", handleSelectAll);
+    return () => document.removeEventListener("keydown", handleSelectAll);
+  }, [selectMultiple, calendar]);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     const date = over?.id as string;
@@ -781,18 +806,6 @@ export default function Partner() {
                 size={"sm"}
                 variant={selectMultiple ? "secondary" : "ghost"}
                 onClick={() => {
-                  document.addEventListener("keydown", (event) => {
-                    if (event.metaKey && event.code === "KeyA") {
-                      let actionsToBeSelected: Action[] = [];
-                      event.preventDefault();
-                      calendar.map((day) => {
-                        day.actions?.map((action) => {
-                          actionsToBeSelected.push(action);
-                        });
-                      });
-                      setSelectedActions(actionsToBeSelected);
-                    }
-                  });
                   if (selectMultiple) {
                     setSelectedActions([]);
                     set_selectMultiple(false);
@@ -816,20 +829,16 @@ export default function Partner() {
                 onClick={() => {
                   if (isInstagramDate) {
                     set_isInstagramDate(false);
-                    set_showInstagramContent(false);
                     setVariant("line");
 
                     params.delete("instagram_date");
-                    // params.delete("show_content");
                   } else {
                     set_isInstagramDate(true);
-                    set_showInstagramContent(true);
                     setVariant("content");
 
                     console.log("Instagram Date");
 
                     params.set("instagram_date", "true");
-                    // params.set("show_content", "true");
                   }
                   setSearchParams(params);
                 }}
@@ -855,7 +864,7 @@ export default function Partner() {
                   // setSearchParams(params);
                 }}
                 title={
-                  showInstagramContent
+                  isInstagramDate
                     ? "Mostrar conteúdo das postagens (⇧ + ⌥ + C)"
                     : "Mostrar apenas os títulos (⇧ + ⌥ + C)"
                 }
@@ -1254,7 +1263,6 @@ export default function Partner() {
                     day={day}
                     person={person}
                     showResponsibles={showResponsibles}
-                    showInstagramContent={showInstagramContent}
                     key={i}
                     index={i}
                     selectMultiple={selectMultiple}
@@ -1368,7 +1376,6 @@ export const CalendarDay = ({
   day,
   currentDate,
   showResponsibles,
-  showInstagramContent,
   index,
   setSelectedActions,
   selectMultiple,
@@ -1383,7 +1390,6 @@ export const CalendarDay = ({
   currentDate: Date | string;
   person: Person;
   showResponsibles?: boolean;
-  showInstagramContent?: boolean;
   index?: string | number;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
@@ -1435,7 +1441,7 @@ export const CalendarDay = ({
       <div className="flex h-full flex-col justify-between px-2">
         <div className="relative flex h-full grow flex-col gap-3">
           {/* Se for par amostrar o conteúdo estilo Instagram */}
-          {showInstagramContent ? (
+          {isInstagramDate ? (
             <div className="flex flex-col">
               {day.actions?.filter((action) => isInstagramFeed(action.category))
                 .length !== 0 && (
