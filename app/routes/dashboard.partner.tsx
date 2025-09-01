@@ -22,7 +22,6 @@ import {
 import { ptBR } from "date-fns/locale";
 import {
   ArrowDownAZIcon,
-  CalendarClock,
   CalendarDaysIcon,
   CalendarIcon,
   ChevronLeftIcon,
@@ -54,7 +53,6 @@ import {
 } from "react-router";
 import invariant from "tiny-invariant";
 import { ActionItem, type ActionVariant } from "~/components/features/actions";
-import { getQueryString } from "~/lib/helpers";
 import { GridOfActions } from "~/components/features/actions/containers/GridOfActions";
 import CreateAction from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
@@ -70,7 +68,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { getNewDateValues } from "~/lib/helpers";
+import { getNewDateValues, getQueryString } from "~/lib/helpers";
 import { isInstagramFeed } from "~/shared/utils/validation/contentValidation";
 
 import {
@@ -83,6 +81,7 @@ import {
 } from "@dnd-kit/core";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
+import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 import { Input } from "~/components/ui/input";
 import { INTENTS } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
@@ -97,7 +96,6 @@ import {
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
-import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 
 export const config = { runtime: "edge" };
 
@@ -193,21 +191,26 @@ export default function Partner() {
   );
 
   // Hybrid editing action handler: instant UX + background URL sync
-  const handleEditingAction = useCallback((actionId: string, actionPartnerSlug: string) => {
-    if (editingAction === actionId) {
-      // Same action clicked - navigate to full page immediately
-      navigate(`/dashboard/action/${actionId}/${actionPartnerSlug}${getQueryString()}`);
-    } else {
-      // Different action - update local state FIRST for instant UX
-      setEditingAction(actionId);
-      
-      // Then sync URL in background without blocking user
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("editing_action", actionId);
-      newParams.delete("show_feed");
-      setSearchParams(newParams, { replace: true });
-    }
-  }, [editingAction, navigate, searchParams, setSearchParams, setEditingAction]);
+  const handleEditingAction = useCallback(
+    (actionId: string, actionPartnerSlug: string) => {
+      if (editingAction === actionId) {
+        // Same action clicked - navigate to full page immediately
+        navigate(
+          `/dashboard/action/${actionId}/${actionPartnerSlug}${getQueryString()}`,
+        );
+      } else {
+        // Different action - update local state FIRST for instant UX
+        setEditingAction(actionId);
+
+        // Then sync URL in background without blocking user
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set("editing_action", actionId);
+        newParams.delete("show_feed");
+        setSearchParams(newParams, { replace: true });
+      }
+    },
+    [editingAction, navigate, searchParams, setSearchParams, setEditingAction],
+  );
 
   const fullEditingAction = (actions as Action[])?.find(
     (action) => action.id === editingAction,
@@ -235,7 +238,7 @@ export default function Partner() {
     !!searchParams.get("instagram_date"),
   );
   const [showInstagramContent, set_showInstagramContent] = useState(
-    !!searchParams.get("instagram_date") && !!searchParams.get("show_feed"),
+    !!searchParams.get("instagram_date"),
   );
   const [showResponsibles, set_showResponsibles] = useState(
     !!searchParams.get("show_responsibles"),
@@ -412,7 +415,7 @@ export default function Partner() {
 
     // Sync local editingAction state when URL changes (back/forward navigation)
     setEditingAction(searchParams.get("editing_action"));
-    
+
     // Other URL parameters
     set_isInstagramDate(!!searchParams.get("instagram_date"));
     set_showInstagramContent(
@@ -1275,7 +1278,7 @@ export default function Partner() {
           setClose={() => {
             // Close instantly for UX
             setEditingAction(null);
-            
+
             // Sync URL in background
             const newParams = new URLSearchParams(searchParams);
             newParams.delete("editing_action");
@@ -1433,7 +1436,7 @@ export const CalendarDay = ({
         <div className="relative flex h-full grow flex-col gap-3">
           {/* Se for par amostrar o conteúdo estilo Instagram */}
           {showInstagramContent ? (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col">
               {day.actions?.filter((action) => isInstagramFeed(action.category))
                 .length !== 0 && (
                 <>
@@ -1441,7 +1444,7 @@ export const CalendarDay = ({
                     <Grid3x3Icon className="size-4" />
                     <div>Feed</div>
                   </div>
-                  <div className="mb-4 flex flex-col gap-3">
+                  <div className="mb-4 flex flex-col gap-1">
                     {sortActions(
                       day.actions?.filter((action) =>
                         isInstagramFeed(action.category),
