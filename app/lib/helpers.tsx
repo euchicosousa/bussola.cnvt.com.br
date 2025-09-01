@@ -509,18 +509,25 @@ export const Content = ({
         : undefined;
 
   let isPreview = !(action.files !== null && action.files[0] !== "");
-  let currentFile = files && files.length > currentFileIndex ? files[currentFileIndex] : files?.[0];
-  let isFile = currentFile && !["", "null", null].find((p) => p === currentFile.preview);
+  let currentFile =
+    files && files.length > currentFileIndex
+      ? files[currentFileIndex]
+      : files?.[0];
+  let isFile =
+    currentFile && !["", "null", null].find((p) => p === currentFile.preview);
 
   return (
-    <div className="group/action relative">
-      {currentFile && !["", "null", null].find((p) => p === currentFile.preview) ? (
+    <div
+      className={`group/action relative overflow-hidden ${aspect === "feed" ? "aspect-4/5" : ""}`}
+    >
+      {currentFile &&
+      !["", "null", null].find((p) => p === currentFile.preview) ? (
         // Show current file based on index
         currentFile?.type === "image" ? (
           <img
             src={`${currentFile.preview}`}
             className={cn(
-              `object-cover transition-opacity ${isPreview && "opacity-50"}`,
+              `object-cover transition-opacity ${isPreview && "opacity-50"} `,
               className,
             )}
             style={{ backgroundColor: action.color }}
