@@ -1,15 +1,22 @@
-import { useActionData } from "react-router";
 import {
-  type MetaFunction,
+  AlertCircleIcon,
+  EyeIcon,
+  EyeOffIcon,
+  LogInIcon,
+  ViewIcon,
+} from "lucide-react";
+import { useState } from "react";
+import {
   redirect,
+  useActionData,
   type ActionFunctionArgs,
+  type MetaFunction,
 } from "react-router";
-import { AlertCircleIcon, LogInIcon } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { Bussola } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
+import { Bussola } from "~/lib/helpers";
 
 export const config = { runtime: "edge" };
 
@@ -42,51 +49,60 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+
 export default function Login() {
   const actionData = useActionData<typeof action>();
+  const [showPassword, setShowPassword] = useState(false);
   return (
-    <div className="flex h-[100dvh] items-center justify-center">
-      <div className="w-full p-8 md:w-96">
-        <div className="mb-8 flex">
-          <Bussola />
+    <div className="grid min-h-dvh grid-cols-[2rem_20rem_2rem] justify-center overflow-x-hidden md:grid-cols-[2rem_30rem_2rem]">
+      <div className="border-r"></div>
+      <div className="flex flex-col justify-center">
+        <div className="bg-popover before:bg-border after:bg-border relative p-8 before:absolute before:top-0 before:-left-[100vw] before:h-px before:w-[200vw] after:absolute after:bottom-0 after:-left-[100vw] after:h-px after:w-[200vw] dark:after:bg-white/10">
+          <div className="mb-8 flex">
+            <Bussola />
+          </div>
+          {actionData && (
+            <div className="my-8 flex items-center gap-4 rounded-lg bg-rose-600 p-4 leading-none text-rose-50">
+              <AlertCircleIcon className="size-10" />
+              <div>{actionData.errors.email}</div>
+            </div>
+          )}
+
+          <form method="post">
+            <div className="mb-4">
+              <span className="mb-2 block w-full font-medium">E-mail</span>
+              <Input type="email" name="email" className="border" />
+            </div>
+
+            <div className="relative mb-4">
+              <span className="mb-2 block w-full font-medium">Senha</span>
+              <Input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                className="border pr-12"
+              />
+              <Button
+                size={"icon"}
+                className="absolute top-8 right-0"
+                variant={"ghost"}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setShowPassword(!showPassword);
+                }}
+              >
+                {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+              </Button>
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit">
+                Fazer Login <LogInIcon className="ml-2 size-3" />
+              </Button>
+            </div>
+          </form>
         </div>
-        {actionData && (
-          <div className="my-8 flex items-center gap-4 rounded-lg bg-rose-600 p-4 leading-none text-rose-50">
-            <AlertCircleIcon className="size-10" />
-            <div>{actionData.errors.email}</div>
-          </div>
-        )}
-
-        <form method="post">
-          <Label className="focus-within:bg-card mb-4 block w-full p-4">
-            <span className="mb-2 block w-full font-medium">E-mail</span>
-
-            <input
-              type="email"
-              name="email"
-              className="w-full text-xl font-medium tracking-tight outline-none"
-            />
-          </Label>
-          <Label className="focus-within:bg-card mb-4 block w-full p-4">
-            <span className="mb-2 block w-full font-medium">Senha</span>
-
-            <input
-              type="password"
-              name="password"
-              className="w-full text-xl font-medium tracking-tight outline-none"
-            />
-          </Label>
-
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              className="h-auto px-6 py-4 text-lg font-medium tracking-tight"
-            >
-              Fazer Login <LogInIcon className="ml-2 size-3" />
-            </Button>
-          </div>
-        </form>
       </div>
+      <div className="border-l"></div>
     </div>
   );
 }

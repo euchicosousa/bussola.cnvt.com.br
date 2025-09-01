@@ -1,4 +1,4 @@
-import { 
+import {
   addDays,
   format,
   formatRelative,
@@ -19,10 +19,7 @@ import {
   Rows4Icon,
 } from "lucide-react";
 import { useState } from "react";
-import {
-  useMatches,
-  useSearchParams,
-} from "react-router";
+import { useMatches, useSearchParams } from "react-router";
 
 import Badge from "~/components/common/forms/Badge";
 import { CreateAction, ActionItem } from "~/components/features/actions";
@@ -224,14 +221,16 @@ export function TodayView({
               <HoursView actions={currentActions} />
             ) : todayView === "feed" ? (
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-                {(sortActions(
-                  getInstagramFeed({
-                    actions: currentActions,
-                  }) as Action[],
-                  "state",
-                  "asc",
-                  states,
-                ) || []).map((action) => {
+                {(
+                  sortActions(
+                    getInstagramFeed({
+                      actions: currentActions,
+                    }) as Action[],
+                    "state",
+                    "asc",
+                    states,
+                  ) || []
+                ).map((action) => {
                   const partner = partners.filter(
                     (p) => p.slug === action.partners[0],
                   )[0];

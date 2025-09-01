@@ -74,149 +74,144 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
   });
 
   return (
-    <>
-      <div className="border-b"></div>
-      <div className="py-8 lg:py-24">
-        <div className="flex items-center justify-between gap-4 px-2 py-2 md:px-8">
-          <div className="flex items-center gap-2">
-            <h3 className="leading-none font-semibold tracking-tighter lg:text-2xl">
-              {`${format(
-                days[0],
-                "d".concat(
-                  !isSameMonth(days[0], days[days.length - 1])
-                    ? " 'de' MMMM"
-                    : "",
-                ),
-                {
-                  locale: ptBR,
-                },
-              )} a ${format(days[days.length - 1], " d 'de' MMMM", { locale: ptBR })}`}
-            </h3>
+    <div className="before:bg-border relative py-8 before:absolute before:top-0 before:-left-[100vw] before:h-px before:w-[200vw]">
+      <div className="flex items-center justify-between gap-4 px-2 py-2 md:px-8">
+        <div className="flex items-center gap-2">
+          <h3 className="leading-none font-semibold tracking-tighter lg:text-2xl">
+            {`${format(
+              days[0],
+              "d".concat(
+                !isSameMonth(days[0], days[days.length - 1])
+                  ? " 'de' MMMM"
+                  : "",
+              ),
+              {
+                locale: ptBR,
+              },
+            )} a ${format(days[days.length - 1], " d 'de' MMMM", { locale: ptBR })}`}
+          </h3>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"ghost"}>
-                  <CalendarIcon />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="bg-content">
-                <Calendar
-                  locale={ptBR}
-                  mode="single"
-                  selected={parseISO(currentDate)}
-                  onSelect={(date) => {
-                    if (date) {
-                      setCurrentDate(
-                        format(date, "yyyy-MM-dd", { locale: ptBR }),
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={"ghost"}>
+                <CalendarIcon />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="bg-content">
+              <Calendar
+                locale={ptBR}
+                mode="single"
+                selected={parseISO(currentDate)}
+                onSelect={(date) => {
+                  if (date) {
+                    setCurrentDate(
+                      format(date, "yyyy-MM-dd", { locale: ptBR }),
+                    );
+                  }
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setView("month")}
+            variant={view === "month" ? "secondary" : "ghost"}
+          >
+            Mês
+          </Button>
+          <Button
+            onClick={() => setView("week")}
+            variant={view === "week" ? "secondary" : "ghost"}
+          >
+            Semana
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant={"ghost"}>
+                {categoryFilter.length > 0
+                  ? categoryFilter.map((category) => category.title).join(", ")
+                  : "Filtros"}
+                <FilterIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-content">
+              <DropdownMenuCheckboxItem
+                className="bg-select-item"
+                checked={categoryFilter.length === 0}
+                onCheckedChange={() => {
+                  setCategoryFilter([]);
+                }}
+              >
+                Todos os itens
+              </DropdownMenuCheckboxItem>
+              {categories.map((category) => (
+                <DropdownMenuCheckboxItem
+                  key={category.id}
+                  className="bg-select-item"
+                  checked={categoryFilter.includes(category)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setCategoryFilter((prev) => [...prev, category]);
+                    } else {
+                      setCategoryFilter((prev) =>
+                        prev.filter((c) => c.id !== category.id),
                       );
                     }
                   }}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setView("month")}
-              variant={view === "month" ? "secondary" : "ghost"}
-            >
-              Mês
-            </Button>
-            <Button
-              onClick={() => setView("week")}
-              variant={view === "week" ? "secondary" : "ghost"}
-            >
-              Semana
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant={"ghost"}>
-                  {categoryFilter.length > 0
-                    ? categoryFilter
-                        .map((category) => category.title)
-                        .join(", ")
-                    : "Filtros"}
-                  <FilterIcon />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-content">
-                <DropdownMenuCheckboxItem
-                  className="bg-select-item"
-                  checked={categoryFilter.length === 0}
-                  onCheckedChange={() => {
-                    setCategoryFilter([]);
-                  }}
                 >
-                  Todos os itens
+                  {category.title}
                 </DropdownMenuCheckboxItem>
-                {categories.map((category) => (
-                  <DropdownMenuCheckboxItem
-                    key={category.id}
-                    className="bg-select-item"
-                    checked={categoryFilter.includes(category)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setCategoryFilter((prev) => [...prev, category]);
-                      } else {
-                        setCategoryFilter((prev) =>
-                          prev.filter((c) => c.id !== category.id),
-                        );
-                      }
-                    }}
-                  >
-                    {category.title}
-                  </DropdownMenuCheckboxItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        {/* Calendar Header */}
-        <div className="scrollbars-h px-2 md:px-8">
-          <div className="min-w-[1440px]">
-            <div className="grid grid-cols-7 border-b py-2 text-center text-xs font-medium tracking-wider uppercase">
-              {eachDayOfInterval({
-                start: startOfWeek(new Date()),
-                end: endOfWeek(new Date()),
-              }).map((day) => (
-                <div key={day.getDate()}>
-                  <span className="lg:hidden">
-                    {format(day, "iiiiii", { locale: ptBR })}
-                  </span>
-                  <span className="hidden lg:inline-block">
-                    {format(day, "iiii", { locale: ptBR })}
-                  </span>
-                </div>
               ))}
-            </div>
-            {/* Calendar Body */}
-            <div className="grid grid-cols-7">
-              {calendar.map(({ date, actions }, i) => {
-                return (
-                  <div key={i} className="rounded p-1">
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+      <div className="scrollbars-h">
+        {/* Calendar Header */}
+        <div className="min-w-[1440px]">
+          <div className="grid grid-cols-7 py-2 text-center text-xs font-medium tracking-wider uppercase">
+            {eachDayOfInterval({
+              start: startOfWeek(new Date()),
+              end: endOfWeek(new Date()),
+            }).map((day) => (
+              <div key={day.getDate()}>
+                <span className="lg:hidden">
+                  {format(day, "iiiiii", { locale: ptBR })}
+                </span>
+                <span className="hidden lg:inline-block">
+                  {format(day, "iiii", { locale: ptBR })}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Calendar Body */}
+          <div className="grid grid-cols-7">
+            {calendar.map(({ date, actions }, i) => {
+              return (
+                <div key={i} className="rounded p-1">
+                  <div
+                    className={`mb-2 ${!isSameMonth(parseISO(date), new Date()) ? "opacity-25" : ""}`}
+                  >
                     <div
-                      className={`mb-2 ${!isSameMonth(parseISO(date), new Date()) ? "opacity-25" : ""}`}
+                      className={`grid size-8 place-content-center rounded-full ${isToday(parseISO(date)) ? "bg-primary text-primary-foreground" : ""}`}
                     >
-                      <div
-                        className={`grid size-8 place-content-center rounded-full ${isToday(parseISO(date)) ? "bg-primary text-primary-foreground" : ""}`}
-                      >
-                        {parseISO(date).getDate()}
-                      </div>
+                      {parseISO(date).getDate()}
                     </div>
-
-                    <ListOfActions
-                      actions={actions}
-                      isHair
-                      isFoldable
-                      date={{ timeFormat: 1 }}
-                    />
                   </div>
-                );
-              })}
-            </div>
+
+                  <ListOfActions
+                    actions={actions}
+                    isHair
+                    isFoldable
+                    date={{ timeFormat: 1 }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

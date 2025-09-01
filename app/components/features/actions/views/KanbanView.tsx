@@ -57,7 +57,7 @@ export function KanbanView({
 
   return (
     <div className="pb-4">
-      <div className="flex w-full">
+      <div className="w-min-fit flex overflow-x-auto">
         <DndContext onDragEnd={handleDragEnd} sensors={sensors} id={id}>
           {states.map((state) => {
             const stateActions = actions.filter(

@@ -10,9 +10,6 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
-// Using remix-themes instead of custom theme provider
-
-//@ts-ignore
 import { useState } from "react";
 import type { Route } from "./+types/root";
 

@@ -80,7 +80,7 @@ export default function Header({
   const navigation = useNavigation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [theme, setTheme, themeMetadata] = useTheme();
+  const [theme, setTheme] = useTheme();
   const isLoading = navigation.state !== "idle";
 
   const { showFeed, setShowFeed } = useOutletContext() as ContextType;

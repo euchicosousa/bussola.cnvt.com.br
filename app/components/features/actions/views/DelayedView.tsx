@@ -1,10 +1,10 @@
-import { 
+import {
   ComponentIcon,
-  ListIcon, 
+  ListIcon,
   ListTodoIcon,
   SearchIcon,
   SignalIcon,
-  XIcon 
+  XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -31,49 +31,25 @@ export function DelayedView({ actions }: { actions: Action[] }) {
   }, [query, actions]);
 
   return actions.length > 0 ? (
-    <>
-      <div className="border-b"></div>
+    <div className="before:bg-border relative before:absolute before:-left-[100vw] before:h-px before:w-[200vw]">
       <div className="px-2 py-8 md:px-8 lg:py-24">
-        <div className="flex justify-between pb-8">
+        <div className="flex flex-col justify-between gap-4 pb-8 md:flex-row">
           <div className="relative flex">
             <h2 className="text-3xl font-semibold tracking-tight">Atrasados</h2>
             <Badge value={actions.length} />
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              {showSearch && (
-                <div className="relative">
-                  <Input
-                    value={query}
-                    onChange={(e) => {
-                      setQuery(e.target.value);
-                    }}
-                    className="pr-12"
-                  />
-                  <SearchIcon
-                    className={`size-4 ${
-                      showSearch ? "absolute top-3 right-4" : ""
-                    }`}
-                  />
-                </div>
-              )}
-
-              <Button
-                variant={"ghost"}
-                onClick={() => {
-                  setShowSearch(!showSearch);
-                  setFiltered(actions);
-                  setQuery("");
-                }}
-              >
-                {showSearch ? (
-                  <XIcon className={"size-4"} />
-                ) : (
-                  <SearchIcon className={`size-4`} />
-                )}
-              </Button>
+          <div className="flex items-center justify-end gap-4">
+            <div className="relative">
+              <Input
+                placeholder="Procurar ação"
+                className="border"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <SearchIcon className="absolute top-1/2 right-2 size-4 -translate-y-1/2" />
             </div>
+
             <div className="flex items-center gap-2">
               <div className="text-muted-foreground hidden text-[10px] font-semibold tracking-widest uppercase md:block">
                 Ordenar por
@@ -137,6 +113,6 @@ export function DelayedView({ actions }: { actions: Action[] }) {
           <CategoriesView actions={filteredActions} />
         )}
       </div>
-    </>
+    </div>
   ) : null;
 }

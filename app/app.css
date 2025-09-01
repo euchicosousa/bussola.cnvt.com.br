@@ -16,8 +16,11 @@
     --muted: 210 10% 75%;
     --muted-foreground: 200 10% 50%;
 
-    --primary: 220 90% 50%;
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
+
+    /* --primary: 220 90% 50%;
+    --primary-foreground: 0 0% 100%; */
 
     --secondary: 220 10% 85%;
     --secondary-foreground: 200 10% 10%;

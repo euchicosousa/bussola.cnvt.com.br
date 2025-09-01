@@ -123,11 +123,6 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-///
-///
-///
-///
-
 export default function DashboardIndex() {
   let { actions } = useLoaderData<typeof loader>();
   const matches = useMatches();
@@ -161,15 +156,6 @@ export default function DashboardIndex() {
     actions: actions as Action[],
   }) as Action[];
 
-  // const weekActions = eachDayOfInterval({
-  //   start: startOfWeek(new Date()),
-  //   end: endOfWeek(new Date()),
-  // }).map((day) => ({
-  //   date: day,
-  //   actions: actions?.filter((action) =>
-  //     isSameDay(action.date, day),
-  //   ) as Action[],
-  // }));
   const nextActions = actions?.filter((action) => action.state != "finished");
 
   useEffect(() => {
@@ -177,53 +163,56 @@ export default function DashboardIndex() {
   }, []);
 
   return (
-    <div className="scrollbars-v">
-      {/* Progresso  */}
+    <div
+      className="scrollbars-v grid grid-cols-[0.5rem_1fr_0.5rem] justify-center md:grid-cols-[1rem_1fr_1rem] 2xl:grid-cols-[2rem_1fr_2rem]"
+      id="main"
+    >
+      <div className="border-r"></div>
+      <div className="w-full min-w-0">
+        {/* Progresso  */}
 
-      <div suppressHydrationWarning>{person.admin && <ActionsProgress />}</div>
+        <div suppressHydrationWarning>
+          {person.admin && <ActionsProgress />}
+        </div>
 
-      {/* Sprint */}
-      <Sprint />
+        {/* Sprint */}
+        <Sprint />
 
-      {/* Parceiros */}
-      <Partners actions={actions as Action[]} />
+        {/* Parceiros */}
+        <Partners actions={actions as Action[]} />
 
-      {/* Ações em Atraso */}
+        {/* Ações em Atraso */}
 
-      <DelayedView actions={lateActions} />
-      <div className="border-b"></div>
-      {/* Hoje */}
-      <TodayView
-        actions={actions as Action[]}
-        className="px-2 py-8 md:px-8 lg:py-24"
-      />
+        <DelayedView actions={lateActions} />
 
-      {/* Mês */}
+        {/* Hoje */}
+        <div className="before:bg-border relative before:absolute before:-left-[100vw] before:h-px before:w-[200vw]"></div>
+        <div className="overflow-x-hidden">
+          <TodayView
+            actions={actions as Action[]}
+            className="px-2 py-8 md:px-8 lg:py-24"
+          />
+        </div>
 
-      <CalendarView actions={actions} />
+        {/* Mês */}
 
-      {/* Próximas Ações */}
-      <NextActions actions={nextActions as Action[]} />
+        <CalendarView actions={actions} />
 
-      {/* Ações da Semana */}
-      {/* <WeekView weekActions={weekActions} /> */}
+        {/* Próximas Ações */}
+        <NextActions actions={nextActions as Action[]} />
+      </div>
+      <div className="border-l"></div>
     </div>
   );
 }
-
-///
-///
-///
-///
 
 function NextActions({ actions }: { actions: Action[] }) {
   const matches = useMatches();
   const { person } = matches[1].data as DashboardRootType;
 
   return (
-    <>
-      <div className="border-b"></div>
-      <div className="px-2 md:px-8">
+    <div className="relative">
+      <div className="before:bg-border relative px-2 before:absolute before:-left-[100vw] before:h-px before:w-[200vw] md:px-8">
         {/* Próximas ações */}
         <div className="py-8 lg:py-24">
           <div className="relative text-center">
@@ -241,7 +230,7 @@ function NextActions({ actions }: { actions: Action[] }) {
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -255,49 +244,51 @@ function Partners({ actions }: { actions?: Action[] }) {
   actions = actions || [];
 
   return (
-    <div
-      className={`grid grid-cols-4 border-t md:grid-cols-5 ${Math.ceil(partners.length / 2) <= 6 ? "lg:grid-cols-6" : Math.ceil(partners.length / 2) === 7 ? "lg:grid-cols-7" : "lg:grid-cols-8"} `}
-    >
-      {partners.length > 0
-        ? partners.map((partner) => (
-            <Link
-              to={`/dashboard/${partner.slug}`}
-              className="hover:bg-foreground hover:text-background group flex flex-col justify-center p-8"
-              key={partner.id}
-            >
-              <div className="relative self-center text-center text-xl leading-none font-bold uppercase sm:text-3xl">
-                {partner.short.length > 4 ? (
-                  <>
-                    <div>{partner.short.substring(0, 3)}</div>
-                    <div> {partner.short.substring(3)} </div>
-                  </>
-                ) : (
-                  <>
-                    <div>{partner.short.substring(0, 2)}</div>
-                    <div> {partner.short.substring(2)} </div>
-                  </>
-                )}
-                <Badge
-                  className="absolute top-0 -right-8"
-                  value={
-                    lateActions.filter((action) =>
-                      action.partners.find((p: any) => p === partner.slug),
-                    ).length
-                  }
-                  isDynamic
-                />
-              </div>
-
-              <div className="mt-4 hidden w-full opacity-0 group-hover:opacity-100">
-                <ProgressBar
-                  actions={actions.filter((action) =>
-                    action.partners.find((p: any) => p === partner.slug),
+    <div className="before:bg-border relative before:absolute before:-left-[100vw] before:h-px before:w-[200vw]">
+      <div
+        className={`grid grid-cols-4 md:grid-cols-5 ${Math.ceil(partners.length / 2) <= 6 ? "lg:grid-cols-6" : Math.ceil(partners.length / 2) === 7 ? "lg:grid-cols-7" : "lg:grid-cols-8"} `}
+      >
+        {partners.length > 0
+          ? partners.map((partner) => (
+              <Link
+                to={`/dashboard/${partner.slug}`}
+                className="hover:bg-foreground hover:text-background group flex flex-col justify-center p-8"
+                key={partner.id}
+              >
+                <div className="relative self-center text-center text-xl leading-none font-bold uppercase sm:text-3xl">
+                  {partner.short.length > 4 ? (
+                    <>
+                      <div>{partner.short.substring(0, 3)}</div>
+                      <div> {partner.short.substring(3)} </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>{partner.short.substring(0, 2)}</div>
+                      <div> {partner.short.substring(2)} </div>
+                    </>
                   )}
-                />
-              </div>
-            </Link>
-          ))
-        : null}
+                  <Badge
+                    className="absolute top-0 -right-8"
+                    value={
+                      lateActions.filter((action) =>
+                        action.partners.find((p: any) => p === partner.slug),
+                      ).length
+                    }
+                    isDynamic
+                  />
+                </div>
+
+                <div className="mt-4 hidden w-full opacity-0 group-hover:opacity-100">
+                  <ProgressBar
+                    actions={actions.filter((action) =>
+                      action.partners.find((p: any) => p === partner.slug),
+                    )}
+                  />
+                </div>
+              </Link>
+            ))
+          : null}
+      </div>
     </div>
   );
 }
@@ -360,7 +351,9 @@ const ActionsProgress = () => {
             key={i}
             className={`overflow-hidden px-8 py-8 md:border-l lg:py-12 ${i < 3 ? "border-b xl:border-b-0" : ""}`}
           >
-            <h3 className="text-xl font-medium capitalize">{title}</h3>
+            <h3 className="overflow-hidden text-xl font-medium text-ellipsis whitespace-nowrap capitalize">
+              {title}
+            </h3>
             <div className="my-2 text-7xl font-light whitespace-nowrap">
               {actions.length}
             </div>
@@ -404,71 +397,67 @@ function Sprint() {
   actions = actions?.filter((a) => ids.has(a.id)) || [];
 
   return sprints.length > 0 ? (
-    <>
-      <div className="border-b"></div>
-
-      <div className="px-2 py-8 md:px-8 lg:py-24">
-        <div className="flex items-start justify-between pb-8">
-          <div className="relative flex">
-            <h2 className="text-3xl font-semibold tracking-tight">Sprints</h2>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Select
-              value={order}
-              onValueChange={(value) => setOrder(value as ORDER)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-content">
-                <SelectItem value="state">Status</SelectItem>
-                <SelectItem value="priority">Prioridade</SelectItem>
-                <SelectItem value="time">Data</SelectItem>
-              </SelectContent>
-            </Select>
-            <Toggle
-              pressed={descending}
-              variant={"outline"}
-              onPressedChange={(pressed) => setDescending(pressed)}
-            >
-              {descending ? (
-                <ArrowDownIcon className="size-4" />
-              ) : (
-                <ArrowUpIcon className="size-4" />
-              )}
-            </Toggle>
-            {actions.length > 0 && (
-              <div
-                className={`flex items-center gap-1 rounded p-1 px-4 text-sm font-semibold whitespace-nowrap text-white ${
-                  actions.reduce((a, b) => a + b.time, 0) > 70
-                    ? "bg-rose-500"
-                    : actions.reduce((a, b) => a + b.time, 0) > 30
-                      ? "bg-amber-500"
-                      : "bg-lime-500"
-                }`}
-              >
-                <TimerIcon className="size-4 opacity-75" />
-                <span>{actions.reduce((a, b) => a + b.time, 0)} minutos</span>
-              </div>
-            )}
-          </div>
+    <div className="before:bg-border relative shrink-0 grow px-2 py-8 before:absolute before:top-0 before:-left-[100vw] before:h-px before:w-[200vw] md:px-8">
+      <div className="flex h-auto items-start justify-between py-8">
+        <div className="relative flex">
+          <h2 className="text-3xl font-semibold tracking-tight">Sprints</h2>
         </div>
 
-        {actions?.length > 0 ? (
-          <BlockOfActions
-            actions={actions}
-            orderBy={order}
-            descending={descending}
-          />
-        ) : (
-          <div className="flex items-center gap-2">
-            <RabbitIcon className="size-8 opacity-25" />
-            <span>Nenhuma ação no sprint atual</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Select
+            value={order}
+            onValueChange={(value) => setOrder(value as ORDER)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-content">
+              <SelectItem value="state">Status</SelectItem>
+              <SelectItem value="priority">Prioridade</SelectItem>
+              <SelectItem value="time">Data</SelectItem>
+            </SelectContent>
+          </Select>
+          <Toggle
+            pressed={descending}
+            variant={"outline"}
+            onPressedChange={(pressed) => setDescending(pressed)}
+          >
+            {descending ? (
+              <ArrowDownIcon className="size-4" />
+            ) : (
+              <ArrowUpIcon className="size-4" />
+            )}
+          </Toggle>
+          {actions.length > 0 && (
+            <div
+              className={`flex items-center gap-1 rounded p-1 px-4 text-sm font-semibold whitespace-nowrap text-white ${
+                actions.reduce((a, b) => a + b.time, 0) > 70
+                  ? "bg-rose-500"
+                  : actions.reduce((a, b) => a + b.time, 0) > 30
+                    ? "bg-amber-500"
+                    : "bg-lime-500"
+              }`}
+            >
+              <TimerIcon className="size-4 opacity-75" />
+              <span>{actions.reduce((a, b) => a + b.time, 0)} minutos</span>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+
+      {actions?.length > 0 ? (
+        <BlockOfActions
+          actions={actions}
+          orderBy={order}
+          descending={descending}
+        />
+      ) : (
+        <div className="flex items-center gap-2">
+          <RabbitIcon className="size-8 opacity-25" />
+          <span>Nenhuma ação no sprint atual</span>
+        </div>
+      )}
+    </div>
   ) : null;
 }
 
@@ -477,7 +466,7 @@ const ProgressBar = ({ actions }: { actions: ActionChart[] }) => {
   const { states } = matches[1].data as DashboardRootType;
 
   return (
-    <div className="bg-foreground/20 flex h-1 w-full">
+    <div className="flex h-1 w-full">
       {states
         .map((state) => {
           return {
