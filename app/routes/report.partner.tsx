@@ -21,7 +21,6 @@ import {
   type MetaFunction,
 } from "react-router";
 
-import React from "react";
 import { ptBR } from "date-fns/locale";
 import {
   CalendarDaysIcon,
@@ -29,16 +28,15 @@ import {
   Grid3X3Icon,
   Rows3Icon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import invariant from "tiny-invariant";
+import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
   Content,
   getInstagramFeed,
   isInstagramFeed,
-  LikeFooter,
 } from "~/lib/helpers";
-import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
 
@@ -206,7 +204,7 @@ export default function ReportPage() {
           </div>
           <div className="text-sm">
             <div>✅ Aprovação de Conteúdo</div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between gap-4">
               {range ? (
                 <>
                   📅
@@ -214,14 +212,14 @@ export default function ReportPage() {
                     range[0],
                     "d".concat(
                       !isSameMonth(range[0], range[1])
-                        ? " 'de' MMMM".concat(
+                        ? "/MM".concat(
                             !isSameYear(range[0], range[1]) ? " 'de' yyyy" : "",
                           )
                         : "",
                     ),
                     { locale: ptBR },
                   )} a
-${format(range[1], "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`}{" "}
+${format(range[1], "d/MM", { locale: ptBR })}`}{" "}
                   <div className="flex gap-2 text-[10px] font-medium tracking-wider uppercase">
                     <Link
                       className="hover:underline"
