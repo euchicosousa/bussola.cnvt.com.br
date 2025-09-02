@@ -187,3 +187,23 @@ export function getMonthsActions(actions: Action[], date = new Date()) {
   ) as Action[];
 }
 
+export function isActionDelayed(
+  action: Action,
+  state?: State,
+  useInstagramDate?: boolean
+): boolean {
+  const actionState = state?.slug || action.state;
+  
+  if (actionState === "finished" || actionState === "archived") {
+    return false;
+  }
+
+  // Check Instagram date if it's an Instagram feed and useInstagramDate is true
+  if (useInstagramDate && isInstagramFeed(action.category)) {
+    return isBefore(parseISO(action.instagram_date), new Date());
+  }
+
+  // Default to regular date
+  return isBefore(parseISO(action.date), new Date());
+}
+

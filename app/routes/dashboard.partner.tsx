@@ -30,6 +30,7 @@ import {
   Grid3x3Icon,
   ImageIcon,
   ListCheckIcon,
+  PaletteIcon,
   Rows2Icon,
   Rows3Icon,
   Rows4Icon,
@@ -230,20 +231,18 @@ export default function Partner() {
 
   let params = new URLSearchParams(searchParams);
 
-  const [isInstagramDate, set_isInstagramDate] = useState(
+  const [isInstagramDate, setIsInstagramDate] = useState(
     !!searchParams.get("instagram_date"),
   );
-  const [showResponsibles, set_showResponsibles] = useState(
+  const [showResponsibles, setShowResponsibles] = useState(
     !!searchParams.get("show_responsibles"),
   );
-  const [selectMultiple, set_selectMultiple] = useState(
+  const [selectMultiple, setSelectMultiple] = useState(
     !!searchParams.get("select_multiple"),
   );
-  const [showAllActions, set_showAllActions] = useState(
+  const [showAllActions, setShowAllActions] = useState(
     !!searchParams.get("show_all_actions"),
   );
-
-  console.log({ isInstagramDate });
 
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [currentDate, setCurrentDate] = useState(date);
@@ -253,6 +252,7 @@ export default function Partner() {
   const [variant, setVariant] = useState<ActionVariant>(
     isInstagramDate ? "content" : "line",
   );
+  const [showColor, setShowColor] = useState(!!searchParams.get("show_color"));
 
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
@@ -355,23 +355,23 @@ export default function Partner() {
           setSearchParams(params);
         } else if (code === "KeyR") {
           if (params.get("show_responsibles")) {
-            set_showResponsibles(false);
+            setShowResponsibles(false);
             params.delete("show_responsibles");
           } else {
-            set_showResponsibles(true);
+            setShowResponsibles(true);
             params.set("show_responsibles", "true");
           }
           setSearchParams(params);
         } else if (code === "KeyI") {
           if (params.get("show_feed")) {
-            set_isInstagramDate(false);
+            setIsInstagramDate(false);
             setShowFeed(false);
 
             params.delete("show_feed");
             params.delete("instagram_date");
             params.delete("show_content");
           } else {
-            set_isInstagramDate(true);
+            setIsInstagramDate(true);
             setShowFeed(true);
 
             params.set("instagram_date", "true");
@@ -410,22 +410,22 @@ export default function Partner() {
 
   // Instagram date sync - only when instagram_date param changes
   useEffect(() => {
-    set_isInstagramDate(!!searchParams.get("instagram_date"));
+    setIsInstagramDate(!!searchParams.get("instagram_date"));
   }, [searchParams.get("instagram_date")]);
 
   // Show responsibles sync - only when show_responsibles param changes
   useEffect(() => {
-    set_showResponsibles(!!searchParams.get("show_responsibles"));
+    setShowResponsibles(!!searchParams.get("show_responsibles"));
   }, [searchParams.get("show_responsibles")]);
 
   // Select multiple sync - only when select_multiple param changes
   useEffect(() => {
-    set_selectMultiple(!!searchParams.get("select_multiple"));
+    setSelectMultiple(!!searchParams.get("select_multiple"));
   }, [searchParams.get("select_multiple")]);
 
   // Show all actions sync - only when show_all_actions param changes
   useEffect(() => {
-    set_showAllActions(!!searchParams.get("show_all_actions"));
+    setShowAllActions(!!searchParams.get("show_all_actions"));
   }, [searchParams.get("show_all_actions")]);
 
   // Variant sync - only when show_feed param changes
@@ -808,10 +808,10 @@ export default function Partner() {
                 onClick={() => {
                   if (selectMultiple) {
                     setSelectedActions([]);
-                    set_selectMultiple(false);
+                    setSelectMultiple(false);
                     params.delete("select_multiple");
                   } else {
-                    set_selectMultiple(true);
+                    setSelectMultiple(true);
                     params.set("select_multiple", "true");
                   }
                   setSearchParams(params);
@@ -820,20 +820,18 @@ export default function Partner() {
               >
                 <CopyCheckIcon className="size-4" />{" "}
               </Button>
-            </div>
-
-            <div className="flex gap-1 px-2">
+              {/* Organizar pela data do Instagram */}
               <Button
                 size={"sm"}
                 variant={isInstagramDate ? "secondary" : "ghost"}
                 onClick={() => {
                   if (isInstagramDate) {
-                    set_isInstagramDate(false);
+                    setIsInstagramDate(false);
                     setVariant("line");
 
                     params.delete("instagram_date");
                   } else {
-                    set_isInstagramDate(true);
+                    setIsInstagramDate(true);
                     setVariant("content");
 
                     console.log("Instagram Date");
@@ -846,6 +844,47 @@ export default function Partner() {
               >
                 <SiInstagram className="size-4" />
               </Button>
+              {/* Mostrar responsáveis */}
+              <Button
+                size={"sm"}
+                variant={showResponsibles ? "secondary" : "ghost"}
+                onClick={() => {
+                  if (showResponsibles) {
+                    setShowResponsibles(false);
+                    params.delete("show_responsibles");
+                  } else {
+                    setShowResponsibles(true);
+                    params.set("show_responsibles", "true");
+                  }
+
+                  setSearchParams(params);
+                }}
+                title={
+                  showResponsibles
+                    ? "Todos os responsáveis (⇧ + ⌥ + R) "
+                    : "'Eu' como responsável (⇧ + ⌥ + R) "
+                }
+              >
+                {showResponsibles ? <UsersIcon /> : <UserIcon />}
+              </Button>
+
+              <Button
+                variant={showColor ? "secondary" : "ghost"}
+                size={"icon"}
+                onClick={() => {
+                  if (showColor) {
+                    setShowColor(false);
+                    params.delete("show_color");
+                  } else {
+                    setShowColor(true);
+                    params.set("show_color", "true");
+                  }
+
+                  setSearchParams(params);
+                }}
+              >
+                <PaletteIcon />
+              </Button>
             </div>
 
             <div className="flex gap-1 px-2">
@@ -854,14 +893,6 @@ export default function Partner() {
                 variant={variant === "content" ? "secondary" : "ghost"}
                 onClick={() => {
                   setVariant("content");
-                  // if (showInstagramContent) {
-                  //   set_showInstagramContent(false);
-                  //   params.delete("show_content");
-                  // } else {
-                  //   set_showInstagramContent(true);
-                  //   params.set("show_content", "true");
-                  // }
-                  // setSearchParams(params);
                 }}
                 title={
                   isInstagramDate
@@ -900,34 +931,6 @@ export default function Partner() {
               </Button>
             </div>
 
-            <div className="flex gap-1 px-2">
-              <Button
-                size={"sm"}
-                variant={showResponsibles ? "secondary" : "ghost"}
-                onClick={() => {
-                  if (showResponsibles) {
-                    set_showResponsibles(false);
-                    params.delete("show_responsibles");
-                  } else {
-                    set_showResponsibles(true);
-                    params.set("show_responsibles", "true");
-                  }
-
-                  setSearchParams(params);
-                }}
-                title={
-                  showResponsibles
-                    ? "Todos os responsáveis (⇧ + ⌥ + R) "
-                    : "'Eu' como responsável (⇧ + ⌥ + R) "
-                }
-              >
-                {showResponsibles ? (
-                  <UsersIcon className="size-4" />
-                ) : (
-                  <UserIcon className="size-4" />
-                )}
-              </Button>
-            </div>
             <div className="flex gap-1 px-2">
               <Button
                 size={"sm"}
@@ -1263,6 +1266,7 @@ export default function Partner() {
                     day={day}
                     person={person}
                     showResponsibles={showResponsibles}
+                    showColor={showColor}
                     key={i}
                     index={i}
                     selectMultiple={selectMultiple}
@@ -1331,10 +1335,10 @@ export default function Partner() {
                 onClick={() => {
                   if (showAllActions) {
                     params.delete("show_all_actions");
-                    set_showAllActions(false);
+                    setShowAllActions(false);
                   } else {
                     params.set("show_all_actions", "true");
-                    set_showAllActions(true);
+                    setShowAllActions(true);
                   }
 
                   setSearchParams(params);
@@ -1376,6 +1380,7 @@ export const CalendarDay = ({
   day,
   currentDate,
   showResponsibles,
+  showColor,
   index,
   setSelectedActions,
   selectMultiple,
@@ -1390,6 +1395,7 @@ export const CalendarDay = ({
   currentDate: Date | string;
   person: Person;
   showResponsibles?: boolean;
+  showColor?: boolean;
   index?: string | number;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
@@ -1467,6 +1473,7 @@ export const CalendarDay = ({
                         handleEditingAction={handleEditingAction}
                         selectMultiple={selectMultiple}
                         showResponsibles={showResponsibles}
+                        showColor={showColor}
                         setSelectedActions={setSelectedActions}
                         showDelay
                         action={action}
@@ -1497,6 +1504,7 @@ export const CalendarDay = ({
                       handleEditingAction={handleEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
+                      showColor={showColor}
                       category={category}
                       actions={actions}
                       variant={variant === "content" ? "line" : variant}
@@ -1526,6 +1534,7 @@ export const CalendarDay = ({
                       handleEditingAction={handleEditingAction}
                       selectMultiple={selectMultiple}
                       showResponsibles={showResponsibles}
+                      showColor={showColor}
                       category={category}
                       isInstagramDate={isInstagramDate}
                       actions={actions}
@@ -1557,6 +1566,7 @@ function CategoryActions({
   actions,
   variant,
   showResponsibles,
+  showColor,
   setSelectedActions,
   selectMultiple = false,
   editingAction,
@@ -1569,6 +1579,7 @@ function CategoryActions({
   actions?: Action[];
   variant?: ActionVariant;
   showResponsibles?: boolean;
+  showColor?: boolean;
   selectMultiple?: boolean;
   setSelectedActions: React.Dispatch<React.SetStateAction<Action[]>>;
   editingAction?: string | null;
@@ -1608,6 +1619,7 @@ function CategoryActions({
             handleEditingAction={handleEditingAction}
             selectMultiple={selectMultiple}
             showResponsibles={showResponsibles}
+            showColor={showColor}
             showDelay
             action={action}
             key={action.id}

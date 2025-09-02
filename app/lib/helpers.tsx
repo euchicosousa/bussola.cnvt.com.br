@@ -527,7 +527,7 @@ export const Content = ({
           <img
             src={`${currentFile.preview}`}
             className={cn(
-              `object-cover transition-opacity ${isPreview && "opacity-50"} `,
+              `object-cover transition-opacity ${isPreview && "opacity-50"} ${aspect === "feed" ? "aspect-4/5" : ""}`,
               className,
             )}
             style={{ backgroundColor: action.color }}
@@ -577,7 +577,7 @@ export const Post = ({
   return (
     <div
       className={clsx(
-        `@container grid aspect-[3/4] place-content-center overflow-hidden inset-ring inset-ring-black/5 transition-opacity`,
+        `@container grid aspect-[4/5] place-content-center overflow-hidden inset-ring inset-ring-black/5 transition-opacity`,
         className,
       )}
       style={{

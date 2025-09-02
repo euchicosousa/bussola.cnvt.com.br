@@ -1,13 +1,9 @@
 import { useDraggable } from "@dnd-kit/core";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
-import { format, isBefore, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { HeartHandshakeIcon, RabbitIcon } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  useMatches,
-  useNavigate,
-  useSubmit,
-} from "react-router";
+import { useMatches, useNavigate, useSubmit } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
 import { EditableTitle } from "~/components/ui/editable-title";
@@ -25,7 +21,8 @@ import {
   isInstagramFeed,
   isSprint,
 } from "~/lib/helpers";
-import { cn } from "~/lib/ui";
+import { isActionDelayed } from "~/lib/filters/actions";
+import { cn, getTextColor } from "~/lib/ui";
 import { ActionContextMenu } from "./shared/ActionContextMenu";
 import { formatActionDatetime } from "./shared/formatActionDatetime";
 import { ShortcutActions } from "./shared/ShortcutActions";
@@ -43,6 +40,7 @@ interface NewActionProps {
   showCategory?: boolean;
   showDelay?: boolean;
   showPartner?: boolean;
+  showColor?: boolean;
   selectMultiple?: boolean;
   setSelectedActions?: React.Dispatch<React.SetStateAction<Action[]>>;
   selectedActions?: Action[];
@@ -70,6 +68,7 @@ export const ActionItem = React.memo(function ActionItem({
   showCategory,
   showDelay,
   showPartner,
+  showColor,
   selectMultiple,
   setSelectedActions,
   selectedActions,
@@ -156,10 +155,8 @@ export const ActionItem = React.memo(function ActionItem({
   // Unified delay logic
   const isDelayed =
     showDelay &&
-    state.slug !== "finished" &&
-    ((isInstagramFeed(action.category) &&
-      isBefore(parseISO(action.instagram_date), new Date())) ||
-      isBefore(parseISO(action.date), new Date()));
+    (isActionDelayed(action, state, true) ||
+      isActionDelayed(action, state, false));
 
   const getDelayClasses = (variantType: string) => {
     if (!isDelayed) return "";
@@ -175,6 +172,17 @@ export const ActionItem = React.memo(function ActionItem({
         return "";
     }
   };
+
+  const styleColors = useMemo(() => {
+    console.log(showColor, isInstagramFeed(action.category));
+
+    return showColor && isInstagramFeed(action.category)
+      ? {
+          color: getTextColor(action.color),
+          backgroundColor: action.color,
+        }
+      : undefined;
+  }, [showColor, action.color]);
 
   const renderActionVariant = () => {
     switch (variant) {
@@ -198,13 +206,13 @@ export const ActionItem = React.memo(function ActionItem({
           >
             <div
               className={`flex cursor-pointer items-center justify-between gap-2 overflow-hidden transition-all ${
-                isBefore(parseISO(action.date), new Date()) &&
-                state.slug !== "finished"
+                isActionDelayed(action, state)
                   ? "bg-error/5 hover:bg-error/20 text-error"
                   : "hover:bg-muted/50"
               }`}
               onMouseEnter={() => setHover?.(true)}
               onMouseLeave={() => setHover?.(false)}
+              style={styleColors}
             >
               {isHover && !edit && <ShortcutActions action={action} />}
 
@@ -239,8 +247,8 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
+      // Instagram feed content view
       case "content":
-        // Instagram feed content view
         return (
           <div
             title={isHydrated ? action.title : undefined}
@@ -280,7 +288,7 @@ export const ActionItem = React.memo(function ActionItem({
                 partner={actionPartner!}
                 showInfo
                 date={{ timeFormat: 1 }}
-                className={`the-action-content aspect-[3/4] overflow-hidden rounded-md hover:opacity-75`}
+                className={`the-action-content aspect-[4/5] overflow-hidden rounded-md hover:opacity-75`}
               />
 
               <div className="late-border border-background ring-error absolute inset-0 hidden rounded-md border ring-2"></div>
@@ -351,7 +359,7 @@ export const ActionItem = React.memo(function ActionItem({
               action={action}
               partner={partner || actionPartner!}
               showInfo
-              className="action-grid aspect-[3/4] overflow-hidden"
+              className="action-grid aspect-[4/5] overflow-hidden"
             />
             <div className="absolute -top-3 right-3">
               {selectMultiple && setSelectedActions && (
@@ -378,6 +386,7 @@ export const ActionItem = React.memo(function ActionItem({
               className={`action group/action action-item action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm ${
                 isDragging ? "z-[100]" : "z-0"
               }`}
+              style={styleColors}
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
@@ -411,7 +420,7 @@ export const ActionItem = React.memo(function ActionItem({
                 className="leading-tighter relative overflow-hidden text-xl font-medium tracking-tighter"
               />
 
-              <div className="flex items-center justify-between gap-4 overflow-x-hidden">
+              <div className="flex items-center justify-between gap-4 overflow-x-hidden py-1">
                 <div className="flex items-center gap-2">
                   <div
                     className="size-2 shrink-0 rounded-full"
@@ -506,272 +515,278 @@ export const ActionItem = React.memo(function ActionItem({
             {...listeners}
             {...attributes}
             style={style}
-            // [&>*]:border-red-500
-            // estava aqui sem eu ver necessidade
-            className={`action group/action action-item items-center gap-2 hover:z-100 ${
-              isDragging ? "z-[100]" : "z-0"
-            } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${getDelayClasses(variant)}`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-
-              if (!edit && !selectMultiple) {
-                if (handleEditingAction) {
-                  handleEditingAction(action.id, actionPartner.slug);
-                } else {
-                  navigate(
-                    `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
-                  );
-                }
-              }
-            }}
-            onMouseEnter={() => {
-              setHover(() => true);
-            }}
-            onMouseLeave={() => {
-              setHover(false);
-            }}
-            role="button"
-            tabIndex={0}
           >
-            {/* Atalhos */}
-            {isHover && !edit ? <ShortcutActions action={action} /> : null}
-
-            {selectMultiple && setSelectedActions && (
-              <SelectionCheckbox
-                isSelected={
-                  selectedActions?.some((a) => a.id === action.id) || false
-                }
-                action={action}
-                onSelectionChange={setSelectedActions}
-                currentSelection={selectedActions || []}
-              />
-            )}
-
-            {/* State */}
             <div
-              className="absolute top-0 bottom-0 left-0 -ml-[1px] w-1 shrink-0 rounded-l-full"
-              style={{ backgroundColor: state.color }}
-            ></div>
+              // [&>*]:border-red-500
+              // estava aqui sem eu ver necessidade
+              className={`action group/action action-item items-center gap-2 hover:z-100 ${
+                isDragging ? "z-[100]" : "z-0"
+              } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${getDelayClasses(variant)}`}
+              style={styleColors}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
 
-            {/* Sprint */}
-            {isSprint(action.id, sprints) && (
-              <SprintIcon hasBackground={long} />
-            )}
-
-            {/* Title */}
-            <EditableTitle
-              title={action.title}
-              isEditing={edit}
-              setIsEditing={setEdit}
-              onSave={(newTitle) => {
-                handleActions({
-                  intent: INTENTS.updateAction,
-                  ...action,
-                  title: newTitle,
-                });
-              }}
-              className={`relative flex w-full shrink overflow-hidden ${
-                long ? "text-base" : ""
-              }`}
-            />
-
-            {/* Categoria */}
-            {showCategory && (
-              <div
-                title={
-                  categories.find(
-                    (category) => category.slug === action.category,
-                  )?.title
+                if (!edit && !selectMultiple) {
+                  if (handleEditingAction) {
+                    handleEditingAction(action.id, actionPartner.slug);
+                  } else {
+                    navigate(
+                      `/dashboard/action/${action.id}/${actionPartner.slug}${getQueryString()}`,
+                    );
+                  }
                 }
-              >
-                <Icons
-                  id={
+              }}
+              onMouseEnter={() => {
+                setHover(() => true);
+              }}
+              onMouseLeave={() => {
+                setHover(false);
+              }}
+              role="button"
+              tabIndex={0}
+            >
+              {/* Atalhos */}
+              {isHover && !edit ? <ShortcutActions action={action} /> : null}
+
+              {selectMultiple && setSelectedActions && (
+                <SelectionCheckbox
+                  isSelected={
+                    selectedActions?.some((a) => a.id === action.id) || false
+                  }
+                  action={action}
+                  onSelectionChange={setSelectedActions}
+                  currentSelection={selectedActions || []}
+                />
+              )}
+
+              {/* State */}
+              <div
+                className="absolute top-0 bottom-0 left-0 -ml-[1px] w-1 shrink-0 rounded-l-full"
+                style={{ backgroundColor: state.color }}
+              ></div>
+
+              {/* Sprint */}
+              {isSprint(action.id, sprints) && (
+                <SprintIcon hasBackground={long} />
+              )}
+
+              {/* Title */}
+              <EditableTitle
+                title={action.title}
+                isEditing={edit}
+                setIsEditing={setEdit}
+                onSave={(newTitle) => {
+                  handleActions({
+                    intent: INTENTS.updateAction,
+                    ...action,
+                    title: newTitle,
+                  });
+                }}
+                className={`relative flex w-full shrink overflow-hidden ${
+                  long ? "text-base" : ""
+                }`}
+              />
+
+              {/* Categoria */}
+              {showCategory && (
+                <div
+                  title={
                     categories.find(
                       (category) => category.slug === action.category,
-                    )?.slug
+                    )?.title
                   }
-                  className={`hidden shrink-0 opacity-25 @[200px]:block ${
-                    long ? "size-6" : "size-4"
-                  }`}
-                />
-              </div>
-            )}
-
-            {/* parceiro */}
-            {actionPartner && (showPartner || long) ? (
-              <div
-                title={getPartners(action.partners, partners)
-                  .map((partner) => partner.title)
-                  .join(" • ")}
-                className={long ? "flex w-32 shrink-0 justify-center" : ""}
-              >
-                {getPartners(action.partners, partners).length === 1 ? (
-                  <Avatar
-                    item={{
-                      short: actionPartner.short,
-                      bg: actionPartner.colors[0],
-                      fg: actionPartner.colors[1],
-                    }}
-                    size={long ? "sm" : "xs"}
-                  />
-                ) : (
-                  <AvatarGroup
-                    size={long ? "sm" : "xs"}
-                    ringColor={
-                      isSprint(action.id, sprints)
-                        ? "ring-primary"
-                        : "ring-card"
+                >
+                  <Icons
+                    id={
+                      categories.find(
+                        (category) => category.slug === action.category,
+                      )?.slug
                     }
-                    avatars={getPartners(action.partners, partners).map(
-                      (partner) => ({
-                        item: {
-                          short: partner.short,
-                          bg: partner.colors[0],
-                          fg: partner.colors[1],
-                          title: partner.title,
-                        },
-                      }),
-                    )}
+                    className={`hidden shrink-0 opacity-25 @[200px]:block ${
+                      long ? "size-6" : "size-4"
+                    }`}
                   />
-                )}
-              </div>
-            ) : (
-              action.partners.length > 1 && (
+                </div>
+              )}
+
+              {/* parceiro */}
+              {actionPartner && (showPartner || long) ? (
                 <div
-                  className="opacity-25"
                   title={getPartners(action.partners, partners)
                     .map((partner) => partner.title)
                     .join(" • ")}
+                  className={long ? "flex w-32 shrink-0 justify-center" : ""}
                 >
-                  <HeartHandshakeIcon className={long ? "size-6" : "size-4"} />
-                </div>
-              )
-            )}
-
-            {/* priority */}
-            {long ? (
-              <div
-                title={`Prioridade ${
-                  priorities.find(
-                    (priority) => priority.slug === action.priority,
-                  )?.title
-                }`}
-              >
-                <Icons
-                  id={
-                    priorities.find(
-                      (priority) => priority.slug === action.priority,
-                    )?.slug
-                  }
-                  className={`${long ? "size-6" : "size-5"} shrink-0`}
-                  type="priority"
-                />
-              </div>
-            ) : (
-              action.priority === PRIORITIES.high && (
-                <Icons
-                  id="high"
-                  className={`text-red-500 ${
-                    long ? "size-6" : "size-5"
-                  } shrink-0`}
-                />
-              )
-            )}
-
-            {/* Responsibles */}
-            {showResponsibles || long ? (
-              <div
-                className={`flex shrink-0 justify-center ${long ? "w-24" : ""}`}
-              >
-                <AvatarGroup
-                  avatars={people
-                    .filter(
-                      (person) =>
-                        action.responsibles.filter(
-                          (responsible_id: string) =>
-                            responsible_id === person.user_id,
-                        ).length > 0,
-                    )
-                    .map((person) => ({
-                      item: {
-                        image: person.image,
-                        short: person.initials!,
-                        title: person.name,
-                      },
-                    }))}
-                  size={long ? "sm" : "xs"}
-                  ringColor="ring-card"
-                />
-              </div>
-            ) : (
-              <div
-                title={
-                  isHydrated &&
-                  amIResponsible(action.responsibles, person.user_id)
-                    ? `${person.name} é a pessoa responsável pela ação`
-                    : undefined
-                }
-                suppressHydrationWarning
-              >
-                {isHydrated &&
-                  amIResponsible(action.responsibles, person.user_id) && (
+                  {getPartners(action.partners, partners).length === 1 ? (
                     <Avatar
                       item={{
-                        image: person.image,
-                        short: person.initials!,
+                        short: actionPartner.short,
+                        bg: actionPartner.colors[0],
+                        fg: actionPartner.colors[1],
                       }}
                       size={long ? "sm" : "xs"}
                     />
+                  ) : (
+                    <AvatarGroup
+                      size={long ? "sm" : "xs"}
+                      ringColor={
+                        isSprint(action.id, sprints)
+                          ? "ring-primary"
+                          : "ring-card"
+                      }
+                      avatars={getPartners(action.partners, partners).map(
+                        (partner) => ({
+                          item: {
+                            short: partner.short,
+                            bg: partner.colors[0],
+                            fg: partner.colors[1],
+                            title: partner.title,
+                          },
+                        }),
+                      )}
+                    />
                   )}
-              </div>
-            )}
-
-            {long ? (
-              <div className="hidden w-56 shrink-0 overflow-x-hidden text-right text-sm whitespace-nowrap opacity-50 md:text-xs @[150px]:block">
-                {formatActionDatetime({
-                  date: action.date,
-                  dateFormat: 4,
-                  timeFormat: 1,
-                })}{" "}
-                {isInstagramFeed(action.category) &&
-                  action.instagram_date &&
-                  " | ".concat(
-                    formatActionDatetime({
-                      date: action.instagram_date,
-                      dateFormat: 4,
-                      timeFormat: 1,
-                    }),
-                  )}
-              </div>
-            ) : (
-              date && (
-                <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
-                  <span
-                    className={
-                      isInstagramFeed(action.category)
-                        ? "group-hover/action:hidden"
-                        : ""
-                    }
+                </div>
+              ) : (
+                action.partners.length > 1 && (
+                  <div
+                    className="opacity-25"
+                    title={getPartners(action.partners, partners)
+                      .map((partner) => partner.title)
+                      .join(" • ")}
                   >
-                    {formatActionDatetime({
-                      date: action.date,
-                      timeFormat: 1,
-                    })}
-                  </span>
-                  {isInstagramFeed(action.category) && (
-                    <span className="hidden items-center gap-1 group-hover/action:flex">
-                      <SiInstagram className="size-3" />
-                      {formatActionDatetime({
+                    <HeartHandshakeIcon
+                      className={long ? "size-6" : "size-4"}
+                    />
+                  </div>
+                )
+              )}
+
+              {/* priority */}
+              {long ? (
+                <div
+                  title={`Prioridade ${
+                    priorities.find(
+                      (priority) => priority.slug === action.priority,
+                    )?.title
+                  }`}
+                >
+                  <Icons
+                    id={
+                      priorities.find(
+                        (priority) => priority.slug === action.priority,
+                      )?.slug
+                    }
+                    className={`${long ? "size-6" : "size-5"} shrink-0`}
+                    type="priority"
+                  />
+                </div>
+              ) : (
+                action.priority === PRIORITIES.high && (
+                  <Icons
+                    id="high"
+                    className={`text-red-500 ${
+                      long ? "size-6" : "size-5"
+                    } shrink-0`}
+                  />
+                )
+              )}
+
+              {/* Responsibles */}
+              {showResponsibles || long ? (
+                <div
+                  className={`flex shrink-0 justify-center ${long ? "w-24" : ""}`}
+                >
+                  <AvatarGroup
+                    avatars={people
+                      .filter(
+                        (person) =>
+                          action.responsibles.filter(
+                            (responsible_id: string) =>
+                              responsible_id === person.user_id,
+                          ).length > 0,
+                      )
+                      .map((person) => ({
+                        item: {
+                          image: person.image,
+                          short: person.initials!,
+                          title: person.name,
+                        },
+                      }))}
+                    size={long ? "sm" : "xs"}
+                    ringColor="ring-card"
+                  />
+                </div>
+              ) : (
+                <div
+                  title={
+                    isHydrated &&
+                    amIResponsible(action.responsibles, person.user_id)
+                      ? `${person.name} é a pessoa responsável pela ação`
+                      : undefined
+                  }
+                  suppressHydrationWarning
+                >
+                  {isHydrated &&
+                    amIResponsible(action.responsibles, person.user_id) && (
+                      <Avatar
+                        item={{
+                          image: person.image,
+                          short: person.initials!,
+                        }}
+                        size={long ? "sm" : "xs"}
+                      />
+                    )}
+                </div>
+              )}
+
+              {long ? (
+                <div className="hidden w-56 shrink-0 overflow-x-hidden text-right text-sm whitespace-nowrap opacity-50 md:text-xs @[150px]:block">
+                  {formatActionDatetime({
+                    date: action.date,
+                    dateFormat: 4,
+                    timeFormat: 1,
+                  })}{" "}
+                  {isInstagramFeed(action.category) &&
+                    action.instagram_date &&
+                    " | ".concat(
+                      formatActionDatetime({
                         date: action.instagram_date,
-                        dateFormat: 2,
+                        dateFormat: 4,
+                        timeFormat: 1,
+                      }),
+                    )}
+                </div>
+              ) : (
+                date && (
+                  <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
+                    <span
+                      className={
+                        isInstagramFeed(action.category)
+                          ? "group-hover/action:hidden"
+                          : ""
+                      }
+                    >
+                      {formatActionDatetime({
+                        date: action.date,
                         timeFormat: 1,
                       })}
                     </span>
-                  )}
-                </div>
-              )
-            )}
+                    {isInstagramFeed(action.category) && (
+                      <span className="hidden items-center gap-1 group-hover/action:flex">
+                        <SiInstagram className="size-3" />
+                        {formatActionDatetime({
+                          date: action.instagram_date,
+                          dateFormat: 2,
+                          timeFormat: 1,
+                        })}
+                      </span>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
           </div>
         );
     }
