@@ -652,8 +652,8 @@ function ContentLowerBar({
           <span className="hidden group-hover:block">
             {formatActionDatetime({
               date: action.date,
-              dateFormat: 2,
-              timeFormat: 1,
+              dateFormat: date.dateFormat || 1,
+              timeFormat: date.timeFormat || 0,
             })}
           </span>
           <div className="flex items-center gap-2 group-hover:hidden">
@@ -661,7 +661,8 @@ function ContentLowerBar({
             <span>
               {formatActionDatetime({
                 date: action.instagram_date,
-                timeFormat: 1,
+                dateFormat: date.dateFormat || 1,
+                timeFormat: date.timeFormat || 0,
               })}
             </span>
           </div>

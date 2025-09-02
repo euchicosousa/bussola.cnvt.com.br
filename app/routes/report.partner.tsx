@@ -579,7 +579,7 @@ const InstagramReportView = ({
   }, []);
 
   return (
-    <div className="mx-auto px-4 lg:max-w-lg">
+    <div className="mx-auto px-4 lg:max-w-xl">
       <div className="grid grid-cols-3 gap-[1px] overflow-hidden rounded">
         {instagramActions?.map((action, i) => (
           <div key={i} className="relative">
@@ -589,7 +589,7 @@ const InstagramReportView = ({
               partner={partner}
               showInfo
               showFinished
-              date={{ dateFormat: 2 }}
+              date={{ dateFormat: 2, timeFormat: 1 }}
             />
           </div>
         ))}
