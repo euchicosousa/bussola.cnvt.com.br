@@ -616,7 +616,7 @@ function ContentLowerBar({
 
   return (
     <div
-      className={`absolute bottom-0 left-0 flex w-full justify-between rounded-b-md p-2 pt-8 text-xs font-semibold drop-shadow-xs transition-opacity ${
+      className={`absolute bottom-0 left-0 flex w-full justify-between gap-2 overflow-hidden rounded-b-md p-2 pt-8 text-xs font-semibold drop-shadow-xs transition-opacity ${
         action.files?.length ? "drop-shadow-sm" : ""
       } `}
       style={
@@ -630,13 +630,14 @@ function ContentLowerBar({
             }
       }
     >
-      <Icons id={action.category} className="size-4" />
+      <Icons id={action.category} className="size-4 shrink-0" />
       {/* {action.partners.length > 1 && (
       <HeartHandshakeIcon className="size-4" />
     )} */}
       {action.partners.length > 1 && (
         <AvatarGroup
           size="xs"
+          className="shrink-0"
           avatars={action_partners.map((partner) => ({
             item: {
               short: partner.short,
@@ -649,22 +650,22 @@ function ContentLowerBar({
       )}
       {date && (
         <>
-          <span className="hidden group-hover:block">
+          <span className="hidden overflow-hidden group-hover:block">
             {formatActionDatetime({
               date: action.date,
               dateFormat: date.dateFormat || 1,
               timeFormat: date.timeFormat || 0,
             })}
           </span>
-          <div className="flex items-center gap-2 group-hover:hidden">
-            <SiInstagram className="size-4" />
-            <span>
+          <div className="flex w-full items-center justify-end gap-2 overflow-hidden group-hover:hidden">
+            <SiInstagram className="size-4 shrink-0" />
+            <div className="overflow-hidden text-ellipsis whitespace-nowrap">
               {formatActionDatetime({
                 date: action.instagram_date,
                 dateFormat: date.dateFormat || 1,
                 timeFormat: date.timeFormat || 0,
               })}
-            </span>
+            </div>
           </div>
         </>
       )}
