@@ -150,7 +150,7 @@ export default function Header({
                     params.delete("instagram_date");
                     setShowFeed(false);
                   } else {
-                    // params.delete("editing_action");
+                    params.delete("editing_action");
 
                     params.set("show_feed", "true");
                     params.set("instagram_date", "true");

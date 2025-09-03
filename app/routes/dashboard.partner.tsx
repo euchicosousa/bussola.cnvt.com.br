@@ -207,6 +207,7 @@ export default function Partner() {
         const newParams = new URLSearchParams(searchParams);
         newParams.set("editing_action", actionId);
         newParams.delete("show_feed");
+        newParams.delete("instagram_date");
         setSearchParams(newParams, { replace: true });
       }
     },
