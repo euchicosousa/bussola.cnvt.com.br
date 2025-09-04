@@ -1,26 +1,7 @@
 import clsx from "clsx";
-import { Link, useFetchers, useMatches, useSearchParams } from "react-router";
+import { Link, useMatches } from "react-router";
 // @ts-ignore
-import Color from "color";
-import {
-  addHours,
-  addMinutes,
-  compareAsc,
-  endOfDay,
-  endOfWeek,
-  format,
-  isAfter,
-  isBefore,
-  isSameDay,
-  isSameMonth,
-  isThisWeek,
-  isToday,
-  isTomorrow,
-  parseISO,
-  startOfDay,
-  startOfWeek,
-  subHours,
-} from "date-fns";
+import { endOfDay, endOfWeek, format, startOfDay, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   BadgeCheckIcon,
@@ -49,7 +30,7 @@ import {
   UsersIcon,
   type LucideIcon,
 } from "lucide-react";
-import React, { useEffect, useMemo, useState, type CSSProperties } from "react";
+import React, { useMemo, useState, type CSSProperties } from "react";
 import { type DateRange } from "react-day-picker";
 import invariant from "tiny-invariant";
 import { formatActionDatetime } from "~/components/features/actions/shared/formatActionDatetime";
@@ -65,87 +46,53 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { BASE_COLOR, INTENTS, PRIORITIES } from "./constants";
 import { cn } from "./ui/utils";
 // Import refactored functions
-import {
-  getActionNewDate,
-  getBiaMessage,
-  actionToRawAction,
-} from "./formatters";
-import {
-  sortActions,
-  getDelayedActions,
-  getNotFinishedActions,
-  getUrgentActions,
-  getActionsByState,
-  getActionsForThisDay,
-  getInstagramFeed,
-  getTodayActions,
-  getTomorrowActions,
-  getThisWeekActions,
-  getMonthsActions,
-} from "./filters";
-import { getQueryString, getCategoriesQueryString } from "./utils";
-import { getTextColor, getBussolaSize } from "./ui";
+import { getBussolaSize, getTextColor } from "./ui";
 // Import from new shared utilities
-import {
-  getResponsibles,
-  getPartners,
-  getCategoriesSortedByContent,
-} from "~/shared/utils/format/dataFormatters";
-import {
-  isInstagramFeed,
-  getTypeOfTheContent,
-} from "~/shared/utils/validation/contentValidation";
-import { isSprint, amIResponsible } from "~/shared/utils/api/sprintUtils";
-import { getNewDateValues } from "~/shared/utils/date/dateUtils";
-import {
-  useIDsToRemove,
-  usePendingData,
-} from "~/shared/hooks/data/useFetcherData";
-import { useDocumentSize } from "~/shared/hooks/misc/useDocumentSize";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
+import { getPartners } from "~/shared/utils/format/dataFormatters";
+import { getTypeOfTheContent } from "~/shared/utils/validation/contentValidation";
 
 // Re-export functions for backward compatibility
 export {
-  sortActions,
-  getDelayedActions,
-  getNotFinishedActions,
-  getUrgentActions,
   getActionsByState,
   getActionsForThisDay,
+  getDelayedActions,
   getInstagramFeed,
+  getMonthsActions,
+  getNotFinishedActions,
+  getThisWeekActions,
   getTodayActions,
   getTomorrowActions,
-  getThisWeekActions,
-  getMonthsActions,
+  getUrgentActions,
+  sortActions,
 } from "./filters";
-export { getQueryString, getCategoriesQueryString } from "./utils";
-export { getTextColor, getBussolaSize } from "./ui";
 export {
+  actionToRawAction,
   getActionNewDate,
   getBiaMessage,
-  actionToRawAction,
 } from "./formatters";
+export { getBussolaSize, getTextColor } from "./ui";
+export { getCategoriesQueryString, getQueryString } from "./utils";
 
 // Re-export from shared utilities for backward compatibility
-export {
-  getResponsibles,
-  getPartners,
-  getCategoriesSortedByContent,
-} from "~/shared/utils/format/dataFormatters";
-export {
-  isInstagramFeed,
-  getTypeOfTheContent,
-} from "~/shared/utils/validation/contentValidation";
-export { isSprint, amIResponsible } from "~/shared/utils/api/sprintUtils";
-export { getNewDateValues } from "~/shared/utils/date/dateUtils";
 export {
   useIDsToRemove,
   usePendingData,
 } from "~/shared/hooks/data/useFetcherData";
 export { useDocumentSize } from "~/shared/hooks/misc/useDocumentSize";
+export { amIResponsible, isSprint } from "~/shared/utils/api/sprintUtils";
+export { getNewDateValues } from "~/shared/utils/date/dateUtils";
+export {
+  getCategoriesSortedByContent,
+  getPartners,
+  getResponsibles,
+} from "~/shared/utils/format/dataFormatters";
+export {
+  getTypeOfTheContent,
+  isInstagramFeed,
+} from "~/shared/utils/validation/contentValidation";
 
 export function ShortText({
   text,
