@@ -112,6 +112,7 @@ import { cn } from "~/lib/ui/utils";
 interface ActionContextMenuProps {
   action: Action;
   handleActions: (data: HandleActionsDataType) => void;
+  onDeleteAction: (action: Action) => void;
 }
 
 export const ChangeDatePopover = ({
@@ -159,6 +160,7 @@ export const ChangeDatePopover = ({
 export const ActionContextMenu = React.memo(function ActionContextMenu({
   action,
   handleActions,
+  onDeleteAction,
 }: ActionContextMenuProps) {
   const matches = useMatches();
   const {
@@ -253,12 +255,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
       <ContextMenuItem
         className="bg-item flex items-center gap-2"
         onSelect={() => {
-          handleActions({
-            ...action,
-            intent: action.archived
-              ? INTENTS.recoverAction
-              : INTENTS.deleteAction,
-          });
+          onDeleteAction(action);
         }}
       >
         {action.archived ? (

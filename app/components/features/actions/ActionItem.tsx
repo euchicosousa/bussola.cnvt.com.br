@@ -26,6 +26,7 @@ import { cn, getTextColor } from "~/lib/ui";
 import { ActionContextMenu } from "./shared/ActionContextMenu";
 import { formatActionDatetime } from "./shared/formatActionDatetime";
 import { ShortcutActions } from "./shared/ShortcutActions";
+import { DeleteActionDialog } from "./shared/DeleteActionDialog";
 
 // Tipos de variantes
 export type ActionVariant = "hair" | "line" | "content" | "block" | "grid";
@@ -84,10 +85,7 @@ export const ActionItem = React.memo(function ActionItem({
   const [edit, setEdit] = useState(false);
   const [isHover, setHover] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
-
-  // const isInstagramDate = isHydrated
-  //   ? searchParams.get("instagram_date")
-  //   : null;
+  const [deleteAction, setDeleteAction] = useState<Action | null>(null);
 
   // Shared data from matches
   const { categories, states, sprints, partners, people, priorities, person } =
@@ -214,8 +212,6 @@ export const ActionItem = React.memo(function ActionItem({
               onMouseLeave={() => setHover?.(false)}
               style={styleColors}
             >
-              {isHover && !edit && <ShortcutActions action={action} />}
-
               <div className="flex items-center gap-2 overflow-hidden">
                 <div
                   className="h-6 w-1 shrink-0"
@@ -281,7 +277,6 @@ export const ActionItem = React.memo(function ActionItem({
                 setHover(false);
               }}
             >
-              {isHover && !edit ? <ShortcutActions action={action} /> : null}
               <Content
                 aspect="feed"
                 action={action}
@@ -403,8 +398,6 @@ export const ActionItem = React.memo(function ActionItem({
                 setHover(false);
               }}
             >
-              {isHover && !edit ? <ShortcutActions action={action} /> : null}
-
               {/* Title */}
               <EditableTitle
                 title={action.title}
@@ -547,7 +540,6 @@ export const ActionItem = React.memo(function ActionItem({
               tabIndex={0}
             >
               {/* Atalhos */}
-              {isHover && !edit ? <ShortcutActions action={action} /> : null}
 
               {selectMultiple && setSelectedActions && (
                 <SelectionCheckbox
@@ -796,7 +788,24 @@ export const ActionItem = React.memo(function ActionItem({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{renderActionVariant()}</ContextMenuTrigger>
-      <ActionContextMenu action={action} handleActions={handleActions} />
+      <ActionContextMenu action={action} handleActions={handleActions} onDeleteAction={setDeleteAction} />
+      {isHover && <ShortcutActions action={action as Action} onDeleteAction={setDeleteAction} />}
+      {deleteAction && (
+        <DeleteActionDialog
+          isOpen={true}
+          onOpenChange={() => setDeleteAction(null)}
+          onConfirm={() => {
+            handleActions({
+              ...deleteAction,
+              intent: INTENTS.deleteAction,
+            });
+            setDeleteAction(null);
+          }}
+          actionTitle={deleteAction.title}
+          isArchived={!!deleteAction.archived}
+          isPermanent={false}
+        />
+      )}
     </ContextMenu>
   );
 });

@@ -212,11 +212,12 @@ export async function handleCustomShortcut(
     isInstagramDate: boolean;
     person: any;
     sprints: any[];
+    confirmDelete?: (callback: () => void) => void;
   },
 ) {
   if (!context) return;
 
-  const { navigate, handleActions, isInstagramDate, person, sprints } = context;
+  const { navigate, handleActions, isInstagramDate, person, sprints, confirmDelete } = context;
   const { key, modifiers } = shortcut;
 
   // Atalhos de ações principais
@@ -234,11 +235,21 @@ export async function handleCustomShortcut(
       updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
     });
   } else if (modifiers.shift && key === "x") {
-    if (confirm("Deseja mesmo excluir essa ação?")) {
-      handleActions({
-        ...action,
-        intent: INTENTS.deleteAction,
+    if (confirmDelete) {
+      confirmDelete(() => {
+        handleActions({
+          ...action,
+          intent: INTENTS.deleteAction,
+        });
       });
+    } else {
+      // Fallback para o confirm nativo caso confirmDelete não esteja disponível
+      if (confirm("Deseja mesmo excluir essa ação?")) {
+        handleActions({
+          ...action,
+          intent: INTENTS.deleteAction,
+        });
+      }
     }
   } else if (modifiers.shift && key === "u") {
     handleActions({

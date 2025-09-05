@@ -54,8 +54,10 @@ const DEFAULT_UPDATE_TIMESTAMP = () =>
  */
 export const ShortcutActions = React.memo(function ShortcutActions({
   action,
+  onDeleteAction,
 }: {
   action: Action;
+  onDeleteAction: (action: Action) => void;
 }) {
   const navigate = useNavigate();
   const submit = useSubmit();
@@ -65,6 +67,7 @@ export const ShortcutActions = React.memo(function ShortcutActions({
 
   const { states, categories, priorities, person, sprints } = matches[1]
     .data as DashboardRootType;
+
 
   const handleActions = useCallback(
     (data: HandleActionsDataType) => {
@@ -102,6 +105,7 @@ export const ShortcutActions = React.memo(function ShortcutActions({
       const shortcut = findShortcut(key, event);
       if (shortcut) {
         event.preventDefault();
+        event.stopPropagation();
 
         switch (shortcut.action.type) {
           case "updateAction":
@@ -124,6 +128,9 @@ export const ShortcutActions = React.memo(function ShortcutActions({
               isInstagramDate,
               person,
               sprints,
+              confirmDelete: () => {
+                onDeleteAction(action);
+              },
             });
             break;
         }
@@ -159,6 +166,7 @@ export const ShortcutActions = React.memo(function ShortcutActions({
       priorities,
       person,
       sprints,
+      onDeleteAction,
     ]
   );
 
@@ -167,5 +175,5 @@ export const ShortcutActions = React.memo(function ShortcutActions({
     return () => window.removeEventListener("keydown", keyDownHandler);
   }, [keyDownHandler]);
 
-  return <></>;
+  return null;
 });
