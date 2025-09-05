@@ -155,7 +155,7 @@ export default function CreateAction({
   useEffect(() => {
     if (open) {
       const keyDownSubmit = (event: KeyboardEvent) => {
-        if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        if (!event.shiftKey && event.key === "Enter") {
           event.preventDefault();
           createAction();
         }
