@@ -1,5 +1,6 @@
 import {
   addHours,
+  addMinutes,
   format,
   formatDistanceToNow,
   isAfter,
@@ -80,7 +81,8 @@ import { Popover, PopoverContent } from "~/components/ui/popover";
 import { Slider } from "~/components/ui/slider";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
-import { AI_INTENTS, INTENTS } from "~/lib/constants";
+import { AI_INTENTS, INTENTS, TIMES } from "~/lib/constants";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import {
   parametersOptimized,
   suggestionsParameters,
@@ -1348,25 +1350,35 @@ function LowerBar({
             date: parseISO(action.date),
             instagram_date: parseISO(action.instagram_date),
           }}
-          onChange={({ date, instagram_date, time }) => {
-            if (date)
-              setAction({
-                ...action,
-                date: format(date, "yyyy-MM-dd HH:mm:ss"),
-                instagram_date: isAfter(date, action.instagram_date)
-                  ? format(addHours(date, 1), "yyyy-MM-dd HH:mm:ss")
-                  : action.instagram_date,
-              });
-            if (instagram_date)
-              setAction({
-                ...action,
-                instagram_date: format(instagram_date, "yyyy-MM-dd HH:mm:ss"),
-                date: isAfter(action.date, instagram_date)
-                  ? format(subHours(instagram_date, 1), "yyyy-MM-dd HH:mm:ss")
-                  : action.date,
-              });
-
-            if (time) setAction({ ...action, time });
+          onDataChange={({ date, instagram_date, time }: { date?: Date; instagram_date?: Date; time?: number }) => {
+            // Usar a função unificada de validação
+            const timeRequired = (TIMES as any)[action.category] || (TIMES as any)['post'];
+            
+            const adjustments = validateAndAdjustActionDates({
+              date,
+              instagram_date,
+              time,
+              currentDate: parseISO(action.date),
+              currentInstagramDate: parseISO(action.instagram_date),
+              currentTime: timeRequired
+            });
+            
+            let updates = { ...action };
+            
+            // Aplicar os ajustes formatando as datas para string se necessário
+            if (adjustments.date) {
+              updates.date = format(adjustments.date, "yyyy-MM-dd HH:mm:ss");
+            }
+            
+            if (adjustments.instagram_date) {
+              updates.instagram_date = format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss");
+            }
+            
+            if (adjustments.time) {
+              updates.time = adjustments.time;
+            }
+            
+            setAction(updates);
           }}
         />
 

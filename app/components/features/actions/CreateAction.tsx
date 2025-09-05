@@ -1,6 +1,12 @@
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format, formatDuration, isToday, parseISO } from "date-fns";
+import {
+  addMinutes,
+  format,
+  formatDuration,
+  isToday,
+  parseISO,
+} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   CheckCircle2Icon,
@@ -23,6 +29,7 @@ import {
   Icons,
   isInstagramFeed,
 } from "~/lib/helpers";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
@@ -80,6 +87,8 @@ export default function CreateAction({
     newDate.setHours(11, 0);
   }
 
+  const DEFAULT_CATEGORY = "post";
+
   let [partner, setPartner] = useState(
     matches[2] && matches[2].data
       ? (matches[2].data as DashboardPartnerType).partner
@@ -87,9 +96,9 @@ export default function CreateAction({
   );
 
   const cleanAction: RawAction = {
-    category: "post",
+    category: DEFAULT_CATEGORY,
     date: newDate,
-    instagram_date: newDate,
+    instagram_date: addMinutes(newDate, TIMES[DEFAULT_CATEGORY]),
     description: "",
     responsibles: [user.id], // Default responsible is the user
     // [user.id]
@@ -98,7 +107,7 @@ export default function CreateAction({
     title: "",
     user_id: user.id,
     color: partner ? partner.colors[0] : BASE_COLOR,
-    time: TIMES.post,
+    time: TIMES[DEFAULT_CATEGORY],
     topics: [],
   };
 
@@ -117,6 +126,19 @@ export default function CreateAction({
       }
     }
   }, [rawAction.partners]);
+
+  // useEffect para mudança de categoria - recalcular time e instagram_date
+  useEffect(() => {
+    if (rawAction.category) {
+      const timeRequired =
+        (TIMES as any)[rawAction.category] || (TIMES as any)[DEFAULT_CATEGORY];
+      setRawAction((prev) => ({
+        ...prev,
+        time: timeRequired,
+        instagram_date: addMinutes(prev.date, timeRequired),
+      }));
+    }
+  }, [rawAction.category]);
 
   useEffect(() => {
     if (
@@ -155,7 +177,7 @@ export default function CreateAction({
   useEffect(() => {
     if (open) {
       const keyDownSubmit = (event: KeyboardEvent) => {
-        if (!event.shiftKey && event.key === "Enter") {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
           event.preventDefault();
           createAction();
         }
@@ -355,11 +377,33 @@ export default function CreateAction({
           <div className="flex w-full items-center justify-between gap-2 overflow-hidden p-1">
             <DateTimeAndInstagramDate
               action={rawAction}
-              onChange={({ date, instagram_date, time }) => {
-                if (date) setRawAction({ ...rawAction, date });
-                if (instagram_date)
-                  setRawAction({ ...rawAction, instagram_date });
-                if (time) setRawAction({ ...rawAction, time });
+              onDataChange={({ date, instagram_date, time }) => {
+                // Usar a função unificada de validação
+                const adjustments = validateAndAdjustActionDates({
+                  date,
+                  instagram_date,
+                  time,
+                  currentDate: rawAction.date,
+                  currentInstagramDate: rawAction.instagram_date,
+                  currentTime: rawAction.time
+                });
+                
+                let updates = { ...rawAction };
+                
+                // Aplicar os ajustes (as datas já vêm como Date objects)
+                if (adjustments.date) {
+                  updates.date = adjustments.date;
+                }
+                
+                if (adjustments.instagram_date) {
+                  updates.instagram_date = adjustments.instagram_date;
+                }
+                
+                if (adjustments.time) {
+                  updates.time = adjustments.time;
+                }
+
+                setRawAction(updates);
               }}
             />
 
@@ -846,10 +890,10 @@ export function ResponsibleForAction({
 
 export function DateTimeAndInstagramDate({
   action,
-  onChange,
+  onDataChange,
 }: {
   action: RawAction;
-  onChange: ({
+  onDataChange: ({
     date,
     instagram_date,
     time,
@@ -859,6 +903,35 @@ export function DateTimeAndInstagramDate({
     time?: number;
   }) => void;
 }) {
+  const [tempDate, setTempDate] = useState(action.date);
+  const [tempInstagramDate, setTempInstagramDate] = useState(
+    action.instagram_date,
+  );
+
+  // Estados separados apenas para inputs de hora/minuto (não afetam Calendar)
+  const [tempHours, setTempHours] = useState(action.date.getHours().toString());
+  const [tempMinutes, setTempMinutes] = useState(
+    action.date.getMinutes().toString(),
+  );
+  const [tempInstagramHours, setTempInstagramHours] = useState(
+    action.instagram_date.getHours().toString(),
+  );
+  const [tempInstagramMinutes, setTempInstagramMinutes] = useState(
+    action.instagram_date.getMinutes().toString(),
+  );
+
+  // Sincronizar com as props quando mudarem externamente
+  useEffect(() => {
+    setTempDate(action.date);
+    setTempHours(action.date.getHours().toString());
+    setTempMinutes(action.date.getMinutes().toString());
+  }, [action.date]);
+
+  useEffect(() => {
+    setTempInstagramDate(action.instagram_date);
+    setTempInstagramHours(action.instagram_date.getHours().toString());
+    setTempInstagramMinutes(action.instagram_date.getMinutes().toString());
+  }, [action.instagram_date]);
   return (
     <>
       {/* Data e Hora */}
@@ -866,17 +939,17 @@ export function DateTimeAndInstagramDate({
         <PopoverTrigger asChild>
           <Button
             title={
-              action.date
+              tempDate
                 ? format(
-                    action.date,
+                    tempDate,
                     "d/M"
                       .concat(
-                        action.date.getFullYear() !== new Date().getFullYear()
+                        tempDate.getFullYear() !== new Date().getFullYear()
                           ? " 'de' y"
                           : "",
                       )
                       .concat(" 'às' H'h'")
-                      .concat(action.date.getMinutes() !== 0 ? "m" : ""),
+                      .concat(tempDate.getMinutes() !== 0 ? "m" : ""),
                     { locale: ptBR },
                   ).concat(" por " + formatActionTime(action.time))
                 : "Ação sem data"
@@ -887,17 +960,17 @@ export function DateTimeAndInstagramDate({
           >
             <CheckCircle2Icon className="size-4" />
             <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-              {action.date
+              {tempDate
                 ? format(
-                    action.date,
+                    tempDate,
                     "d/M"
                       .concat(
-                        action.date.getFullYear() !== new Date().getFullYear()
+                        tempDate.getFullYear() !== new Date().getFullYear()
                           ? " 'de' y"
                           : "",
                       )
                       .concat(" 'às' H'h'")
-                      .concat(action.date.getMinutes() !== 0 ? "m" : ""),
+                      .concat(tempDate.getMinutes() !== 0 ? "m" : ""),
                     { locale: ptBR },
                   ).concat(" por " + formatActionTime(action.time))
                 : "Ação sem data"}
@@ -908,16 +981,13 @@ export function DateTimeAndInstagramDate({
           <Calendar
             mode="single"
             locale={ptBR}
-            selected={action.date}
+            selected={tempDate}
             onSelect={(date) => {
               if (date) {
-                if (action.date) {
-                  date?.setHours(
-                    action.date.getHours(),
-                    action.date.getMinutes(),
-                  );
-
-                  onChange({ date });
+                if (tempDate) {
+                  date?.setHours(tempDate.getHours(), tempDate.getMinutes());
+                  setTempDate(date);
+                  onDataChange({ date });
                 }
               }
             }}
@@ -925,44 +995,42 @@ export function DateTimeAndInstagramDate({
           <div className="mx-auto flex w-full gap-2">
             <div className="flex shrink-0">
               <Input
-                value={action.date.getHours().toString()}
+                value={tempHours}
                 className="border-border w-1/2 rounded-r-none border border-r-0 text-right focus:z-10"
                 type="number"
                 min={0}
                 max={23}
                 onChange={(event) => {
-                  const date = action.date;
-                  date.setHours(Number(event.target.value));
-                  // if(setRawAction){
-                  //   setRawAction({ ...action, date });
-
-                  // }
-                  onChange({ date });
+                  setTempHours(event.target.value);
+                }}
+                onBlur={() => {
+                  const date = new Date(tempDate);
+                  date.setHours(Number(tempHours));
+                  date.setMinutes(Number(tempMinutes));
+                  onDataChange({ date });
                 }}
               />
               <Input
-                value={action.date.getMinutes().toString()}
+                value={tempMinutes}
                 className="border-border w-1/2 rounded-l-none border border-l-0 text-left"
                 type="number"
                 min={0}
                 max={59}
                 onChange={(event) => {
-                  const date = action.date;
-                  date.setMinutes(Number(event.target.value));
-                  // setAction({
-                  //   ...action,
-                  //   date: date,
-                  // });
-                  onChange({ date });
+                  setTempMinutes(event.target.value);
+                }}
+                onBlur={() => {
+                  const date = new Date(tempDate);
+                  date.setHours(Number(tempHours));
+                  date.setMinutes(Number(tempMinutes));
+                  onDataChange({ date });
                 }}
               />
             </div>
             <Select
               value={action.time.toString()}
               onValueChange={(value) => {
-                onChange({ time: Number(value) });
-                // setAction({ ...action, time: Number(value) });
-                // onChange(Number(value));
+                onDataChange({ time: Number(value) });
               }}
             >
               <SelectTrigger className="border-border bg-input w-full border">
@@ -985,19 +1053,19 @@ export function DateTimeAndInstagramDate({
           <PopoverTrigger asChild>
             <Button
               title={
-                action.instagram_date
+                tempInstagramDate
                   ? format(
-                      action.instagram_date,
+                      tempInstagramDate,
                       "d/M"
                         .concat(
-                          action.instagram_date.getFullYear() !==
+                          tempInstagramDate.getFullYear() !==
                             new Date().getFullYear()
                             ? " 'de' y"
                             : "",
                         )
                         .concat(" 'às' H'h'")
                         .concat(
-                          action.instagram_date.getMinutes() !== 0 ? "m" : "",
+                          tempInstagramDate.getMinutes() !== 0 ? "m" : "",
                         ),
                       { locale: ptBR },
                     )
@@ -1009,19 +1077,19 @@ export function DateTimeAndInstagramDate({
             >
               <SiInstagram className="size-4" />
               <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-                {action.instagram_date
+                {tempInstagramDate
                   ? format(
-                      action.instagram_date,
+                      tempInstagramDate,
                       "d/M"
                         .concat(
-                          action.instagram_date.getFullYear() !==
+                          tempInstagramDate.getFullYear() !==
                             new Date().getFullYear()
                             ? " 'de' y"
                             : "",
                         )
                         .concat(" 'às' H'h'")
                         .concat(
-                          action.instagram_date.getMinutes() !== 0 ? "m" : "",
+                          tempInstagramDate.getMinutes() !== 0 ? "m" : "",
                         ),
                       { locale: ptBR },
                     )
@@ -1033,16 +1101,16 @@ export function DateTimeAndInstagramDate({
             <Calendar
               locale={ptBR}
               mode="single"
-              selected={action.instagram_date}
+              selected={tempInstagramDate}
               onSelect={(instagram_date) => {
                 if (instagram_date) {
-                  if (action.instagram_date) {
+                  if (tempInstagramDate) {
                     instagram_date?.setHours(
-                      action.instagram_date.getHours(),
-                      action.instagram_date.getMinutes(),
+                      tempInstagramDate.getHours(),
+                      tempInstagramDate.getMinutes(),
                     );
-                    // setAction({ ...action, instagram_date });
-                    onChange({ instagram_date });
+                    setTempInstagramDate(instagram_date);
+                    onDataChange({ instagram_date });
                   }
                 }
               }}
@@ -1050,32 +1118,35 @@ export function DateTimeAndInstagramDate({
             <div className="flex justify-center gap-2">
               <div className="flex shrink-0">
                 <Input
-                  value={action.instagram_date.getHours().toString()}
+                  value={tempInstagramHours}
                   className="border-border w-1/2 rounded-r-none border border-r-0 text-right focus:z-10"
                   type="number"
                   min={0}
                   max={23}
                   onChange={(event) => {
-                    const instagram_date = action.instagram_date;
-                    instagram_date.setHours(Number(event.target.value));
-
-                    onChange({ instagram_date });
+                    setTempInstagramHours(event.target.value);
+                  }}
+                  onBlur={() => {
+                    const instagram_date = new Date(tempInstagramDate);
+                    instagram_date.setHours(Number(tempInstagramHours));
+                    instagram_date.setMinutes(Number(tempInstagramMinutes));
+                    onDataChange({ instagram_date });
                   }}
                 />
                 <Input
-                  value={action.instagram_date.getMinutes().toString()}
+                  value={tempInstagramMinutes}
                   className="border-border w-1/2 rounded-l-none border border-l-0 text-left"
                   type="number"
                   min={0}
                   max={59}
                   onChange={(event) => {
-                    const instagram_date = action.instagram_date;
-                    instagram_date.setMinutes(Number(event.target.value));
-                    onChange({ instagram_date });
-                    // setAction({
-                    //   ...action,
-                    //   instagram_date,
-                    // });
+                    setTempInstagramMinutes(event.target.value);
+                  }}
+                  onBlur={() => {
+                    const instagram_date = new Date(tempInstagramDate);
+                    instagram_date.setHours(Number(tempInstagramHours));
+                    instagram_date.setMinutes(Number(tempInstagramMinutes));
+                    onDataChange({ instagram_date });
                   }}
                 />
               </div>
@@ -1087,27 +1158,27 @@ export function DateTimeAndInstagramDate({
   );
 }
 
-function getResponsibleForArea(category: string) {
-  const { categories, areas, people } = useMatches()[1]
-    .data as DashboardRootType;
+// function getResponsibleForArea(category: string) {
+//   const { categories, areas, people } = useMatches()[1]
+//     .data as DashboardRootType;
 
-  const _category = categories.find((c) => c.slug === category);
+//   const _category = categories.find((c) => c.slug === category);
 
-  invariant(_category, "O valor de category deve estar errado.");
+//   invariant(_category, "O valor de category deve estar errado.");
 
-  const _area = areas.find((a) => a.slug === _category.area);
+//   const _area = areas.find((a) => a.slug === _category.area);
 
-  invariant(
-    _area,
-    "A área não pode ser encontrada, verifique novamente o valor de category",
-  );
+//   invariant(
+//     _area,
+//     "A área não pode ser encontrada, verifique novamente o valor de category",
+//   );
 
-  const responsibles = people.filter((person) =>
-    person.areas?.find((a: string) => a === _area.slug),
-  );
+//   const responsibles = people.filter((person) =>
+//     person.areas?.find((a: string) => a === _area.slug),
+//   );
 
-  return responsibles;
-}
+//   return responsibles;
+// }
 
 function ColorsPartnerDropdown({
   partner,
