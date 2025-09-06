@@ -113,10 +113,6 @@ export default function CreateAction({
 
   const [rawAction, setRawAction] = useState<RawAction>(cleanAction);
 
-  const category = categories.find(
-    (category) => category.slug === rawAction.category,
-  ) as Category;
-
   useEffect(() => {
     if (rawAction.partners) {
       const newPartner = partners.find((p) => p.slug === rawAction.partners[0]);
@@ -127,36 +123,21 @@ export default function CreateAction({
     }
   }, [rawAction.partners]);
 
-  // useEffect para mudança de categoria - recalcular time e instagram_date
+  // useEffect para mudança de categoria - usar validação unificada
   useEffect(() => {
     if (rawAction.category) {
       const timeRequired =
         (TIMES as any)[rawAction.category] || (TIMES as any)[DEFAULT_CATEGORY];
-      setRawAction((prev) => ({
-        ...prev,
-        time: timeRequired,
-        instagram_date: addMinutes(prev.date, timeRequired),
-      }));
-    }
-  }, [rawAction.category]);
 
-  useEffect(() => {
-    if (
-      areas.find(
-        (area) =>
-          categories.find((category) => category.slug === rawAction.category)
-            ?.area === "creative",
-      )
-    ) {
-      setRawAction({
-        ...rawAction,
-        responsibles: ["b4f1f8f7-e8bb-4726-8693-76e217472674"],
+      const adjustments = validateAndAdjustActionDates({
+        time: timeRequired,
+        currentDate: rawAction.date,
+        currentInstagramDate: rawAction.instagram_date,
+        currentTime: rawAction.time,
       });
-    } else {
-      setRawAction({
-        ...rawAction,
-        responsibles: [user.id],
-      });
+
+      // Aplicar todas as mudanças de uma vez
+      setRawAction((prev) => ({ ...prev, ...adjustments }));
     }
   }, [rawAction.category]);
 
@@ -385,20 +366,20 @@ export default function CreateAction({
                   time,
                   currentDate: rawAction.date,
                   currentInstagramDate: rawAction.instagram_date,
-                  currentTime: rawAction.time
+                  currentTime: rawAction.time,
                 });
-                
+
                 let updates = { ...rawAction };
-                
+
                 // Aplicar os ajustes (as datas já vêm como Date objects)
                 if (adjustments.date) {
                   updates.date = adjustments.date;
                 }
-                
+
                 if (adjustments.instagram_date) {
                   updates.instagram_date = adjustments.instagram_date;
                 }
-                
+
                 if (adjustments.time) {
                   updates.time = adjustments.time;
                 }
@@ -935,7 +916,19 @@ export function DateTimeAndInstagramDate({
   return (
     <>
       {/* Data e Hora */}
-      <Popover>
+      <Popover
+        onOpenChange={(open) => {
+          // Validação apenas quando popover FECHA
+          if (!open && tempDate) {
+            const finalDate = new Date(tempDate);
+            finalDate.setHours(Number(tempHours), Number(tempMinutes));
+            onDataChange({ 
+              date: finalDate,
+              time: action.time
+            });
+          }
+        }}
+      >
         <PopoverTrigger asChild>
           <Button
             title={
@@ -987,7 +980,7 @@ export function DateTimeAndInstagramDate({
                 if (tempDate) {
                   date?.setHours(tempDate.getHours(), tempDate.getMinutes());
                   setTempDate(date);
-                  onDataChange({ date });
+                  // ❌ REMOVIDO: onDataChange({ date });
                 }
               }
             }}
@@ -1002,12 +995,7 @@ export function DateTimeAndInstagramDate({
                 max={23}
                 onChange={(event) => {
                   setTempHours(event.target.value);
-                }}
-                onBlur={() => {
-                  const date = new Date(tempDate);
-                  date.setHours(Number(tempHours));
-                  date.setMinutes(Number(tempMinutes));
-                  onDataChange({ date });
+                  // ❌ REMOVIDO: onBlur com onDataChange
                 }}
               />
               <Input
@@ -1018,19 +1006,15 @@ export function DateTimeAndInstagramDate({
                 max={59}
                 onChange={(event) => {
                   setTempMinutes(event.target.value);
-                }}
-                onBlur={() => {
-                  const date = new Date(tempDate);
-                  date.setHours(Number(tempHours));
-                  date.setMinutes(Number(tempMinutes));
-                  onDataChange({ date });
+                  // ❌ REMOVIDO: onBlur com onDataChange
                 }}
               />
             </div>
             <Select
               value={action.time.toString()}
               onValueChange={(value) => {
-                onDataChange({ time: Number(value) });
+                // Validação será feita no fechamento do popover
+                // Aqui apenas atualizamos visualmente se necessário
               }}
             >
               <SelectTrigger className="border-border bg-input w-full border">
@@ -1049,7 +1033,16 @@ export function DateTimeAndInstagramDate({
       </Popover>
       {/* Data e Hora do Instagram  */}
       {isInstagramFeed(action.category, true) ? (
-        <Popover>
+        <Popover
+          onOpenChange={(open) => {
+            // Validação apenas quando popover FECHA
+            if (!open && tempInstagramDate) {
+              const finalInstagramDate = new Date(tempInstagramDate);
+              finalInstagramDate.setHours(Number(tempInstagramHours), Number(tempInstagramMinutes));
+              onDataChange({ instagram_date: finalInstagramDate });
+            }
+          }}
+        >
           <PopoverTrigger asChild>
             <Button
               title={
@@ -1110,7 +1103,6 @@ export function DateTimeAndInstagramDate({
                       tempInstagramDate.getMinutes(),
                     );
                     setTempInstagramDate(instagram_date);
-                    onDataChange({ instagram_date });
                   }
                 }
               }}
@@ -1126,12 +1118,6 @@ export function DateTimeAndInstagramDate({
                   onChange={(event) => {
                     setTempInstagramHours(event.target.value);
                   }}
-                  onBlur={() => {
-                    const instagram_date = new Date(tempInstagramDate);
-                    instagram_date.setHours(Number(tempInstagramHours));
-                    instagram_date.setMinutes(Number(tempInstagramMinutes));
-                    onDataChange({ instagram_date });
-                  }}
                 />
                 <Input
                   value={tempInstagramMinutes}
@@ -1141,12 +1127,6 @@ export function DateTimeAndInstagramDate({
                   max={59}
                   onChange={(event) => {
                     setTempInstagramMinutes(event.target.value);
-                  }}
-                  onBlur={() => {
-                    const instagram_date = new Date(tempInstagramDate);
-                    instagram_date.setHours(Number(tempInstagramHours));
-                    instagram_date.setMinutes(Number(tempInstagramMinutes));
-                    onDataChange({ instagram_date });
                   }}
                 />
               </div>

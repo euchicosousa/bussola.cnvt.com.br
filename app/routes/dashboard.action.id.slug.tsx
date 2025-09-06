@@ -1130,9 +1130,21 @@ function LowerBar({
         <CategoryDropdown
           action={actionToRawAction(action)}
           setAction={(rawAction) => {
+            const timeRequired = (TIMES as any)[rawAction.category];
+            
+            const adjustments = validateAndAdjustActionDates({
+              time: timeRequired,
+              currentDate: parseISO(action.date),
+              currentInstagramDate: parseISO(action.instagram_date),
+              currentTime: action.time
+            });
+            
             setAction({
               ...action,
               category: rawAction.category,
+              date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : action.date,
+              instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : action.instagram_date,
+              time: adjustments.time || action.time,
             });
           }}
         />

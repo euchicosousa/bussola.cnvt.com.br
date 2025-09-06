@@ -428,6 +428,10 @@ export default function Partner() {
   useEffect(() => {
     setShowAllActions(!!searchParams.get("show_all_actions"));
   }, [searchParams.get("show_all_actions")]);
+  // Show color sync - only when show_color param changes
+  useEffect(() => {
+    setShowColor(!!searchParams.get("show_color"));
+  }, [searchParams.get("show_color")]);
 
   // Variant sync - only when show_feed param changes
   useEffect(() => {

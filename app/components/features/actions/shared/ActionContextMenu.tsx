@@ -97,7 +97,8 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
   );
 };
 import { toast } from "~/components/ui/use-toast";
-import { INTENTS } from "~/lib/constants";
+import { INTENTS, TIMES } from "~/lib/constants";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import {
   getPartners,
   getQueryString,
@@ -224,9 +225,21 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
       <ChangeDatePopover
         date={action.date}
         onChangeDate={(date) => {
+          const timeRequired = (TIMES as any)[action.category];
+          
+          const adjustments = validateAndAdjustActionDates({
+            date,
+            currentDate: new Date(action.date),
+            currentInstagramDate: new Date(action.instagram_date),
+            currentTime: timeRequired
+          });
+          
           handleActions({
             ...action,
-            date: format(date, "yyyy-MM-dd HH:mm:ss"),
+            date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : format(date, "yyyy-MM-dd HH:mm:ss"),
+            instagram_date: adjustments.instagram_date 
+              ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss")
+              : action.instagram_date,
             intent: INTENTS.updateAction,
           });
         }}
@@ -239,9 +252,21 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         <ChangeDatePopover
           date={action.instagram_date}
           onChangeDate={(date) => {
+            const timeRequired = (TIMES as any)[action.category];
+            
+            const adjustments = validateAndAdjustActionDates({
+              instagram_date: date,
+              currentDate: new Date(action.date),
+              currentInstagramDate: new Date(action.instagram_date),
+              currentTime: timeRequired
+            });
+            
             handleActions({
               ...action,
-              instagram_date: format(date, "yyyy-MM-dd HH:mm:ss"),
+              date: adjustments.date 
+                ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
+                : action.date,
+              instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : format(date, "yyyy-MM-dd HH:mm:ss"),
               intent: INTENTS.updateAction,
             });
           }}
@@ -427,9 +452,21 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
                       key={category.slug}
                       className="bg-item flex items-center gap-2"
                       onSelect={() => {
+                        const timeRequired = (TIMES as any)[category.slug];
+                        
+                        const adjustments = validateAndAdjustActionDates({
+                          time: timeRequired,
+                          currentDate: new Date(action.date),
+                          currentInstagramDate: new Date(action.instagram_date),
+                          currentTime: action.time
+                        });
+                        
                         handleActions({
                           ...action,
                           category: category.slug,
+                          date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : action.date,
+                          instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : action.instagram_date,
+                          time: adjustments.time || action.time,
                           intent: INTENTS.updateAction,
                         });
                       }}

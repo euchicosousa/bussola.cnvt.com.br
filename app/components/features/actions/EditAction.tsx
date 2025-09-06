@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { Description, Header, Title } from "~/routes/dashboard.action.id.slug";
 import { Button } from "~/components/ui/button";
 import { useNavigate, useSubmit } from "react-router";
-import { format } from "date-fns";
-import { INTENTS } from "~/lib/constants";
+import { format, parseISO } from "date-fns";
+import { INTENTS, TIMES } from "~/lib/constants";
 import { actionToRawAction, isInstagramFeed, Post } from "~/lib/helpers";
-import { CategoryDropdown } from "./CreateAction";
+import { CategoryDropdown, DateTimeAndInstagramDate } from "./CreateAction";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 
 export default function EditAction({
   action,
@@ -128,7 +129,11 @@ export default function EditAction({
                   ? "border-0 focus-within:ring-0"
                   : ""
               }`}
-              value={editingAction.instagram_caption ? editingAction.instagram_caption : undefined}
+              value={
+                editingAction.instagram_caption
+                  ? editingAction.instagram_caption
+                  : undefined
+              }
             ></textarea>
           </div>
         )}
@@ -138,10 +143,81 @@ export default function EditAction({
             <CategoryDropdown
               action={actionToRawAction(editingAction)}
               setAction={(action) => {
+                const timeRequired = (TIMES as any)[action.category];
+
+                const adjustments = validateAndAdjustActionDates({
+                  time: timeRequired,
+                  currentDate: new Date(editingAction.date),
+                  currentInstagramDate: new Date(editingAction.instagram_date),
+                  currentTime: editingAction.time,
+                });
+
                 setEditingAction({
                   ...editingAction,
                   category: action.category,
+                  date: adjustments.date
+                    ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
+                    : editingAction.date,
+                  instagram_date: adjustments.instagram_date
+                    ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss")
+                    : editingAction.instagram_date,
+                  time: adjustments.time || editingAction.time,
                 });
+              }}
+            />
+          </div>
+          <div className="flex items-center">
+            <DateTimeAndInstagramDate
+              action={{
+                ...action,
+                date: parseISO(action.date),
+                instagram_date: parseISO(action.instagram_date),
+              }}
+              onDataChange={({
+                date,
+                instagram_date,
+                time,
+              }: {
+                date?: Date;
+                instagram_date?: Date;
+                time?: number;
+              }) => {
+                // Usar a função unificada de validação
+                const timeRequired =
+                  (TIMES as any)[editingAction.category] ||
+                  (TIMES as any)["post"];
+
+                const adjustments = validateAndAdjustActionDates({
+                  date,
+                  instagram_date,
+                  time,
+                  currentDate: parseISO(editingAction.date),
+                  currentInstagramDate: parseISO(editingAction.instagram_date),
+                  currentTime: timeRequired,
+                });
+
+                let updates = { ...editingAction };
+
+                // Aplicar os ajustes formatando as datas para string se necessário
+                if (adjustments.date) {
+                  updates.date = format(
+                    adjustments.date,
+                    "yyyy-MM-dd HH:mm:ss",
+                  );
+                }
+
+                if (adjustments.instagram_date) {
+                  updates.instagram_date = format(
+                    adjustments.instagram_date,
+                    "yyyy-MM-dd HH:mm:ss",
+                  );
+                }
+
+                if (adjustments.time) {
+                  updates.time = adjustments.time;
+                }
+
+                setEditingAction(updates);
               }}
             />
           </div>

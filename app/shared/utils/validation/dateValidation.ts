@@ -21,31 +21,38 @@ export function validateAndAdjustActionDates({
 }) {
   let updates: any = {};
   
+  const timeToUse = time ?? currentTime;
+  
   if (date) {
     updates.date = date;
     
     // Verificar se instagram_date ainda respeitará a distância mínima
-    const timeRequired = currentTime;
     const timeDiff = (currentInstagramDate.getTime() - date.getTime()) / (1000 * 60);
     
-    if (timeDiff < timeRequired) {
+    if (timeDiff < timeToUse) {
       // Violou a regra → ajustar instagram_date
-      updates.instagram_date = addMinutes(date, timeRequired);
+      updates.instagram_date = addMinutes(date, timeToUse);
     }
   } else if (instagram_date) {
     updates.instagram_date = instagram_date;
     
     // Verificar se date ainda respeitará a distância mínima  
-    const timeRequired = currentTime;
     const timeDiff = (instagram_date.getTime() - currentDate.getTime()) / (1000 * 60);
     
-    if (timeDiff < timeRequired) {
+    if (timeDiff < timeToUse) {
       // Violou a regra → ajustar date
-      updates.date = addMinutes(instagram_date, -timeRequired);
+      updates.date = addMinutes(instagram_date, -timeToUse);
     }
+  } else if (time !== undefined) {
+    // Só mudou categoria/time - MANTER INSTAGRAM_DATE INTACTO
+    const currentTimeDiff = (currentInstagramDate.getTime() - currentDate.getTime()) / (1000 * 60);
+    
+    if (currentTimeDiff < time) {
+      // Precisa ajustar DATE (não instagram_date)
+      updates.date = addMinutes(currentInstagramDate, -time);
+    }
+    updates.time = time;
   }
-  
-  if (time) updates.time = time;
   
   return updates;
 }
