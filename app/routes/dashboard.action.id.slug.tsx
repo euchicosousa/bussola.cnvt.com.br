@@ -26,7 +26,6 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  ChevronsUpDownIcon,
   DownloadIcon,
   ImageIcon,
   LightbulbIcon,
@@ -35,8 +34,6 @@ import {
   SaveIcon,
   SlidersIcon,
   SparklesIcon,
-  TimerIcon,
-  TimerOffIcon,
   Trash2Icon,
   TrashIcon,
 } from "lucide-react";
@@ -56,6 +53,7 @@ import {
   TopicsAction,
 } from "~/components/features/actions/CreateAction";
 import { Button } from "~/components/ui/button";
+import { Timer } from "~/components/ui/timer";
 import {
   Command,
   CommandEmpty,
@@ -71,7 +69,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
-  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -1072,7 +1069,6 @@ function LowerBar({
   const matches = useMatches();
   const submit = useSubmit();
   const { toast } = useToast();
-  const [runningTime, setRunningTime] = useState(0);
 
   const { categories, priorities, areas, partners } = matches[1]
     .data as DashboardRootType;
@@ -1091,25 +1087,6 @@ function LowerBar({
       },
     );
   };
-
-  useEffect(() => {
-    const title = `${action.title} / ʙússoʟa`;
-    let timerInterval: NodeJS.Timeout | undefined;
-    document.title = formatTimer(runningTime).concat(` / ${title}`);
-    if (runningTime > 0) {
-      timerInterval = setInterval(() => {
-        setRunningTime((rt) => rt - 1);
-        document.title = formatTimer(runningTime).concat(` / ${title}`);
-      }, 1000);
-    } else {
-      document.title = title;
-      clearInterval(timerInterval);
-    }
-
-    return () => {
-      if (timerInterval) clearInterval(timerInterval);
-    };
-  }, [runningTime]);
 
   const navigate = useNavigate();
 
@@ -1283,78 +1260,22 @@ function LowerBar({
           </>
         ) : null}
 
-        {/* Tempo */}
-        <div className="flex items-center gap-2">
-          <Button
-            size={"icon"}
-            variant={runningTime ? "destructive" : "ghost"}
-            onClick={() => {
-              if (runningTime) {
-                setRunningTime(0);
-              } else {
-                setRunningTime(action.time * 60);
-                // setRunningTime(3);
-              }
-            }}
-          >
-            {runningTime ? <TimerOffIcon /> : <TimerIcon />}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="focus:outline-none">
-              <ChevronsUpDownIcon className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent className="bg-content">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRunningTime(action.time * 60);
-                  }}
-                  className="bg-item"
-                >
-                  {action.time} minutos
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRunningTime(5 * 60);
-                  }}
-                  className="bg-item"
-                >
-                  5 minutos
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRunningTime(10 * 60);
-                  }}
-                  className="bg-item"
-                >
-                  10 minutos
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRunningTime(20 * 60);
-                  }}
-                  className="bg-item"
-                >
-                  20 minutos
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setRunningTime(40 * 60);
-                  }}
-                  className="bg-item"
-                >
-                  40 minutos
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenu>
-          <div className="px-2 text-2xl font-medium tabular-nums">
-            {runningTime
-              ? formatTimer(runningTime)
-              : formatTimer(action.time * 60)}
-          </div>
-        </div>
+        {/* Timer */}
+        <Timer
+          defaultTime={action.time}
+          presetTimes={[
+            1,
+            ...Array.from(new Set(Object.values(TIMES))).sort((a, b) => a - b),
+          ]}
+          titlePrefix={action.title}
+          size="md"
+          onComplete={() => {
+            toast({
+              title: "Timer finalizado!",
+              description: `Tempo da ação "${action.title}" concluído.`,
+            });
+          }}
+        />
       </div>
 
       {/* Data / Deletar / Atualizar */}
@@ -1460,16 +1381,6 @@ function getCleanTitle(title: string) {
   return title.indexOf(" | ") >= 0
     ? title.substring(0, title.indexOf(" | "))
     : title;
-}
-
-function formatTimer(time: number) {
-  const hours = Math.floor(time / 3600);
-  const minutes = Math.floor((time % 3600) / 60);
-  const seconds = time % 60;
-
-  return (time >= 3600 ? `${String(hours).padStart(2, "0")}:` : "").concat(
-    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
-  );
 }
 
 function PopoverParameters({
