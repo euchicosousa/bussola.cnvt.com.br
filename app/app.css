@@ -214,7 +214,7 @@ body {
 }
 
 .action-item-block {
-  @apply isolate rounded-lg px-6 py-4;
+  @apply isolate px-4 py-3;
 }
 
 .dark .action-item {

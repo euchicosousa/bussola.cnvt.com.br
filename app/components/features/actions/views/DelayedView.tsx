@@ -4,13 +4,12 @@ import {
   ListTodoIcon,
   SearchIcon,
   SignalIcon,
-  XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Badge from "~/components/common/forms/Badge";
 import { CategoriesView } from "~/components/features/actions/views/CategoriesView";
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 
@@ -100,7 +99,7 @@ export function DelayedView({ actions }: { actions: Action[] }) {
         </div>
 
         {view === "list" ? (
-          <ListOfActions
+          <ActionsContainer
             actions={filteredActions}
             showCategory={true}
             columns={6}

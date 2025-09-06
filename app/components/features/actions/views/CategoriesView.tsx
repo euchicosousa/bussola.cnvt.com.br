@@ -1,6 +1,6 @@
 import { useMatches } from "react-router";
 import { Icons } from "~/lib/helpers";
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 
 export function CategoriesView({ actions }: { actions: Action[] }) {
   const matches = useMatches();
@@ -16,7 +16,7 @@ export function CategoriesView({ actions }: { actions: Action[] }) {
             <h4 className="font-bold">{category.title}</h4>
           </div>
 
-          <ListOfActions
+          <ActionsContainer
             actions={actions.filter(
               (action) => action.category === category.slug,
             )}

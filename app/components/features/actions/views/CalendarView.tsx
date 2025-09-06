@@ -16,14 +16,13 @@ import { CalendarIcon, FilterIcon } from "lucide-react";
 import { useState } from "react";
 import { useMatches } from "react-router";
 
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
@@ -200,9 +199,9 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
                     </div>
                   </div>
 
-                  <ListOfActions
+                  <ActionsContainer
                     actions={actions}
-                    isHair
+                    // variant={VARIANTS.HAIR}
                     isFoldable
                     date={{ timeFormat: 1 }}
                   />

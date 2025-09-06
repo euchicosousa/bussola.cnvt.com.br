@@ -6,7 +6,7 @@ import {
   useLoaderData,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { Heading } from "~/components/common/forms/Headings";
 import { createClient } from "~/lib/database/supabase";
 
@@ -102,7 +102,7 @@ export default function LatePage() {
     <div className="px-4 py-8 md:px-8">
       <Heading>Ações em atraso</Heading>
       <div className="mx-auto pb-32">
-        <ListOfActions
+        <ActionsContainer
           actions={actions}
           date={{ dateFormat: 4, timeFormat: 1 }}
           long

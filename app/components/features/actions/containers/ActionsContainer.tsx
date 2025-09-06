@@ -2,10 +2,9 @@ import React, { useState } from "react";
 import { useMatches } from "react-router";
 import { ExpandIcon, ShrinkIcon } from "lucide-react";
 import { Toggle } from "~/components/ui/toggle";
-import {
-  sortActions,
-} from "~/lib/helpers";
+import { sortActions } from "~/lib/helpers";
 import { ActionItem } from "../ActionItem";
+import { VARIANTS } from "~/lib/constants";
 
 const FOLD_MULTIPLIER = 4;
 
@@ -13,8 +12,8 @@ interface ActionsContainerProps {
   actions?: Action[] | null;
 
   // Layout options
-  variant?: "line" | "block" | "hair";
-  columns?: 1 | 2 | 3 | 6;
+  variant?: typeof VARIANTS.LINE | typeof VARIANTS.BLOCK | typeof VARIANTS.HAIR;
+  columns?: 1 | 2 | 3 | 4 | 5 | 6;
   max?: number; // Substitui o max={1|2} do BlockOfActions
 
   // Ordering options
@@ -44,7 +43,7 @@ interface ActionsContainerProps {
 
 export function ActionsContainer({
   actions,
-  variant = "line",
+  variant = VARIANTS.LINE,
   columns = 1,
   max,
   orderBy = "state",
@@ -69,20 +68,24 @@ export function ActionsContainer({
 
   // Ordenação unificada
   actions = actions
-    ? sortActions(actions, orderBy as any, descending ? "desc" : "asc", states) || []
+    ? sortActions(
+        actions,
+        orderBy as any,
+        descending ? "desc" : "asc",
+        states,
+      ) || []
     : [];
 
-  // Limitação por max (funcionalidade do BlockOfActions)
+  // Limitação por max
   const displayActions = max ? actions?.slice(0, max) : actions;
 
-  // Fold logic (funcionalidade do ListOfActions)
   const foldCount = columns * FOLD_MULTIPLIER;
   const [fold, setFold] = useState(isFoldable ? foldCount : undefined);
   const finalActions = fold ? displayActions?.slice(0, fold) : displayActions;
 
   // CSS classes baseado no variant e configurações
   const getContainerClasses = () => {
-    if (variant === "block") {
+    if (variant === VARIANTS.BLOCK) {
       // Layout do antigo BlockOfActions
       if (max === undefined) {
         return "grid @[600px]:grid-cols-2 @[1000px]:grid-cols-3 @[1300px]:grid-cols-4";
@@ -90,7 +93,6 @@ export function ActionsContainer({
       return max === 2 ? "grid grid-cols-2" : "flex flex-col";
     }
 
-    // Layout do antigo ListOfActions
     if (columns === 1) {
       return "flex flex-col";
     }
@@ -102,15 +104,15 @@ export function ActionsContainer({
   };
 
   const gapClass =
-    variant === "hair"
+    variant === VARIANTS.HAIR
       ? "gap-y-[1px]"
-      : variant === "block"
+      : variant === VARIANTS.BLOCK
         ? "gap-2"
-        : "gap-y-1";
-  const paddingClass = variant === "block" ? "p-1 pb-8" : "";
+        : "gap-2";
+  const paddingClass = variant === VARIANTS.BLOCK ? "p-1 pb-8" : "";
   const scrollClass = scroll
     ? "scrollbars-v pt-1 pb-8"
-    : variant === "block"
+    : variant === VARIANTS.BLOCK
       ? "scrollbars-v"
       : "";
 
@@ -121,13 +123,13 @@ export function ActionsContainer({
   return (
     <div
       className={
-        variant === "block"
+        variant === VARIANTS.BLOCK
           ? "@container -mx-1 h-full overflow-hidden"
           : "group"
       }
     >
       <div
-        className={` ${getContainerClasses()} ${scrollClass} ${gapClass} ${paddingClass} @container h-full gap-x-4`}
+        className={` ${getContainerClasses()} ${scrollClass} ${gapClass} ${paddingClass} @container h-full`}
       >
         {finalActions.map((action) => (
           <ActionItem
@@ -150,11 +152,11 @@ export function ActionsContainer({
         ))}
       </div>
 
-      {/* Fold toggle (apenas para ListOfActions behavior) */}
+      {/* Fold toggle  */}
       {actions &&
       isFoldable &&
       actions.length > foldCount &&
-      variant !== "block" ? (
+      variant !== VARIANTS.BLOCK ? (
         <div className="p-4 text-center opacity-0 group-hover:opacity-100">
           <Toggle
             size="sm"
@@ -178,9 +180,3 @@ export function ActionsContainer({
     </div>
   );
 }
-
-// Aliases para backward compatibility
-export const ListOfActions = (props: any) => <ActionsContainer {...props} />;
-export const BlockOfActions = (props: any) => (
-  <ActionsContainer {...props} variant="block" />
-);

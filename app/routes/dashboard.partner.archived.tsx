@@ -6,7 +6,7 @@ import {
   redirect,
   useLoaderData,
 } from "react-router";
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
@@ -82,7 +82,7 @@ export default function LatePage() {
           <Link to={"/dashboard/admin/users"}>Ações em atraso</Link>
         </h2>
         <div className="mx-auto pb-32">
-          <ListOfActions
+          <ActionsContainer
             actions={actions}
             date={{ dateFormat: 4, timeFormat: 1 }}
             long

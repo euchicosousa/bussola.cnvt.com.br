@@ -2,7 +2,7 @@
 export { ActionItem, type ActionVariant } from "./ActionItem";
 
 // Container exports
-export { ActionsContainer, ListOfActions, BlockOfActions } from "./containers/ActionsContainer";
+export { ActionsContainer } from "./containers/ActionsContainer";
 export { GridOfActions } from "./containers/GridOfActions";
 
 // Shared utilities

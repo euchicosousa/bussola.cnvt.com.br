@@ -1,6 +1,7 @@
 import React from "react";
 import { isAfter } from "date-fns";
 import { ActionItem } from "../ActionItem";
+import { VARIANTS } from "~/lib/constants";
 
 interface GridOfActionsProps {
   actions?: Action[];
@@ -20,7 +21,7 @@ export function GridOfActions({ actions, partner }: GridOfActionsProps) {
           <ActionItem
             key={index}
             action={action}
-            variant="grid"
+            variant={VARIANTS.GRID}
             partner={partner}
           />
         ))}

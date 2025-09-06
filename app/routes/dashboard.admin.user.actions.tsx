@@ -8,7 +8,7 @@ import {
   type MetaFunction,
 } from "react-router";
 import invariant from "tiny-invariant";
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { Heading } from "~/components/common/forms/Headings";
 import { Button } from "~/components/ui/button";
 import { Avatar } from "~/lib/helpers";
@@ -110,7 +110,7 @@ export default function AdminPartners() {
             .map((action) => <ActionLine action={action} key={action.id} />)}
         </div> */}
 
-        <ListOfActions
+        <ActionsContainer
           actions={actions?.filter((action) =>
             viewFinished ? true : action.state !== "finished",
           )}

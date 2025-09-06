@@ -8,9 +8,8 @@ import {
 } from "@dnd-kit/core";
 import { useId } from "react";
 import { useMatches, useSubmit } from "react-router";
-import { INTENTS } from "~/lib/constants";
-import { BlockOfActions } from "~/components/features/actions";
-import { ListOfActions } from "~/components/features/actions";
+import { INTENTS, VARIANTS } from "~/lib/constants";
+import { ActionsContainer } from "../containers/ActionsContainer";
 
 export function KanbanView({
   actions,
@@ -107,14 +106,19 @@ function KanbanColumn({
       </div>
 
       {list ? (
-        <ListOfActions
+        <ActionsContainer
           actions={actions}
           showCategory
           date={{ timeFormat: 1 }}
           scroll
         />
       ) : (
-        <BlockOfActions max={1} actions={actions} sprint />
+        <ActionsContainer
+          max={1}
+          actions={actions}
+          variant={VARIANTS.BLOCK}
+          sprint
+        />
       )}
     </div>
   );

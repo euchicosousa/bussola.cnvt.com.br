@@ -7,7 +7,7 @@ import { useMatches, useNavigate, useSubmit } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
 import { EditableTitle } from "~/components/ui/editable-title";
-import { INTENTS, PRIORITIES } from "~/lib/constants";
+import { INTENTS, PRIORITIES, VARIANTS } from "~/lib/constants";
 import {
   amIResponsible,
   Avatar,
@@ -29,7 +29,12 @@ import { ShortcutActions } from "./shared/ShortcutActions";
 import { DeleteActionDialog } from "./shared/DeleteActionDialog";
 
 // Tipos de variantes
-export type ActionVariant = "hair" | "line" | "content" | "block" | "grid";
+export type ActionVariant =
+  | typeof VARIANTS.HAIR
+  | typeof VARIANTS.LINE
+  | typeof VARIANTS.CONTENT
+  | typeof VARIANTS.BLOCK
+  | typeof VARIANTS.GRID;
 
 interface NewActionProps {
   action: Action;
@@ -61,7 +66,7 @@ const DEFAULT_UPDATE_TIMESTAMP = () =>
 
 export const ActionItem = React.memo(function ActionItem({
   action,
-  variant = "line",
+  variant = VARIANTS.LINE,
   partner,
   date,
   long,
@@ -73,7 +78,6 @@ export const ActionItem = React.memo(function ActionItem({
   selectMultiple,
   setSelectedActions,
   selectedActions,
-  editingAction,
   handleEditingAction,
   isInstagramDate,
 }: NewActionProps) {
@@ -137,7 +141,7 @@ export const ActionItem = React.memo(function ActionItem({
   );
 
   // Early return for invalid state
-  if (!state || (!actionPartner && variant !== "grid")) {
+  if (!state || (!actionPartner && variant !== VARIANTS.GRID)) {
     return null;
   }
 
@@ -146,8 +150,8 @@ export const ActionItem = React.memo(function ActionItem({
     isInstagramDate && isInstagramFeed(action.category, true);
 
   variant =
-    variant === "content" && !isInstagramFeed(action.category)
-      ? "block"
+    variant === VARIANTS.CONTENT && !isInstagramFeed(action.category)
+      ? VARIANTS.BLOCK
       : variant;
 
   // Unified delay logic
@@ -158,17 +162,10 @@ export const ActionItem = React.memo(function ActionItem({
 
   const getDelayClasses = (variantType: string) => {
     if (!isDelayed) return "";
-
-    switch (variantType) {
-      case "content":
-        return "action-content-delayed";
-      case "block":
-      case "line":
-      case "hair":
-        return "action-delayed";
-      default:
-        return "";
+    if (variantType === "content") {
+      return "action-content-delayed";
     }
+    return "action-delayed";
   };
 
   const styleColors = useMemo(() => {
@@ -182,7 +179,7 @@ export const ActionItem = React.memo(function ActionItem({
 
   const renderActionVariant = () => {
     switch (variant) {
-      case "hair":
+      case VARIANTS.HAIR:
         return (
           <div
             title={action.title}
@@ -242,7 +239,7 @@ export const ActionItem = React.memo(function ActionItem({
         );
 
       // Instagram feed content view
-      case "content":
+      case VARIANTS.CONTENT:
         return (
           <div
             title={isHydrated ? action.title : undefined}
@@ -335,7 +332,7 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
-      case "grid":
+      case VARIANTS.GRID:
         return (
           <div
             className="group/action @container cursor-pointer overflow-hidden"
@@ -370,7 +367,7 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
-      case "block":
+      case VARIANTS.BLOCK:
         return (
           <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
             <div
@@ -396,6 +393,7 @@ export const ActionItem = React.memo(function ActionItem({
                 setHover(false);
               }}
             >
+              <StateBorder color={state.color} />
               {/* Title */}
               <EditableTitle
                 title={action.title}
@@ -413,10 +411,6 @@ export const ActionItem = React.memo(function ActionItem({
 
               <div className="flex items-center justify-between gap-4 overflow-x-hidden py-1">
                 <div className="flex items-center gap-2">
-                  <div
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: state.color }}
-                  ></div>
                   {/* Sprint */}
                   {isSprint(action.id, sprints) && <SprintIcon />}
                   {/* Partners | Clientes  */}
@@ -495,7 +489,7 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
-      case "line":
+      case VARIANTS.LINE:
       default:
         // Regular line variant
         return (
@@ -552,10 +546,7 @@ export const ActionItem = React.memo(function ActionItem({
               )}
 
               {/* State */}
-              <div
-                className="absolute top-0 bottom-0 left-0 -ml-[1px] w-1 shrink-0 rounded-l-full"
-                style={{ backgroundColor: state.color }}
-              ></div>
+              <StateBorder color={state.color} />
 
               {/* Sprint */}
               {isSprint(action.id, sprints) && (
@@ -837,5 +828,14 @@ function SprintIcon({
     >
       <RabbitIcon className="size-4" />
     </div>
+  );
+}
+
+function StateBorder({ color }: { color: string }) {
+  return (
+    <div
+      className="absolute top-0 bottom-0 left-0 -mt-[1px] -mb-[1px] -ml-[1px] w-1 shrink-0 rounded-l-[4px]"
+      style={{ backgroundColor: color }}
+    ></div>
   );
 }

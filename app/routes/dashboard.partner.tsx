@@ -85,7 +85,7 @@ import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
 import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 import { Input } from "~/components/ui/input";
-import { INTENTS } from "~/lib/constants";
+import { INTENTS, VARIANTS } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
@@ -272,15 +272,16 @@ export default function Partner() {
     !!searchParams.get("show_all_actions"),
   );
 
+  const [showColor, setShowColor] = useState(!!searchParams.get("show_color"));
+
   const [selectedActions, setSelectedActions] = useState<Action[]>([]);
   const [currentDate, setCurrentDate] = useState(date);
   const [orderActionsBy, setOrderActionsBy] =
     useState<ORDER_ACTIONS_BY>("date");
 
   const [variant, setVariant] = useState<ActionVariant>(
-    isInstagramDate ? "content" : "line",
+    isInstagramDate || showFeed ? VARIANTS.CONTENT : VARIANTS.LINE,
   );
-  const [showColor, setShowColor] = useState(!!searchParams.get("show_color"));
 
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
@@ -446,15 +447,6 @@ export default function Partner() {
     setShowColor(!!searchParams.get("show_color"));
   }, [searchParams.get("show_color")]);
 
-  // Variant sync - only when show_feed param changes
-  useEffect(() => {
-    if (showFeed) {
-      setVariant("content");
-    } else {
-      setVariant("line");
-    }
-  }, [showFeed]);
-
   // Select all actions with Cmd+A when selectMultiple is active
   useEffect(() => {
     if (!selectMultiple) return;
@@ -481,23 +473,27 @@ export default function Partner() {
     const draggedAction = actions?.find((action) => action.id === active.id)!;
 
     // Constrói a nova data mantendo o horário original
-    const originalTime = isInstagramDate
-      ? format(parseISO(draggedAction.instagram_date), "HH:mm:ss")
-      : format(parseISO(draggedAction.date), "HH:mm:ss");
+    const originalTime =
+      isInstagramDate && isInstagramFeed(draggedAction.category, true)
+        ? format(parseISO(draggedAction.instagram_date), "HH:mm:ss")
+        : format(parseISO(draggedAction.date), "HH:mm:ss");
 
     const newFullDate = parseISO(`${newDateString}T${originalTime}`);
     const currentDate = parseISO(draggedAction.date);
     const currentInstagramDate = parseISO(draggedAction.instagram_date);
 
     // Verificar se houve mudança real
-    const hasChanged = isInstagramDate
-      ? !isSameDay(currentInstagramDate, newFullDate)
-      : !isSameDay(currentDate, newFullDate);
+    const hasChanged =
+      isInstagramDate && isInstagramFeed(draggedAction.category, true)
+        ? !isSameDay(currentInstagramDate, newFullDate)
+        : !isSameDay(currentDate, newFullDate);
 
     if (hasChanged) {
       // Usar a nova função unificada de validação
       const updates = validateAndAdjustActionDates({
-        [isInstagramDate ? "instagram_date" : "date"]: newFullDate,
+        [isInstagramDate && isInstagramFeed(draggedAction.category, true)
+          ? "instagram_date"
+          : "date"]: newFullDate,
         currentDate,
         currentInstagramDate,
         currentTime: draggedAction.time,
@@ -857,12 +853,12 @@ export default function Partner() {
                 onClick={() => {
                   if (isInstagramDate) {
                     setIsInstagramDate(false);
-                    setVariant("line");
+                    setVariant(VARIANTS.LINE);
 
                     params.delete("instagram_date");
                   } else {
                     setIsInstagramDate(true);
-                    setVariant("content");
+                    setVariant(VARIANTS.CONTENT);
 
                     params.set("instagram_date", "true");
                   }
@@ -918,9 +914,9 @@ export default function Partner() {
             <div className="flex gap-1 px-2">
               <Button
                 size={"sm"}
-                variant={variant === "content" ? "secondary" : "ghost"}
+                variant={variant === VARIANTS.CONTENT ? "secondary" : "ghost"}
                 onClick={() => {
-                  setVariant("content");
+                  setVariant(VARIANTS.CONTENT);
                 }}
                 title={
                   isInstagramDate
@@ -932,27 +928,27 @@ export default function Partner() {
               </Button>
               <Button
                 size={"sm"}
-                variant={variant === "block" ? "secondary" : "ghost"}
+                variant={variant === VARIANTS.BLOCK ? "secondary" : "ghost"}
                 onClick={() => {
-                  setVariant("block");
+                  setVariant(VARIANTS.BLOCK);
                 }}
               >
                 <Rows2Icon className="size-4" />
               </Button>
               <Button
                 size={"sm"}
-                variant={variant === "line" ? "secondary" : "ghost"}
+                variant={variant === VARIANTS.LINE ? "secondary" : "ghost"}
                 onClick={() => {
-                  setVariant("line");
+                  setVariant(VARIANTS.LINE);
                 }}
               >
                 <Rows3Icon className="size-4" />
               </Button>
               <Button
                 size={"sm"}
-                variant={variant === "hair" ? "secondary" : "ghost"}
+                variant={variant === VARIANTS.HAIR ? "secondary" : "ghost"}
                 onClick={() => {
-                  setVariant("hair");
+                  setVariant(VARIANTS.HAIR);
                 }}
               >
                 <Rows4Icon className="size-4" />
@@ -1477,7 +1473,7 @@ export const CalendarDay = ({
         <div className="relative flex h-full grow flex-col gap-3">
           {/* Se for par amostrar o conteúdo estilo Instagram */}
           {isInstagramDate ? (
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-1">
               {day.actions?.filter((action) => isInstagramFeed(action.category))
                 .length !== 0 && (
                 <>
@@ -1485,7 +1481,7 @@ export const CalendarDay = ({
                     <Grid3x3Icon className="size-4" />
                     <div>Feed</div>
                   </div>
-                  <div className="mb-4 flex flex-col gap-1">
+                  <div className="mb-4 flex flex-col gap-2">
                     {sortActions(
                       day.actions?.filter((action) =>
                         isInstagramFeed(action.category),
@@ -1536,7 +1532,7 @@ export const CalendarDay = ({
                       showColor={showColor}
                       category={category}
                       actions={actions}
-                      variant={variant === "content" ? "line" : variant}
+                      variant={variant === "content" ? VARIANTS.LINE : variant}
                       isInstagramDate={isInstagramDate}
                       key={category.id}
                       setSelectedActions={setSelectedActions}
@@ -1633,7 +1629,7 @@ function CategoryActions({
 
   return actions && actions.length > 0 ? (
     <div key={category.slug} className="flex flex-col gap-3">
-      {!(variant === "content" && isInstagramFeed(category.slug)) && (
+      {!(variant === VARIANTS.CONTENT && isInstagramFeed(category.slug)) && (
         <div className="mt-2 flex items-center gap-1 text-[8px] font-bold tracking-widest uppercase">
           <div>{category.title}</div>
         </div>

@@ -59,3 +59,11 @@ export const TIMES = {
   sm: 15,
   plan: 50,
 };
+
+export const VARIANTS = {
+  LINE: "line",
+  BLOCK: "block",
+  HAIR: "hair",
+  GRID: "grid",
+  CONTENT: "content",
+};

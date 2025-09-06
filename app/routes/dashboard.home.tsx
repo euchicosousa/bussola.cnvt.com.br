@@ -30,7 +30,7 @@ import invariant from "tiny-invariant";
 
 import Badge from "~/components/common/forms/Badge";
 import { Heading } from "~/components/common/forms/Headings";
-import { BlockOfActions, ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { CalendarView } from "~/components/features/actions/views/CalendarView";
 import { DelayedView } from "~/components/features/actions/views/DelayedView";
 import { TodayView } from "~/components/features/actions/views/TodayView";
@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Toggle } from "~/components/ui/toggle";
+import { VARIANTS } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
   getDelayedActions,
@@ -221,7 +222,7 @@ function NextActions({ actions }: { actions: Action[] }) {
               <Badge value={actions?.length || 0} />
             </Heading>
           </div>
-          <ListOfActions
+          <ActionsContainer
             actions={actions}
             columns={!person.admin ? 1 : 3}
             isFoldable={person.admin}
@@ -446,7 +447,8 @@ function Sprint() {
       </div>
 
       {actions?.length > 0 ? (
-        <BlockOfActions
+        <ActionsContainer
+          variant={VARIANTS.BLOCK}
           actions={actions}
           orderBy={order}
           descending={descending}

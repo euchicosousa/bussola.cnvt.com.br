@@ -1,4 +1,4 @@
-import { ListOfActions } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 
 export function HoursView({ actions }: { actions: Action[] }) {
   return (
@@ -24,7 +24,7 @@ export function HoursView({ actions }: { actions: Action[] }) {
                   {hour}h
                 </div>
                 <div className="w-full">
-                  <ListOfActions
+                  <ActionsContainer
                     actions={hourActions}
                     showCategory={true}
                     columns={1}
