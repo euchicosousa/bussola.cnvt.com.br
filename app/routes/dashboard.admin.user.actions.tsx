@@ -9,6 +9,7 @@ import {
 } from "react-router";
 import invariant from "tiny-invariant";
 import { ActionsContainer } from "~/components/features/actions";
+import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 import { Heading } from "~/components/common/forms/Headings";
 import { Button } from "~/components/ui/button";
 import { Avatar } from "~/lib/helpers";
@@ -114,11 +115,10 @@ export default function AdminPartners() {
           actions={actions?.filter((action) =>
             viewFinished ? true : action.state !== "finished",
           )}
-          long
           orderBy="time"
           showCategory
           showPartner
-          date={{ dateFormat: 2, timeFormat: 1 }}
+          dateDisplay={{ dateFormat: DATE_FORMAT.SHORT, timeFormat: TIME_FORMAT.WITH_TIME }}
         />
       </div>
     </div>

@@ -117,5 +117,4 @@ declare global {
 
   type Size = "xs" | "sm" | "md" | "lg" | "xl";
 
-  type dateTimeFormat = { dateFormat?: 0 | 1 | 2 | 3 | 4; timeFormat?: 0 | 1 };
 }

@@ -37,6 +37,7 @@ import {
   getInstagramFeed,
   isInstagramFeed,
 } from "~/lib/helpers";
+import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants/constants";
 
 export const config = { runtime: "edge" };
 
@@ -543,7 +544,7 @@ const CalendarReportView = ({
                       partner={partner}
                       showFinished
                       showInfo
-                      date={{ timeFormat: 1 }}
+                      dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
                     />
 
                     {action.instagram_caption && (
@@ -587,7 +588,10 @@ const InstagramReportView = ({
               partner={partner}
               showInfo
               showFinished
-              date={{ dateFormat: 2, timeFormat: 1 }}
+              dateDisplay={{
+                dateFormat: DATE_FORMAT.FULL,
+                timeFormat: TIME_FORMAT.WITH_TIME,
+              }}
             />
           </div>
         ))}

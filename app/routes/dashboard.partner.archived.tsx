@@ -7,6 +7,7 @@ import {
   useLoaderData,
 } from "react-router";
 import { ActionsContainer } from "~/components/features/actions";
+import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 
 export const config = { runtime: "edge" };
@@ -84,8 +85,7 @@ export default function LatePage() {
         <div className="mx-auto pb-32">
           <ActionsContainer
             actions={actions}
-            date={{ dateFormat: 4, timeFormat: 1 }}
-            long
+            dateDisplay={{ dateFormat: DATE_FORMAT.FULL, timeFormat: TIME_FORMAT.WITH_TIME }}
             orderBy="time"
             showCategory
           />

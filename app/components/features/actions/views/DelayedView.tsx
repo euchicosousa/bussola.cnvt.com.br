@@ -12,6 +12,7 @@ import { CategoriesView } from "~/components/features/actions/views/CategoriesVi
 import { ActionsContainer } from "~/components/features/actions";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { TIME_FORMAT } from "~/lib/constants/constants";
 
 export function DelayedView({ actions }: { actions: Action[] }) {
   const [order, setOrder] = useState<"state" | "priority" | "time">("state");
@@ -106,7 +107,7 @@ export function DelayedView({ actions }: { actions: Action[] }) {
             descending
             orderBy={order}
             showPartner
-            date={{ timeFormat: 1 }}
+            dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
           />
         ) : (
           <CategoriesView actions={filteredActions} />

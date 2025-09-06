@@ -7,6 +7,7 @@ import {
 } from "react-router";
 import invariant from "tiny-invariant";
 import { ActionsContainer } from "~/components/features/actions";
+import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 import { Heading } from "~/components/common/forms/Headings";
 import { createClient } from "~/lib/database/supabase";
 
@@ -104,8 +105,7 @@ export default function LatePage() {
       <div className="mx-auto pb-32">
         <ActionsContainer
           actions={actions}
-          date={{ dateFormat: 4, timeFormat: 1 }}
-          long
+          dateDisplay={{ dateFormat: DATE_FORMAT.FULL, timeFormat: TIME_FORMAT.WITH_TIME }}
           orderBy="time"
           showCategory
         />

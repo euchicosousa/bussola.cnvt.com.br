@@ -53,6 +53,7 @@ import { getBussolaSize, getTextColor } from "./ui";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { getPartners } from "~/shared/utils/format/dataFormatters";
 import { getTypeOfTheContent } from "~/shared/utils/validation/contentValidation";
+import { DATE_FORMAT, TIME_FORMAT, type DateDisplay } from "./constants";
 
 // Re-export functions for backward compatibility
 export {
@@ -429,7 +430,7 @@ export const Content = ({
   className,
   showInfo,
   showFinished,
-  date,
+  dateDisplay,
   currentFileIndex = 0,
 }: {
   action:
@@ -442,7 +443,7 @@ export const Content = ({
   className?: string;
   showInfo?: boolean;
   showFinished?: boolean;
-  date?: dateTimeFormat;
+  dateDisplay?: DateDisplay;
   currentFileIndex?: number;
 }) => {
   let files =
@@ -495,7 +496,9 @@ export const Content = ({
       {showFinished && action.state === "finished" && (
         <FinishedCheck className="absolute top-2 left-2" size="sm" />
       )}
-      {showInfo && <ContentLowerBar action={action} date={date} />}
+      {showInfo && (
+        <ContentLowerBar action={action} dateDisplay={dateDisplay} />
+      )}
     </div>
   );
 };
@@ -552,10 +555,10 @@ export const Post = ({
 
 function ContentLowerBar({
   action,
-  date,
+  dateDisplay,
 }: {
   action: Action;
-  date?: dateTimeFormat;
+  dateDisplay?: DateDisplay;
 }) {
   const matches = useMatches();
   const { partners } = matches[1].data as DashboardRootType;
@@ -595,13 +598,13 @@ function ContentLowerBar({
           }))}
         />
       )}
-      {date && (
+      {dateDisplay && (
         <>
           <span className="hidden overflow-hidden group-hover:block">
             {formatActionDatetime({
               date: action.date,
-              dateFormat: date.dateFormat || 1,
-              timeFormat: date.timeFormat || 0,
+              dateFormat: dateDisplay?.dateFormat || DATE_FORMAT.RELATIVE,
+              timeFormat: dateDisplay?.timeFormat || TIME_FORMAT.NONE,
             })}
           </span>
           <div className="flex w-full items-center justify-end gap-2 overflow-hidden group-hover:hidden">
@@ -609,8 +612,8 @@ function ContentLowerBar({
             <div className="overflow-hidden text-ellipsis whitespace-nowrap">
               {formatActionDatetime({
                 date: action.instagram_date,
-                dateFormat: date.dateFormat || 1,
-                timeFormat: date.timeFormat || 0,
+                dateFormat: dateDisplay?.dateFormat || DATE_FORMAT.RELATIVE,
+                timeFormat: dateDisplay?.timeFormat || TIME_FORMAT.NONE,
               })}
             </div>
           </div>

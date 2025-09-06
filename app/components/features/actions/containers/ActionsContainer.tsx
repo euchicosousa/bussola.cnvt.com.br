@@ -4,7 +4,7 @@ import { ExpandIcon, ShrinkIcon } from "lucide-react";
 import { Toggle } from "~/components/ui/toggle";
 import { sortActions } from "~/lib/helpers";
 import { ActionItem } from "../ActionItem";
-import { VARIANTS } from "~/lib/constants";
+import { VARIANTS, type DateDisplay } from "~/lib/constants";
 
 const FOLD_MULTIPLIER = 4;
 
@@ -14,7 +14,7 @@ interface ActionsContainerProps {
   // Layout options
   variant?: typeof VARIANTS.LINE | typeof VARIANTS.BLOCK | typeof VARIANTS.HAIR;
   columns?: 1 | 2 | 3 | 4 | 5 | 6;
-  max?: number; // Substitui o max={1|2} do BlockOfActions
+  maxItems?: number; // Substitui o max={1|2} do BlockOfActions
 
   // Ordering options
   orderBy?: "state" | "priority" | "time";
@@ -25,13 +25,12 @@ interface ActionsContainerProps {
   showPartner?: boolean;
   showResponsibles?: boolean;
   showDelay?: boolean;
-  date?: { dateFormat?: 0 | 1 | 2 | 3 | 4; timeFormat?: 0 | 1 };
-  long?: boolean;
+  dateDisplay?: DateDisplay;
 
   // Interaction options
-  scroll?: boolean;
-  isFoldable?: boolean;
-  sprint?: boolean;
+  isScrollable?: boolean;
+  isCollapsible?: boolean;
+  showSprint?: boolean;
 
   // Selection (para dashboard.partner.tsx)
   selectMultiple?: boolean;
@@ -45,24 +44,23 @@ export function ActionsContainer({
   actions,
   variant = VARIANTS.LINE,
   columns = 1,
-  max,
+  maxItems,
   orderBy = "state",
   descending = false,
   showCategory,
   showPartner,
   showResponsibles,
   showDelay,
-  date,
-  long,
-  scroll,
-  isFoldable,
-  sprint,
+  dateDisplay,
+  isScrollable,
+  isCollapsible,
+  showSprint,
   selectMultiple,
   selectedActions,
   setSelectedActions,
   editingAction,
   handleEditingAction,
-}: ActionsContainerProps) {
+}: ActionsContainerProps): React.JSX.Element | null {
   const matches = useMatches();
   const { states } = matches[1].data as DashboardRootType;
 
@@ -76,21 +74,24 @@ export function ActionsContainer({
       ) || []
     : [];
 
-  // Limitação por max
-  const displayActions = max ? actions?.slice(0, max) : actions;
+  // Limitação por maxItems
+  const displayActions = maxItems ? actions?.slice(0, maxItems) : actions;
 
   const foldCount = columns * FOLD_MULTIPLIER;
-  const [fold, setFold] = useState(isFoldable ? foldCount : undefined);
+  const [fold, setFold] = useState(isCollapsible ? foldCount : undefined);
   const finalActions = fold ? displayActions?.slice(0, fold) : displayActions;
 
   // CSS classes baseado no variant e configurações
   const getContainerClasses = () => {
     if (variant === VARIANTS.BLOCK) {
-      // Layout do antigo BlockOfActions
-      if (max === undefined) {
-        return "grid @[600px]:grid-cols-2 @[1000px]:grid-cols-3 @[1300px]:grid-cols-4";
+      if (maxItems === undefined) {
+        return "grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))]";
       }
-      return max === 2 ? "grid grid-cols-2" : "flex flex-col";
+      return maxItems === 2 ? "grid grid-cols-2" : "flex flex-col";
+    }
+
+    if (variant === VARIANTS.HOUR) {
+      return "flex";
     }
 
     if (columns === 1) {
@@ -108,9 +109,11 @@ export function ActionsContainer({
       ? "gap-y-[1px]"
       : variant === VARIANTS.BLOCK
         ? "gap-2"
-        : "gap-2";
+        : variant === VARIANTS.HOUR
+          ? "gap-0"
+          : "gap-2";
   const paddingClass = variant === VARIANTS.BLOCK ? "p-1 pb-8" : "";
-  const scrollClass = scroll
+  const scrollClass = isScrollable
     ? "scrollbars-v pt-1 pb-8"
     : variant === VARIANTS.BLOCK
       ? "scrollbars-v"
@@ -131,18 +134,20 @@ export function ActionsContainer({
       <div
         className={` ${getContainerClasses()} ${scrollClass} ${gapClass} ${paddingClass} @container h-full`}
       >
-        {finalActions.map((action) => (
+        {finalActions.map((action, i) => (
           <ActionItem
+            className={`${i === 0 ? "rounded-l-xs" : ""} ${
+              i === finalActions.length - 1 ? "rounded-r-xs" : ""
+            }`}
             key={action.id}
             action={action}
             variant={variant}
-            long={long}
             showCategory={showCategory}
             showPartner={showPartner}
             showResponsibles={showResponsibles}
             showDelay={showDelay}
-            date={date}
-            sprint={sprint}
+            dateDisplay={dateDisplay}
+            sprint={showSprint}
             selectMultiple={selectMultiple}
             selectedActions={selectedActions}
             setSelectedActions={setSelectedActions}
@@ -154,7 +159,7 @@ export function ActionsContainer({
 
       {/* Fold toggle  */}
       {actions &&
-      isFoldable &&
+      isCollapsible &&
       actions.length > foldCount &&
       variant !== VARIANTS.BLOCK ? (
         <div className="p-4 text-center opacity-0 group-hover:opacity-100">

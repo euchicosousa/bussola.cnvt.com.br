@@ -85,7 +85,7 @@ import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
 import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 import { Input } from "~/components/ui/input";
-import { INTENTS, VARIANTS } from "~/lib/constants";
+import { INTENTS, TIME_FORMAT, VARIANTS } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
@@ -1503,8 +1503,8 @@ export const CalendarDay = ({
                         showDelay
                         action={action}
                         key={action.id}
-                        date={{
-                          timeFormat: 1,
+                        dateDisplay={{
+                          timeFormat: TIME_FORMAT.WITH_TIME,
                         }}
                         isInstagramDate={isInstagramDate}
                       />
@@ -1648,8 +1648,8 @@ function CategoryActions({
             showDelay
             action={action}
             key={action.id}
-            date={{
-              timeFormat: 1,
+            dateDisplay={{
+              timeFormat: TIME_FORMAT.WITH_TIME,
             }}
             setSelectedActions={setSelectedActions}
             isInstagramDate={isInstagramDate}

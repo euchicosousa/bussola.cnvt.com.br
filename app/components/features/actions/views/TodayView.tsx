@@ -34,6 +34,7 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { Toggle } from "~/components/ui/toggle";
+import { TIME_FORMAT } from "~/lib/constants";
 import {
   Avatar,
   sortActions,
@@ -56,7 +57,7 @@ export function TodayView({
 }) {
   const [todayView, setTodayView] = useState<
     "kanban" | "hours" | "categories" | "feed"
-  >("kanban");
+  >("hours");
   const [list, setList] = useState(false);
   const [currentDay, setCurrentDay] = useState(date || new Date());
   const currentActions = getActionsForThisDay({
@@ -171,12 +172,12 @@ export function TodayView({
               </div>
             )}
             {[
-              {
-                id: "kanban",
-                title: "Kanban",
-                description: "Ver o Kanban de progresso",
-                Icon: <KanbanIcon className="w-6" />,
-              },
+              // {
+              //   id: "kanban",
+              //   title: "Kanban",
+              //   description: "Ver o Kanban de progresso",
+              //   Icon: <KanbanIcon className="w-6" />,
+              // },
               {
                 id: "feed",
                 title: "Feed",
@@ -258,7 +259,7 @@ export function TodayView({
                       <ActionItem
                         action={action}
                         variant="content"
-                        date={{ timeFormat: 1 }}
+                        dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
                       />
                     </div>
                   );

@@ -66,4 +66,23 @@ export const VARIANTS = {
   HAIR: "hair",
   GRID: "grid",
   CONTENT: "content",
+  HOUR: "hour",
+};
+
+export const DATE_FORMAT = {
+  NONE: 0,           // Sem data, só tempo
+  RELATIVE: 1,       // "há 2 horas" 
+  SHORT: 2,          // "15/12"
+  MEDIUM: 3,         // "15 de dez"
+  FULL: 4,           // "seg, 15 de dezembro"
+} as const;
+
+export const TIME_FORMAT = {
+  NONE: 0,           // Sem horário
+  WITH_TIME: 1,      // "15h30"
+} as const;
+
+export type DateDisplay = {
+  dateFormat?: typeof DATE_FORMAT[keyof typeof DATE_FORMAT];
+  timeFormat?: typeof TIME_FORMAT[keyof typeof TIME_FORMAT];
 };

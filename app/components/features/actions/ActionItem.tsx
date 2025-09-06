@@ -7,7 +7,7 @@ import { useMatches, useNavigate, useSubmit } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
 import { EditableTitle } from "~/components/ui/editable-title";
-import { INTENTS, PRIORITIES, VARIANTS } from "~/lib/constants";
+import { INTENTS, PRIORITIES, TIME_FORMAT, VARIANTS, type DateDisplay } from "~/lib/constants";
 import {
   amIResponsible,
   Avatar,
@@ -40,8 +40,7 @@ interface NewActionProps {
   action: Action;
   variant?: ActionVariant;
   // Props comuns para todas as variantes
-  date?: dateTimeFormat;
-  long?: boolean;
+  dateDisplay?: DateDisplay;
   showResponsibles?: boolean;
   showCategory?: boolean;
   showDelay?: boolean;
@@ -55,6 +54,7 @@ interface NewActionProps {
   sprint?: boolean;
   partner?: Partner; // Para ActionGrid
   isInstagramDate?: boolean; // Para usar instagram_date quando appropriado
+  className?: string;
 }
 
 /**
@@ -68,8 +68,7 @@ export const ActionItem = React.memo(function ActionItem({
   action,
   variant = VARIANTS.LINE,
   partner,
-  date,
-  long,
+  dateDisplay,
   showResponsibles,
   showCategory,
   showDelay,
@@ -80,6 +79,7 @@ export const ActionItem = React.memo(function ActionItem({
   selectedActions,
   handleEditingAction,
   isInstagramDate,
+  className,
 }: NewActionProps) {
   // Shared state
   const submit = useSubmit();
@@ -277,7 +277,7 @@ export const ActionItem = React.memo(function ActionItem({
                 action={action}
                 partner={actionPartner!}
                 showInfo
-                date={{ timeFormat: 1 }}
+                dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
                 className={`the-action-content aspect-[4/5] overflow-hidden rounded-md hover:opacity-75`}
               />
 
@@ -373,9 +373,11 @@ export const ActionItem = React.memo(function ActionItem({
             <div
               title={isHydrated ? action.title : undefined}
               suppressHydrationWarning
-              className={`action group/action action-item action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm ${
-                isDragging ? "z-[100]" : "z-0"
-              }`}
+              className={cn(
+                "action group/action action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm",
+                isDragging ? "z-[100]" : "z-0",
+                className,
+              )}
               style={styleColors}
               onClick={(event) => {
                 event.preventDefault();
@@ -489,6 +491,30 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
+      case VARIANTS.HOUR:
+        return (
+          <div
+            title={isHydrated ? action.title : undefined}
+            suppressHydrationWarning
+            ref={setNodeRef}
+            {...listeners}
+            {...attributes}
+            className={cn(
+              "group/action action-item-hour border-foreground/10 w-full cursor-pointer overflow-hidden border whitespace-nowrap group-hover:w-0 hover:w-full hover:shrink hover:grow-1",
+              className,
+            )}
+            style={{
+              ...style,
+              ...{
+                backgroundColor: state.color,
+                color: "white",
+              },
+            }}
+          >
+            {action.title}
+          </div>
+        );
+
       case VARIANTS.LINE:
       default:
         // Regular line variant
@@ -506,7 +532,7 @@ export const ActionItem = React.memo(function ActionItem({
               // estava aqui sem eu ver necessidade
               className={`action group/action action-item items-center gap-2 hover:z-100 ${
                 isDragging ? "z-[100]" : "z-0"
-              } ${long ? "px-4 py-3" : "p-3"} font-base @container md:text-sm ${getDelayClasses(variant)}`}
+              } @container px-3 py-2 ${getDelayClasses(variant)}`}
               style={styleColors}
               onClick={(e) => {
                 e.preventDefault();
@@ -549,9 +575,7 @@ export const ActionItem = React.memo(function ActionItem({
               <StateBorder color={state.color} />
 
               {/* Sprint */}
-              {isSprint(action.id, sprints) && (
-                <SprintIcon hasBackground={long} />
-              )}
+              {isSprint(action.id, sprints) && <SprintIcon />}
 
               {/* Title */}
               <EditableTitle
@@ -565,9 +589,7 @@ export const ActionItem = React.memo(function ActionItem({
                     title: newTitle,
                   });
                 }}
-                className={`relative flex w-full shrink overflow-hidden ${
-                  long ? "text-base" : ""
-                }`}
+                className={`relative flex w-full shrink overflow-hidden md:text-sm`}
               />
 
               {/* Categoria */}
@@ -585,20 +607,17 @@ export const ActionItem = React.memo(function ActionItem({
                         (category) => category.slug === action.category,
                       )?.slug
                     }
-                    className={`hidden shrink-0 opacity-25 @[200px]:block ${
-                      long ? "size-6" : "size-4"
-                    }`}
+                    className={`hidden size-4 shrink-0 opacity-25 @[200px]:block`}
                   />
                 </div>
               )}
 
               {/* parceiro */}
-              {actionPartner && (showPartner || long) ? (
+              {actionPartner && showPartner ? (
                 <div
                   title={getPartners(action.partners, partners)
                     .map((partner) => partner.title)
                     .join(" • ")}
-                  className={long ? "flex w-32 shrink-0 justify-center" : ""}
                 >
                   {getPartners(action.partners, partners).length === 1 ? (
                     <Avatar
@@ -607,11 +626,9 @@ export const ActionItem = React.memo(function ActionItem({
                         bg: actionPartner.colors[0],
                         fg: actionPartner.colors[1],
                       }}
-                      size={long ? "sm" : "xs"}
                     />
                   ) : (
                     <AvatarGroup
-                      size={long ? "sm" : "xs"}
                       ringColor={
                         isSprint(action.id, sprints)
                           ? "ring-primary"
@@ -638,48 +655,19 @@ export const ActionItem = React.memo(function ActionItem({
                       .map((partner) => partner.title)
                       .join(" • ")}
                   >
-                    <HeartHandshakeIcon
-                      className={long ? "size-6" : "size-4"}
-                    />
+                    <HeartHandshakeIcon />
                   </div>
                 )
               )}
 
               {/* priority */}
-              {long ? (
-                <div
-                  title={`Prioridade ${
-                    priorities.find(
-                      (priority) => priority.slug === action.priority,
-                    )?.title
-                  }`}
-                >
-                  <Icons
-                    id={
-                      priorities.find(
-                        (priority) => priority.slug === action.priority,
-                      )?.slug
-                    }
-                    className={`${long ? "size-6" : "size-5"} shrink-0`}
-                    type="priority"
-                  />
-                </div>
-              ) : (
-                action.priority === PRIORITIES.high && (
-                  <Icons
-                    id="high"
-                    className={`text-red-500 ${
-                      long ? "size-6" : "size-5"
-                    } shrink-0`}
-                  />
-                )
+              {action.priority === PRIORITIES.high && (
+                <Icons id="high" className={`size-5 shrink-0 text-red-500`} />
               )}
 
               {/* Responsibles */}
-              {showResponsibles || long ? (
-                <div
-                  className={`flex shrink-0 justify-center ${long ? "w-24" : ""}`}
-                >
+              {showResponsibles ? (
+                <div className={`flex shrink-0 justify-center`}>
                   <AvatarGroup
                     avatars={people
                       .filter(
@@ -696,7 +684,7 @@ export const ActionItem = React.memo(function ActionItem({
                           title: person.name,
                         },
                       }))}
-                    size={long ? "sm" : "xs"}
+                    size={"xs"}
                     ringColor="ring-card"
                   />
                 </div>
@@ -717,56 +705,37 @@ export const ActionItem = React.memo(function ActionItem({
                           image: person.image,
                           short: person.initials!,
                         }}
-                        size={long ? "sm" : "xs"}
+                        size="xs"
                       />
                     )}
                 </div>
               )}
 
-              {long ? (
-                <div className="hidden w-56 shrink-0 overflow-x-hidden text-right text-sm whitespace-nowrap opacity-50 md:text-xs @[150px]:block">
-                  {formatActionDatetime({
-                    date: action.date,
-                    dateFormat: 4,
-                    timeFormat: 1,
-                  })}{" "}
-                  {isInstagramFeed(action.category) &&
-                    action.instagram_date &&
-                    " | ".concat(
-                      formatActionDatetime({
-                        date: action.instagram_date,
-                        dateFormat: 4,
-                        timeFormat: 1,
-                      }),
-                    )}
-                </div>
-              ) : (
-                date && (
-                  <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
-                    <span
-                      className={
-                        isInstagramFeed(action.category)
-                          ? "group-hover/action:hidden"
-                          : ""
-                      }
-                    >
+              {dateDisplay && (
+                <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
+                  <span
+                    className={
+                      isInstagramFeed(action.category)
+                        ? "group-hover/action:hidden"
+                        : ""
+                    }
+                  >
+                    {formatActionDatetime({
+                      date: action.date,
+                      timeFormat: 1,
+                    })}
+                  </span>
+                  {isInstagramFeed(action.category) && (
+                    <span className="hidden items-center gap-1 group-hover/action:flex">
+                      <SiInstagram className="size-3" />
                       {formatActionDatetime({
-                        date: action.date,
+                        date: action.instagram_date,
+                        dateFormat: 2,
                         timeFormat: 1,
                       })}
                     </span>
-                    {isInstagramFeed(action.category) && (
-                      <span className="hidden items-center gap-1 group-hover/action:flex">
-                        <SiInstagram className="size-3" />
-                        {formatActionDatetime({
-                          date: action.instagram_date,
-                          dateFormat: 2,
-                          timeFormat: 1,
-                        })}
-                      </span>
-                    )}
-                  </div>
-                )
+                  )}
+                </div>
               )}
             </div>
           </div>

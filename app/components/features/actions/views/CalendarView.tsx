@@ -30,6 +30,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import { TIME_FORMAT } from "~/lib/constants";
 
 export function CalendarView({ actions }: { actions: Action[] | null }) {
   const { categories } = useMatches()[1].data as DashboardRootType;
@@ -202,8 +203,8 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
                   <ActionsContainer
                     actions={actions}
                     // variant={VARIANTS.HAIR}
-                    isFoldable
-                    date={{ timeFormat: 1 }}
+                    isCollapsible
+                    dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
                   />
                 </div>
               );

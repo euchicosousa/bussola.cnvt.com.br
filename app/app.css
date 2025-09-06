@@ -209,11 +209,12 @@ body {
   @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full cursor-pointer rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
 }
 
-.action-item-short {
-  @apply text-xs;
+.action-item-hour {
+  @apply p-1 text-xs;
 }
 
 .action-item-block {
+  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full cursor-pointer rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
   @apply isolate px-4 py-3;
 }
 

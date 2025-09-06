@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow, isSameYear, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import type { DateDisplay } from "~/lib/constants";
 
 /**
  * Retorna a formatação da data e da hora de acordo com os parâmetros
@@ -24,8 +25,8 @@ export function formatActionDatetime({
   timeFormat,
 }: {
   date: Date | string;
-  dateFormat?: 0 | 1 | 2 | 3 | 4;
-  timeFormat?: 0 | 1;
+  dateFormat?: DateDisplay['dateFormat'];
+  timeFormat?: DateDisplay['timeFormat'];
 }) {
   date = typeof date === "string" ? parseISO(date) : date;
   const formatString = (

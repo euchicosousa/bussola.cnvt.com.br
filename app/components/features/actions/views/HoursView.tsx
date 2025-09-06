@@ -1,4 +1,5 @@
 import { ActionsContainer } from "~/components/features/actions";
+import { VARIANTS, DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 
 export function HoursView({ actions }: { actions: Action[] }) {
   return (
@@ -26,11 +27,12 @@ export function HoursView({ actions }: { actions: Action[] }) {
                 <div className="w-full">
                   <ActionsContainer
                     actions={hourActions}
+                    variant={VARIANTS.HOUR}
                     showCategory={true}
                     columns={1}
-                    date={{
-                      dateFormat: 0,
-                      timeFormat: 1,
+                    dateDisplay={{
+                      dateFormat: DATE_FORMAT.NONE,
+                      timeFormat: TIME_FORMAT.WITH_TIME,
                     }}
                   />
                 </div>
