@@ -186,10 +186,16 @@ export default function Partner() {
   );
   const [search, setSearch] = useState<string>("");
 
-  // Hybrid approach: local state for instant UX + URL for persistence
-  const [editingAction, setEditingAction] = useState<string | null>(
-    searchParams.get("editing_action"),
-  );
+  const {
+    stateFilter,
+    setStateFilter,
+    showFeed,
+    setShowFeed,
+    editingAction,
+    setEditingAction,
+    categoryFilter,
+    setCategoryFilter,
+  } = useOutletContext() as ContextType;
 
   // Hybrid editing action handler: instant UX + background URL sync
   const handleEditingAction = useCallback(
@@ -206,26 +212,46 @@ export default function Partner() {
         // Then sync URL in background without blocking user
         const newParams = new URLSearchParams(searchParams);
         newParams.set("editing_action", actionId);
+        // Remove feed if active to avoid conflicts
         newParams.delete("show_feed");
-        newParams.delete("instagram_date");
+        setShowFeed(false);
         setSearchParams(newParams, { replace: true });
       }
     },
-    [editingAction, navigate, searchParams, setSearchParams, setEditingAction],
+    [
+      editingAction,
+      navigate,
+      searchParams,
+      setSearchParams,
+      setEditingAction,
+      setShowFeed,
+    ],
+  );
+
+  // Hybrid feed handler: instant UX + background URL sync
+  const handleFeedToggle = useCallback(
+    (show: boolean) => {
+      // Update global state FIRST for instant UX
+      setShowFeed(show);
+
+      // Then sync URL in background without blocking user
+      const newParams = new URLSearchParams(searchParams);
+      if (show) {
+        newParams.set("show_feed", "true");
+        // Remove editing if active to avoid conflicts
+        newParams.delete("editing_action");
+        setEditingAction(null);
+      } else {
+        newParams.delete("show_feed");
+      }
+      setSearchParams(newParams, { replace: true });
+    },
+    [searchParams, setSearchParams, setShowFeed, setEditingAction],
   );
 
   const fullEditingAction = (actions as Action[])?.find(
     (action) => action.id === editingAction,
   );
-
-  const {
-    stateFilter,
-    setStateFilter,
-    showFeed,
-    setShowFeed,
-    categoryFilter,
-    setCategoryFilter,
-  } = useOutletContext() as ContextType;
 
   const { categories, states, person, people, celebrations } = matches[1]
     .data as DashboardRootType;
@@ -404,10 +430,6 @@ export default function Partner() {
     setCategoryFilter(_categories);
   }, [searchParams.get("categories"), categories]);
 
-  // EditingAction sync - only when editing_action param changes (back/forward navigation)
-  useEffect(() => {
-    setEditingAction(searchParams.get("editing_action"));
-  }, [searchParams.get("editing_action")]);
 
   // Instagram date sync - only when instagram_date param changes
   useEffect(() => {
@@ -1286,10 +1308,11 @@ export default function Partner() {
         </DndContext>
       </div>
 
-      {editingAction && !showFeed && (
+      {/* Sidebar - renderização baseada no estado local */}
+      {editingAction && fullEditingAction && !showFeed && (
         <EditAction
           partner={partner}
-          action={fullEditingAction!}
+          action={fullEditingAction}
           setClose={() => {
             // Close instantly for UX
             setEditingAction(null);
@@ -1303,7 +1326,7 @@ export default function Partner() {
       )}
 
       {/* Instagram Grid */}
-      {showFeed && !editingAction && (
+      {showFeed && editingAction === null && (
         <div
           className="relative flex w-full max-w-[480px] min-w-96 flex-col"
           id="instagram-grid"
@@ -1527,7 +1550,7 @@ export const CalendarDay = ({
                 ),
               }))
               .map(
-                ({ category, actions }, i) =>
+                ({ category, actions }) =>
                   actions &&
                   actions.length > 0 && (
                     <CategoryActions

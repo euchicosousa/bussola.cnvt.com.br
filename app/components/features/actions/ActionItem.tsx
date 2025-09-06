@@ -791,7 +791,7 @@ export const ActionItem = React.memo(function ActionItem({
         handleActions={handleActions}
         onDeleteAction={setDeleteAction}
       />
-      {isHover && (
+      {isHover && !edit && (
         <ShortcutActions
           action={action as Action}
           onDeleteAction={setDeleteAction}

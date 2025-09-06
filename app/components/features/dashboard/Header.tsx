@@ -83,9 +83,7 @@ export default function Header({
   const [theme, setTheme] = useTheme();
   const isLoading = navigation.state !== "idle";
 
-  const { showFeed, setShowFeed } = useOutletContext() as ContextType;
-
-  const params = new URLSearchParams(searchParams);
+  const { showFeed, setShowFeed, editingAction, setEditingAction } = useOutletContext() as ContextType;
 
   const { person } = matches[1].data as DashboardRootType;
   let { actions, actionsChart, partner } = (
@@ -111,8 +109,8 @@ export default function Header({
 
   const lateActions = getDelayedActions({ actions: actionsChart as Action[] });
 
-  const date = params.get("date")
-    ? parseISO(params.get("date") as string)
+  const date = searchParams.get("date")
+    ? parseISO(searchParams.get("date") as string)
     : new Date();
 
   return (
@@ -143,21 +141,28 @@ export default function Header({
             <>
               <ReportReview partner={partner} />
               <Button
-                variant={showFeed ? "default" : "ghost"}
+                variant={showFeed ? "secondary" : "ghost"}
                 onClick={() => {
                   if (showFeed) {
-                    params.delete("show_feed");
-                    params.delete("instagram_date");
+                    // Update global state FIRST for instant UX
                     setShowFeed(false);
+                    
+                    // Then sync URL in background
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.delete("show_feed");
+                    setSearchParams(newParams, { replace: true });
                   } else {
-                    params.delete("editing_action");
-
-                    params.set("show_feed", "true");
-                    params.set("instagram_date", "true");
+                    // Update global state FIRST for instant UX
                     setShowFeed(true);
+                    // Remove editing if active to avoid conflicts
+                    setEditingAction(null);
+                    
+                    // Then sync URL in background
+                    const newParams = new URLSearchParams(searchParams);
+                    newParams.set("show_feed", "true");
+                    newParams.delete("editing_action");
+                    setSearchParams(newParams, { replace: true });
                   }
-
-                  setSearchParams(params);
                 }}
                 size={"icon"}
               >
@@ -419,7 +424,6 @@ function PartnerCombobox() {
     partners: partners.filter((partner) => partner.sow === sow.category),
   }));
   const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
-  let params = new URLSearchParams(searchParams);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

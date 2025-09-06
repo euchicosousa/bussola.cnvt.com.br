@@ -102,6 +102,9 @@ declare global {
   type ContextType = {
     showFeed: boolean;
     setShowFeed: React.Dispatch<React.SetStateAction<boolean>>;
+    editingAction: string | null;
+    setEditingAction: React.Dispatch<React.SetStateAction<string | null>>;
+    handleFeedToggle?: (show: boolean) => void;
     isTransitioning: boolean;
     setTransitioning: React.Dispatch<React.SetStateAction<boolean>>;
     stateFilter: State;

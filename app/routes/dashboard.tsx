@@ -87,6 +87,8 @@ export default function Dashboard() {
   const {
     setShowFeed,
     showFeed,
+    editingAction,
+    setEditingAction,
     isTransitioning,
     setTransitioning,
     stateFilter,
@@ -101,6 +103,8 @@ export default function Dashboard() {
         context={{
           setShowFeed,
           showFeed,
+          editingAction,
+          setEditingAction,
           isTransitioning,
           setTransitioning,
           stateFilter,

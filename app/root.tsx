@@ -10,7 +10,7 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Route } from "./+types/root";
 
 import font from "../public/object-sans/object-sans.css?url";
@@ -99,18 +99,30 @@ function AppWithProviders() {
   const [searchParams] = useSearchParams();
 
   const [showFeed, setShowFeed] = useState(!!searchParams.get("show_feed"));
+  const [editingAction, setEditingAction] = useState<string | null>(searchParams.get("editing_action"));
   const [isTransitioning, setTransitioning] = useState(false);
   const [stateFilter, setStateFilter] = useState<State | undefined>();
   const [categoryFilter, setCategoryFilter] = useState<Category[]>([]);
+
+  // Sync global states with URL for navigation consistency
+  useEffect(() => {
+    setShowFeed(!!searchParams.get("show_feed"));
+  }, [searchParams.get("show_feed")]);
+
+  useEffect(() => {
+    setEditingAction(searchParams.get("editing_action"));
+  }, [searchParams.get("editing_action")]);
 
   return (
     <Outlet
       context={{
         showFeed,
+        editingAction,
         isTransitioning,
         stateFilter,
         categoryFilter,
         setShowFeed,
+        setEditingAction,
         setTransitioning,
         setStateFilter,
         setCategoryFilter,
