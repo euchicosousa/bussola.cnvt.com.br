@@ -137,7 +137,25 @@ export default function CreateAction({
       });
 
       // Aplicar todas as mudanças de uma vez
-      setRawAction((prev) => ({ ...prev, ...adjustments }));
+      setRawAction((prev) => {
+        // Primeiro criamos um objeto com as propriedades que precisam ser atualizadas
+        const updates: Partial<RawAction> = {};
+
+        // Aplicamos as atualizações de data se existirem
+        if (adjustments.date) {
+          updates.date = new Date(adjustments.date);
+        }
+        if (adjustments.instagram_date) {
+          updates.instagram_date = new Date(adjustments.instagram_date);
+        }
+        // Aplicamos o time diretamente se existir
+        if (adjustments.time !== undefined) {
+          updates.time = adjustments.time;
+        }
+
+        // Retornamos o objeto anterior com as atualizações
+        return { ...prev, ...updates };
+      });
     }
   }, [rawAction.category]);
 
@@ -373,11 +391,11 @@ export default function CreateAction({
 
                 // Aplicar os ajustes (as datas já vêm como Date objects)
                 if (adjustments.date) {
-                  updates.date = adjustments.date;
+                  updates.date = parseISO(adjustments.date);
                 }
 
                 if (adjustments.instagram_date) {
-                  updates.instagram_date = adjustments.instagram_date;
+                  updates.instagram_date = parseISO(adjustments.instagram_date);
                 }
 
                 if (adjustments.time) {
@@ -922,9 +940,9 @@ export function DateTimeAndInstagramDate({
           if (!open && tempDate) {
             const finalDate = new Date(tempDate);
             finalDate.setHours(Number(tempHours), Number(tempMinutes));
-            onDataChange({ 
+            onDataChange({
               date: finalDate,
-              time: action.time
+              time: action.time,
             });
           }
         }}
@@ -995,7 +1013,6 @@ export function DateTimeAndInstagramDate({
                 max={23}
                 onChange={(event) => {
                   setTempHours(event.target.value);
-                  // ❌ REMOVIDO: onBlur com onDataChange
                 }}
               />
               <Input
@@ -1006,17 +1023,10 @@ export function DateTimeAndInstagramDate({
                 max={59}
                 onChange={(event) => {
                   setTempMinutes(event.target.value);
-                  // ❌ REMOVIDO: onBlur com onDataChange
                 }}
               />
             </div>
-            <Select
-              value={action.time.toString()}
-              onValueChange={(value) => {
-                // Validação será feita no fechamento do popover
-                // Aqui apenas atualizamos visualmente se necessário
-              }}
-            >
+            <Select value={action.time.toString()}>
               <SelectTrigger className="border-border bg-input w-full border">
                 <SelectValue />
               </SelectTrigger>
@@ -1038,7 +1048,10 @@ export function DateTimeAndInstagramDate({
             // Validação apenas quando popover FECHA
             if (!open && tempInstagramDate) {
               const finalInstagramDate = new Date(tempInstagramDate);
-              finalInstagramDate.setHours(Number(tempInstagramHours), Number(tempInstagramMinutes));
+              finalInstagramDate.setHours(
+                Number(tempInstagramHours),
+                Number(tempInstagramMinutes),
+              );
               onDataChange({ instagram_date: finalInstagramDate });
             }
           }}
@@ -1137,28 +1150,6 @@ export function DateTimeAndInstagramDate({
     </>
   );
 }
-
-// function getResponsibleForArea(category: string) {
-//   const { categories, areas, people } = useMatches()[1]
-//     .data as DashboardRootType;
-
-//   const _category = categories.find((c) => c.slug === category);
-
-//   invariant(_category, "O valor de category deve estar errado.");
-
-//   const _area = areas.find((a) => a.slug === _category.area);
-
-//   invariant(
-//     _area,
-//     "A área não pode ser encontrada, verifique novamente o valor de category",
-//   );
-
-//   const responsibles = people.filter((person) =>
-//     person.areas?.find((a: string) => a === _area.slug),
-//   );
-
-//   return responsibles;
-// }
 
 function ColorsPartnerDropdown({
   partner,
