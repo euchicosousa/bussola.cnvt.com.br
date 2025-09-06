@@ -839,8 +839,6 @@ export default function Partner() {
                     setIsInstagramDate(true);
                     setVariant("content");
 
-                    console.log("Instagram Date");
-
                     params.set("instagram_date", "true");
                   }
                   setSearchParams(params);

@@ -1,9 +1,9 @@
-import * as React from "react"
+import { useState, useEffect } from "react"
 
 export function useMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`)
     const onChange = () => {
       setIsMobile(window.innerWidth < breakpoint)
@@ -16,16 +16,3 @@ export function useMobile(breakpoint = 768) {
   return !!isMobile
 }
 
-export function useIsMobileUserAgent() {
-  const [isMobile, setIsMobile] = React.useState(false)
-  
-  React.useEffect(() => {
-    setIsMobile(
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
-    )
-  }, [])
-  
-  return isMobile
-}

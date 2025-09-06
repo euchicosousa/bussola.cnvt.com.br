@@ -78,7 +78,6 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent } from "~/components/ui/popover";
-import { Slider } from "~/components/ui/slider";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
 import { AI_INTENTS, INTENTS, TIMES } from "~/lib/constants";
@@ -602,9 +601,10 @@ function RightSide({
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [currentFileIndex, setCurrentFileIndex] = useState(0);
 
-  const [length, setLength] = useState([120]);
+  const [length, setLength] = useState(120);
 
-  const hasMultipleFiles = (action.files?.length || 0) > 1 || (files?.files?.length || 0) > 1;
+  const hasMultipleFiles =
+    (action.files?.length || 0) > 1 || (files?.files?.length || 0) > 1;
   const totalFiles = (action.files?.length || 0) + (files?.files?.length || 0);
 
   const fetcher = useFetcher({ key: "action-page" });
@@ -781,12 +781,12 @@ function RightSide({
                         event.preventDefault();
                         setCurrentFileIndex((prev) => prev - 1);
                       }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 z-10 grid h-8 w-8 cursor-pointer place-content-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                      className="absolute top-1/2 left-2 z-10 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-content-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70"
                     >
                       <ChevronLeftIcon className="size-5" />
                     </button>
                   )}
-                  
+
                   {/* Right Navigation Button */}
                   {currentFileIndex < totalFiles - 1 && (
                     <button
@@ -795,19 +795,21 @@ function RightSide({
                         event.preventDefault();
                         setCurrentFileIndex((prev) => prev + 1);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 z-10 grid h-8 w-8 cursor-pointer place-content-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                      className="absolute top-1/2 right-2 z-10 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-content-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70"
                     >
                       <ChevronRightIcon className="size-5" />
                     </button>
                   )}
-                  
+
                   {/* Dots indicator */}
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1">
+                  <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
                     {Array.from({ length: totalFiles }).map((_, index) => (
                       <div
                         key={index}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${
-                          index === currentFileIndex ? 'bg-white' : 'bg-white/50'
+                        className={`h-1.5 w-1.5 rounded-full transition-all ${
+                          index === currentFileIndex
+                            ? "bg-white"
+                            : "bg-white/50"
                         }`}
                       />
                     ))}
@@ -852,7 +854,9 @@ function RightSide({
                             event.stopPropagation();
                             event.preventDefault();
 
-                            const fileUrl = action.files![currentFileIndex] || action.files![0];
+                            const fileUrl =
+                              action.files![currentFileIndex] ||
+                              action.files![0];
                             window.open(fileUrl, "_blank");
                           }}
                           className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
@@ -862,9 +866,7 @@ function RightSide({
                       )}
                     </>
                   ) : (
-                    <>
-                      Arraste seus arquivos para cá.
-                    </>
+                    <>Arraste seus arquivos para cá.</>
                   )}
                 </div>
               )}
@@ -879,18 +881,15 @@ function RightSide({
           {action.category === "stories" ? "Sequência de Stories" : "Legenda"}
         </div>
         <div className="flex items-center gap-2 overflow-x-hidden p-1">
-          {
-            <Slider
-              max={300}
-              min={60}
-              step={60}
-              className="w-20"
-              value={length}
-              onValueChange={(value) => {
-                setLength(value);
-              }}
-            />
-          }
+          <input
+            type="range"
+            min={60}
+            max={300}
+            step={60}
+            value={length}
+            onChange={(e) => setLength(e.target.valueAsNumber)}
+            className="bg-accent h-2 w-20 cursor-pointer appearance-none rounded-full"
+          />
 
           <span className="block w-8 text-center text-xs">{length}</span>
 
@@ -1010,7 +1009,7 @@ function RightSide({
                                   context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
                                   intent: AI_INTENTS.generateCaption,
                                   model: k,
-                                  length: length[0].toString(),
+                                  length: length.toString(),
                                 },
                                 {
                                   action: "/handle-openai",
@@ -1131,19 +1130,23 @@ function LowerBar({
           action={actionToRawAction(action)}
           setAction={(rawAction) => {
             const timeRequired = (TIMES as any)[rawAction.category];
-            
+
             const adjustments = validateAndAdjustActionDates({
               time: timeRequired,
               currentDate: parseISO(action.date),
               currentInstagramDate: parseISO(action.instagram_date),
-              currentTime: action.time
+              currentTime: action.time,
             });
-            
+
             setAction({
               ...action,
               category: rawAction.category,
-              date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : action.date,
-              instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : action.instagram_date,
+              date: adjustments.date
+                ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
+                : action.date,
+              instagram_date: adjustments.instagram_date
+                ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss")
+                : action.instagram_date,
               time: adjustments.time || action.time,
             });
           }}
@@ -1362,34 +1365,46 @@ function LowerBar({
             date: parseISO(action.date),
             instagram_date: parseISO(action.instagram_date),
           }}
-          onDataChange={({ date, instagram_date, time }: { date?: Date; instagram_date?: Date; time?: number }) => {
+          onDataChange={({
+            date,
+            instagram_date,
+            time,
+          }: {
+            date?: Date;
+            instagram_date?: Date;
+            time?: number;
+          }) => {
             // Usar a função unificada de validação
-            const timeRequired = (TIMES as any)[action.category] || (TIMES as any)['post'];
-            
+            const timeRequired =
+              (TIMES as any)[action.category] || (TIMES as any)["post"];
+
             const adjustments = validateAndAdjustActionDates({
               date,
               instagram_date,
               time,
               currentDate: parseISO(action.date),
               currentInstagramDate: parseISO(action.instagram_date),
-              currentTime: timeRequired
+              currentTime: timeRequired,
             });
-            
+
             let updates = { ...action };
-            
+
             // Aplicar os ajustes formatando as datas para string se necessário
             if (adjustments.date) {
               updates.date = format(adjustments.date, "yyyy-MM-dd HH:mm:ss");
             }
-            
+
             if (adjustments.instagram_date) {
-              updates.instagram_date = format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss");
+              updates.instagram_date = format(
+                adjustments.instagram_date,
+                "yyyy-MM-dd HH:mm:ss",
+              );
             }
-            
+
             if (adjustments.time) {
               updates.time = adjustments.time;
             }
-            
+
             setAction(updates);
           }}
         />

@@ -172,8 +172,6 @@ export const ActionItem = React.memo(function ActionItem({
   };
 
   const styleColors = useMemo(() => {
-    console.log(showColor, isInstagramFeed(action.category));
-
     return showColor && isInstagramFeed(action.category)
       ? {
           color: getTextColor(action.color),
@@ -788,8 +786,17 @@ export const ActionItem = React.memo(function ActionItem({
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>{renderActionVariant()}</ContextMenuTrigger>
-      <ActionContextMenu action={action} handleActions={handleActions} onDeleteAction={setDeleteAction} />
-      {isHover && <ShortcutActions action={action as Action} onDeleteAction={setDeleteAction} />}
+      <ActionContextMenu
+        action={action}
+        handleActions={handleActions}
+        onDeleteAction={setDeleteAction}
+      />
+      {isHover && (
+        <ShortcutActions
+          action={action as Action}
+          onDeleteAction={setDeleteAction}
+        />
+      )}
       {deleteAction && (
         <DeleteActionDialog
           isOpen={true}

@@ -20,13 +20,9 @@ export function sortActions(
 ) {
   if (!actions) return null;
 
-  // console.log("orderActionsBy", orderActionsBy);
-  // console.log("order", order);
-
   switch (orderActionsBy) {
     case "state":
       if (!states) {
-        console.log("Você não mandou states");
         return actions;
       }
       let sortedStates = order === "desc" ? [...states].reverse() : states;
@@ -55,16 +51,16 @@ export function sortActions(
     case "date":
       return actions.sort((a, b) => {
         // Determine which date to use for each action
-        const aDate = useInstagramDate && isInstagramFeed(a.category, true) 
-          ? a.instagram_date 
-          : a.date;
-        const bDate = useInstagramDate && isInstagramFeed(b.category, true) 
-          ? b.instagram_date 
-          : b.date;
-        
-        const comparison = isBefore(parseISO(aDate), parseISO(bDate))
-          ? -1
-          : 1;
+        const aDate =
+          useInstagramDate && isInstagramFeed(a.category, true)
+            ? a.instagram_date
+            : a.date;
+        const bDate =
+          useInstagramDate && isInstagramFeed(b.category, true)
+            ? b.instagram_date
+            : b.date;
+
+        const comparison = isBefore(parseISO(aDate), parseISO(bDate)) ? -1 : 1;
         return order === "desc" ? -comparison : comparison;
       });
 
@@ -190,10 +186,10 @@ export function getMonthsActions(actions: Action[], date = new Date()) {
 export function isActionDelayed(
   action: Action,
   state?: State,
-  useInstagramDate?: boolean
+  useInstagramDate?: boolean,
 ): boolean {
   const actionState = state?.slug || action.state;
-  
+
   if (actionState === "finished" || actionState === "archived") {
     return false;
   }
@@ -206,4 +202,3 @@ export function isActionDelayed(
   // Default to regular date
   return isBefore(parseISO(action.date), new Date());
 }
-
