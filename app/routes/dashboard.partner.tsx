@@ -69,8 +69,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { getNewDateValues, getQueryString } from "~/lib/helpers";
+import { getQueryString } from "~/lib/helpers";
 import { isInstagramFeed } from "~/shared/utils/validation/contentValidation";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 
 import {
   DndContext,
@@ -373,14 +374,7 @@ export default function Partner() {
 
         const code = event.code;
 
-        if (code === "KeyC") {
-          if (params.get("show_content")) {
-            params.delete("show_content");
-          } else {
-            params.set("show_content", "true");
-          }
-          setSearchParams(params);
-        } else if (code === "KeyR") {
+        if (code === "KeyR") {
           if (params.get("show_responsibles")) {
             setShowResponsibles(false);
             params.delete("show_responsibles");
@@ -396,13 +390,11 @@ export default function Partner() {
 
             params.delete("show_feed");
             params.delete("instagram_date");
-            params.delete("show_content");
           } else {
             setIsInstagramDate(true);
             setShowFeed(true);
 
             params.set("instagram_date", "true");
-            params.set("show_content", "true");
             params.set("show_feed", "true");
           }
           setSearchParams(params);
@@ -430,7 +422,6 @@ export default function Partner() {
     setCategoryFilter(_categories);
   }, [searchParams.get("categories"), categories]);
 
-
   // Instagram date sync - only when instagram_date param changes
   useEffect(() => {
     setIsInstagramDate(!!searchParams.get("instagram_date"));
@@ -457,10 +448,12 @@ export default function Partner() {
 
   // Variant sync - only when show_feed param changes
   useEffect(() => {
-    if (searchParams.get("show_feed")) {
+    if (showFeed) {
       setVariant("content");
+    } else {
+      setVariant("line");
     }
-  }, [searchParams.get("show_feed")]);
+  }, [showFeed]);
 
   // Select all actions with Cmd+A when selectMultiple is active
   useEffect(() => {
@@ -484,27 +477,37 @@ export default function Partner() {
   }, [selectMultiple, calendar]);
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    const date = over?.id as string;
-    const actionDate = isInstagramDate
-      ? (active.data.current?.instagram_date as string)
-      : (active.data.current?.date as string);
+    const newDateString = over?.id as string;
     const draggedAction = actions?.find((action) => action.id === active.id)!;
 
-    if (date !== format(actionDate, "yyyy-MM-dd")) {
+    // Constrói a nova data mantendo o horário original
+    const originalTime = isInstagramDate
+      ? format(parseISO(draggedAction.instagram_date), "HH:mm:ss")
+      : format(parseISO(draggedAction.date), "HH:mm:ss");
+
+    const newFullDate = parseISO(`${newDateString}T${originalTime}`);
+    const currentDate = parseISO(draggedAction.date);
+    const currentInstagramDate = parseISO(draggedAction.instagram_date);
+
+    // Verificar se houve mudança real
+    const hasChanged = isInstagramDate
+      ? !isSameDay(currentInstagramDate, newFullDate)
+      : !isSameDay(currentDate, newFullDate);
+
+    if (hasChanged) {
+      // Usar a nova função unificada de validação
+      const updates = validateAndAdjustActionDates({
+        [isInstagramDate ? "instagram_date" : "date"]: newFullDate,
+        currentDate,
+        currentInstagramDate,
+        currentTime: draggedAction.time,
+      });
+
       submit(
         {
           ...draggedAction,
           intent: INTENTS.updateAction,
-          [isInstagramDate && isInstagramFeed(active.data.current?.category)
-            ? "instagram_date"
-            : "date"]: date?.concat(` ${format(actionDate, "HH:mm:ss")}`),
-          ...getNewDateValues(
-            draggedAction,
-            isInstagramDate,
-            0,
-            true,
-            new Date(date?.concat(` ${format(actionDate, "HH:mm:ss")}`)),
-          ),
+          ...updates,
         },
         {
           action: "/handle-actions",

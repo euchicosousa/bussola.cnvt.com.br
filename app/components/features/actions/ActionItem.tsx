@@ -541,6 +541,7 @@ export const ActionItem = React.memo(function ActionItem({
 
               {selectMultiple && setSelectedActions && (
                 <SelectionCheckbox
+                  className="size-4"
                   isSelected={
                     selectedActions?.some((a) => a.id === action.id) || false
                   }
