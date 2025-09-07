@@ -517,8 +517,20 @@ export const ActionItem = React.memo(function ActionItem({
                 color: "white",
               },
             }}
+            onMouseEnter={() => {
+              setHover(true);
+            }}
+            onMouseLeave={() => {
+              setHover(false);
+            }}
           >
             {action.title}
+            {isHover && (
+              <ShortcutActions
+                action={action}
+                onDeleteAction={setDeleteAction}
+              />
+            )}
           </div>
         );
 

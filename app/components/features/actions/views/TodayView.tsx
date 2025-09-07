@@ -22,7 +22,11 @@ import { useState } from "react";
 import { useMatches, useSearchParams } from "react-router";
 
 import Badge from "~/components/common/forms/Badge";
-import { CreateAction, ActionItem } from "~/components/features/actions";
+import {
+  CreateAction,
+  ActionItem,
+  type ActionVariant,
+} from "~/components/features/actions";
 import { CategoriesView } from "~/components/features/actions/views/CategoriesView";
 import { HoursView } from "~/components/features/actions/views/HoursView";
 import { KanbanView } from "~/components/features/actions/views/KanbanView";
@@ -34,13 +38,14 @@ import {
   PopoverTrigger,
 } from "~/components/ui/popover";
 import { Toggle } from "~/components/ui/toggle";
-import { TIME_FORMAT } from "~/lib/constants";
+import { TIME_FORMAT, VARIANTS } from "~/lib/constants";
 import {
   Avatar,
   sortActions,
   getActionsForThisDay,
   getInstagramFeed,
   Icons,
+  isInstagramFeed,
 } from "~/lib/helpers";
 import { cn } from "~/lib/ui/utils";
 
@@ -58,13 +63,18 @@ export function TodayView({
   const [todayView, setTodayView] = useState<
     "kanban" | "hours" | "categories" | "feed"
   >("hours");
-  const [list, setList] = useState(false);
+  const isInstagramDate = todayView === "feed";
+  const [variant, setVariant] = useState<ActionVariant>(VARIANTS.LINE);
   const [currentDay, setCurrentDay] = useState(date || new Date());
   const currentActions = getActionsForThisDay({
     actions,
     date: currentDay,
-    isInstagramDate: todayView === "feed",
-  });
+    isInstagramDate,
+  }).filter((action) =>
+    isInstagramDate ? isInstagramFeed(action.category) : true,
+  );
+
+  console.log({ currentActions });
 
   const [searchParams, setSearchParams] = useSearchParams();
   const params = new URLSearchParams(searchParams);
@@ -90,7 +100,10 @@ export function TodayView({
                         locale: ptBR,
                       })}
               </h2>
-              <Badge value={currentActions?.length} isDynamic />
+              <Badge
+                value={currentActions?.length}
+                isDynamic={todayView !== "hours"}
+              />
 
               <CreateAction
                 date={format(currentDay, "yyyy-MM-dd")}
@@ -155,15 +168,17 @@ export function TodayView({
               <div>
                 <Toggle
                   variant={"default"}
-                  onPressedChange={(pressed) => setList(pressed)}
-                  pressed={list}
+                  onPressedChange={(pressed) =>
+                    setVariant(pressed ? VARIANTS.BLOCK : VARIANTS.LINE)
+                  }
+                  pressed={variant === VARIANTS.BLOCK}
                   title={
-                    list
-                      ? "Modo de visualização de Lista"
-                      : "Modo de visualização de bloco"
+                    variant === VARIANTS.BLOCK
+                      ? "Modo de visualização de bloco"
+                      : "Modo de visualização de lista"
                   }
                 >
-                  {list ? (
+                  {variant === VARIANTS.BLOCK ? (
                     <Rows3Icon className="size-4" />
                   ) : (
                     <Rows4Icon className="size-4" />
@@ -217,7 +232,10 @@ export function TodayView({
         {currentActions?.length > 0 && (
           <>
             {todayView === "kanban" ? (
-              <KanbanView actions={currentActions} list={list} />
+              <KanbanView
+                actions={currentActions}
+                list={variant === VARIANTS.LINE}
+              />
             ) : todayView === "hours" ? (
               <HoursView actions={currentActions} />
             ) : todayView === "feed" ? (

@@ -16,7 +16,7 @@ export function HoursView({ actions }: { actions: Action[] }) {
               (action) => new Date(action.date).getHours() === hour,
             );
             return (
-              <div key={j} className="flex min-h-10 gap-2 border-t py-2">
+              <div key={j} className="flex min-h-11 gap-2 border-t py-2">
                 <div
                   className={`text-xs font-bold ${
                     hourActions.length === 0 ? "opacity-15" : ""
