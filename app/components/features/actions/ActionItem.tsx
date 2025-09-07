@@ -7,7 +7,13 @@ import { useMatches, useNavigate, useSubmit } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
 import { EditableTitle } from "~/components/ui/editable-title";
-import { INTENTS, PRIORITIES, TIME_FORMAT, VARIANTS, type DateDisplay } from "~/lib/constants";
+import {
+  INTENTS,
+  PRIORITIES,
+  TIME_FORMAT,
+  VARIANTS,
+  type DateDisplay,
+} from "~/lib/constants";
 import {
   amIResponsible,
   Avatar,
@@ -375,6 +381,7 @@ export const ActionItem = React.memo(function ActionItem({
               suppressHydrationWarning
               className={cn(
                 "action group/action action-item-block @container cursor-pointer flex-col justify-between gap-2 text-sm",
+                getDelayClasses("block"),
                 isDragging ? "z-[100]" : "z-0",
                 className,
               )}

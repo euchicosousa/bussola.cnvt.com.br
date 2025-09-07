@@ -452,6 +452,7 @@ function Sprint() {
           actions={actions}
           orderBy={order}
           descending={descending}
+          showDelay={true}
         />
       ) : (
         <div className="flex items-center gap-2">

@@ -226,11 +226,11 @@ body {
   @apply bg-foreground text-background hover:bg-foreground/80;
 }
 
-.action-item.action-delayed {
+.action-delayed {
   @apply border-rose-300 bg-rose-50 text-rose-700 shadow-rose-700/20;
 }
 
-.dark .action-item.action-delayed {
+.dark .action-delayed {
   @apply border-rose-900 bg-rose-950 text-rose-100;
 }
 
