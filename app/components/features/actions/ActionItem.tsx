@@ -740,7 +740,9 @@ export const ActionItem = React.memo(function ActionItem({
                     }
                   >
                     {formatActionDatetime({
-                      date: action.date,
+                      date: shouldUseInstagramDate
+                        ? action.instagram_date
+                        : action.date,
                       timeFormat: 1,
                     })}
                   </span>
@@ -748,7 +750,9 @@ export const ActionItem = React.memo(function ActionItem({
                     <span className="hidden items-center gap-1 group-hover/action:flex">
                       <SiInstagram className="size-3" />
                       {formatActionDatetime({
-                        date: action.instagram_date,
+                        date: shouldUseInstagramDate
+                          ? action.instagram_date
+                          : action.date,
                         dateFormat: 2,
                         timeFormat: 1,
                       })}

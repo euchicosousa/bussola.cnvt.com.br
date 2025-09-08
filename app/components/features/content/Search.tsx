@@ -1,16 +1,16 @@
 /* eslint-disable jsx-a11y/no-autofocus */
+import { createBrowserClient } from "@supabase/ssr";
+import { CommandLoading } from "cmdk";
+import React, { useEffect, useState } from "react";
 import {
   useMatches,
   useNavigate,
   useOutletContext,
   useSearchParams,
 } from "react-router";
-import { createBrowserClient } from "@supabase/ssr";
-import { CommandLoading } from "cmdk";
-import React, { useEffect, useState } from "react";
 // import { useDebounce } from "use-debounce";
-import { PRIORITIES } from "~/lib/constants";
-import { Avatar, getCategoriesQueryString, Icons } from "~/lib/helpers";
+import Loader from "~/components/common/feedback/Loader";
+import { formatActionDatetime } from "~/components/features/actions/shared/formatActionDatetime";
 import {
   CommandDialog,
   CommandEmpty,
@@ -19,9 +19,9 @@ import {
   CommandItem,
   CommandList,
 } from "~/components/ui/command";
-import Loader from "~/components/common/feedback/Loader";
 import { DialogTitle } from "~/components/ui/dialog";
-import { formatActionDatetime } from "~/components/features/actions/shared/formatActionDatetime";
+import { PRIORITIES } from "~/lib/constants";
+import { Avatar, getCategoriesQueryString, Icons } from "~/lib/helpers";
 import { useDebounce } from "~/lib/hooks/use-debouce";
 
 type CommandItemType = {
@@ -192,14 +192,20 @@ export default function Search({
           .contains("responsibles", person?.admin ? [] : [person.user_id])
           .containedBy("partners", partner_slug)
           .order("date", { ascending: false })
-          .textSearch("title", `%${query}%`, { type: "websearch" })
+          .textSearch("title", `%${query.split(" ")[0]}%`, {
+            type: "websearch",
+          })
           .then((value: any) => {
             const actions = value.data
               ? value.data.map((action: Action) => ({
                   id: action.id,
                   title: action.title,
                   href: `/dashboard/action/${action.id}/${action.partners[0]}`,
-                  options: [action.title, action.id],
+                  options: [
+                    action.title,
+                    action.category,
+                    action.partners.join(" "),
+                  ],
                   obs: {
                     state: states.find((state) => state.slug === action.state)!,
                     category: categories.find(
@@ -271,7 +277,7 @@ export default function Search({
               {section.items.map((item, i) => (
                 <CommandItem
                   key={i}
-                  value={item.options.join(" ")}
+                  value={item.options.join("")}
                   onSelect={() => {
                     if (item.href) navigate(item.href);
                     else if (item.click) item.click();

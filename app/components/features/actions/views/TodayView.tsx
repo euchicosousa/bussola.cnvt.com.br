@@ -14,7 +14,6 @@ import {
   ChevronRightIcon,
   ComponentIcon,
   GridIcon,
-  KanbanIcon,
   Rows3Icon,
   Rows4Icon,
 } from "lucide-react";
@@ -23,8 +22,8 @@ import { useMatches, useSearchParams } from "react-router";
 
 import Badge from "~/components/common/forms/Badge";
 import {
-  CreateAction,
   ActionItem,
+  CreateAction,
   type ActionVariant,
 } from "~/components/features/actions";
 import { CategoriesView } from "~/components/features/actions/views/CategoriesView";
@@ -41,11 +40,11 @@ import { Toggle } from "~/components/ui/toggle";
 import { TIME_FORMAT, VARIANTS } from "~/lib/constants";
 import {
   Avatar,
-  sortActions,
   getActionsForThisDay,
   getInstagramFeed,
   Icons,
   isInstagramFeed,
+  sortActions,
 } from "~/lib/helpers";
 import { cn } from "~/lib/ui/utils";
 
@@ -73,8 +72,6 @@ export function TodayView({
   }).filter((action) =>
     isInstagramDate ? isInstagramFeed(action.category) : true,
   );
-
-  console.log({ currentActions });
 
   const [searchParams, setSearchParams] = useSearchParams();
   const params = new URLSearchParams(searchParams);

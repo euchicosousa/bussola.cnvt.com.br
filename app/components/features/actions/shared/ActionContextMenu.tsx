@@ -1,34 +1,48 @@
-import React, { Fragment, useState } from "react";
-import { Link, useMatches } from "react-router";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
   ArchiveRestoreIcon,
-  CalendarClock,
+  CalendarIcon,
   ClockIcon,
   CopyIcon,
   PencilLineIcon,
   RabbitIcon,
   SaveIcon,
-  TimerIcon,
   TrashIcon,
 } from "lucide-react";
+import React, { Fragment, useState } from "react";
+import { Link, useMatches } from "react-router";
 
+import { SiInstagram } from "@icons-pack/react-simple-icons";
+import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
 import {
+  ContextMenuCheckboxItem,
   ContextMenuContent,
+  ContextMenuGroup,
   ContextMenuItem,
+  ContextMenuPortal,
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuSub,
-  ContextMenuSubTrigger,
-  ContextMenuPortal,
   ContextMenuSubContent,
-  ContextMenuCheckboxItem,
-  ContextMenuGroup,
+  ContextMenuSubTrigger,
 } from "~/components/ui/context-menu";
-import { Calendar } from "~/components/ui/calendar";
 import { Input } from "~/components/ui/input";
-import { Button } from "~/components/ui/button";
+import { toast } from "~/components/ui/use-toast";
+import { INTENTS, TIMES } from "~/lib/constants";
+import {
+  Avatar,
+  getPartners,
+  getQueryString,
+  getResponsibles,
+  Icons,
+  isInstagramFeed,
+  isSprint,
+} from "~/lib/helpers";
+import { cn } from "~/lib/ui/utils";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
+import { formatActionDatetime } from "./formatActionDatetime";
 
 // Componente interno para seleção de data e hora
 interface DateTimePickerProps {
@@ -67,7 +81,11 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
             if (date) {
               // Preserve the current time when selecting a new date
               const newDate = new Date(date);
-              newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes(), selectedDate.getSeconds());
+              newDate.setHours(
+                selectedDate.getHours(),
+                selectedDate.getMinutes(),
+                selectedDate.getSeconds(),
+              );
               setSelectedDate(newDate);
               onDateChange?.(newDate);
             }
@@ -96,19 +114,6 @@ export const DateTimePicker: React.FC<DateTimePickerProps> = ({
     </>
   );
 };
-import { toast } from "~/components/ui/use-toast";
-import { INTENTS, TIMES } from "~/lib/constants";
-import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
-import {
-  getPartners,
-  getQueryString,
-  getResponsibles,
-  Icons,
-  isInstagramFeed,
-  isSprint,
-  Avatar,
-} from "~/lib/helpers";
-import { cn } from "~/lib/ui/utils";
 
 interface ActionContextMenuProps {
   action: Action;
@@ -226,26 +231,31 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         date={action.date}
         onChangeDate={(date) => {
           const timeRequired = (TIMES as any)[action.category];
-          
+
           const adjustments = validateAndAdjustActionDates({
             date,
             currentDate: new Date(action.date),
             currentInstagramDate: new Date(action.instagram_date),
-            currentTime: timeRequired
+            currentTime: timeRequired,
           });
-          
+
           handleActions({
             ...action,
-            date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : format(date, "yyyy-MM-dd HH:mm:ss"),
-            instagram_date: adjustments.instagram_date 
+            date: adjustments.date
+              ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
+              : format(date, "yyyy-MM-dd HH:mm:ss"),
+            instagram_date: adjustments.instagram_date
               ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss")
               : action.instagram_date,
             intent: INTENTS.updateAction,
           });
         }}
       >
-        <CalendarClock className="size-3" />
-        <span>Mudar Data</span>
+        <CalendarIcon className="size-3" />
+        <span className="first-letter:capitalize">
+          {formatActionDatetime({ date: parseISO(action.date) })}{" "}
+        </span>
+        {/* <span>Mudar Data</span> */}
       </ChangeDatePopover>
 
       {isInstagramFeed(action.category, true) && (
@@ -253,26 +263,33 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
           date={action.instagram_date}
           onChangeDate={(date) => {
             const timeRequired = (TIMES as any)[action.category];
-            
+
             const adjustments = validateAndAdjustActionDates({
               instagram_date: date,
               currentDate: new Date(action.date),
               currentInstagramDate: new Date(action.instagram_date),
-              currentTime: timeRequired
+              currentTime: timeRequired,
             });
-            
+
             handleActions({
               ...action,
-              date: adjustments.date 
+              date: adjustments.date
                 ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
                 : action.date,
-              instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : format(date, "yyyy-MM-dd HH:mm:ss"),
+              instagram_date: adjustments.instagram_date
+                ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss")
+                : format(date, "yyyy-MM-dd HH:mm:ss"),
               intent: INTENTS.updateAction,
             });
           }}
         >
-          <CalendarClock className="size-3" />
-          <span>Mudar Data do Instagram</span>
+          <SiInstagram className="size-3" />
+          <span className="first-letter:capitalize">
+            {formatActionDatetime({
+              date: parseISO(action.instagram_date),
+            })}
+          </span>
+          {/* <span>Mudar Data do Instagram</span> */}
         </ChangeDatePopover>
       )}
 
@@ -315,9 +332,10 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
                     bg: partner.colors[0],
                     fg: partner.colors[1],
                   }}
-                  size="sm"
+                  size="xs"
                   key={partner.id}
                   ring
+                  className="-mr-1"
                 />
                 {action.partners.length === 1 ? partner.title : null}
               </Fragment>
@@ -388,9 +406,10 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
       <ContextMenuSub>
         <ContextMenuSubTrigger className="bg-item flex items-center gap-2">
           <div
-            className={`text-muted} size-2 rounded-full`}
+            className={`ml-1 size-2 rounded-full`}
             style={{ backgroundColor: state?.color }}
           ></div>
+
           <span>{state?.title}</span>
         </ContextMenuSubTrigger>
         <ContextMenuPortal>
@@ -453,19 +472,26 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
                       className="bg-item flex items-center gap-2"
                       onSelect={() => {
                         const timeRequired = (TIMES as any)[category.slug];
-                        
+
                         const adjustments = validateAndAdjustActionDates({
                           time: timeRequired,
                           currentDate: new Date(action.date),
                           currentInstagramDate: new Date(action.instagram_date),
-                          currentTime: action.time
+                          currentTime: action.time,
                         });
-                        
+
                         handleActions({
                           ...action,
                           category: category.slug,
-                          date: adjustments.date ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss") : action.date,
-                          instagram_date: adjustments.instagram_date ? format(adjustments.instagram_date, "yyyy-MM-dd HH:mm:ss") : action.instagram_date,
+                          date: adjustments.date
+                            ? format(adjustments.date, "yyyy-MM-dd HH:mm:ss")
+                            : action.date,
+                          instagram_date: adjustments.instagram_date
+                            ? format(
+                                adjustments.instagram_date,
+                                "yyyy-MM-dd HH:mm:ss",
+                              )
+                            : action.instagram_date,
                           time: adjustments.time || action.time,
                           intent: INTENTS.updateAction,
                         });
@@ -503,9 +529,10 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
                     image: person.image,
                     short: person.initials!,
                   }}
-                  size="sm"
+                  size="xs"
                   key={person.id}
                   ring
+                  className="-mr-1"
                 />
                 {action.responsibles.length === 1 ? person.name : null}
               </Fragment>

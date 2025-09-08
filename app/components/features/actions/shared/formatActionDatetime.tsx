@@ -1,6 +1,6 @@
 import { format, formatDistanceToNow, isSameYear, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { DateDisplay } from "~/lib/constants";
+import { DATE_FORMAT, TIME_FORMAT, type DateDisplay } from "~/lib/constants";
 
 /**
  * Retorna a formatação da data e da hora de acordo com os parâmetros
@@ -25,10 +25,20 @@ export function formatActionDatetime({
   timeFormat,
 }: {
   date: Date | string;
-  dateFormat?: DateDisplay['dateFormat'];
-  timeFormat?: DateDisplay['timeFormat'];
+  dateFormat?: DateDisplay["dateFormat"];
+  timeFormat?: DateDisplay["timeFormat"];
 }) {
+  if (dateFormat === undefined && timeFormat === undefined) {
+    dateFormat = DATE_FORMAT.FULL;
+    timeFormat = TIME_FORMAT.WITH_TIME;
+  }
+
   date = typeof date === "string" ? parseISO(date) : date;
+
+  if (dateFormat === 1) {
+    return formatDistanceToNow(date, { locale: ptBR, addSuffix: true });
+  }
+
   const formatString = (
     dateFormat === 2
       ? `d/M${
@@ -55,7 +65,5 @@ export function formatActionDatetime({
       : "",
   );
 
-  return dateFormat === 1
-    ? formatDistanceToNow(date, { locale: ptBR, addSuffix: true })
-    : format(date, formatString, { locale: ptBR });
+  return format(date, formatString, { locale: ptBR });
 }
