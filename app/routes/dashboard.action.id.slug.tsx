@@ -134,9 +134,15 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 // File upload now handled by /handle-actions endpoint
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
+  if (!data?.action?.title) {
+    return [
+      { title: "ʙússoʟa - Domine, Crie e Conquiste." },
+    ];
+  }
+  
   return [
     {
-      title: `${data?.action?.title} / ʙússoʟa`,
+      title: `${data.action.title} / ʙússoʟa`,
     },
   ];
 };
