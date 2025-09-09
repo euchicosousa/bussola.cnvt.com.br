@@ -210,7 +210,7 @@ body {
 }
 
 .action-item-hour {
-  @apply p-1 text-xs;
+  @apply px-2 py-1 text-xs;
 }
 
 .action-item-block {

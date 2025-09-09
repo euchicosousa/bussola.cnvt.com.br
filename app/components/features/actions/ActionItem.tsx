@@ -2,7 +2,13 @@ import { useDraggable } from "@dnd-kit/core";
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import { format } from "date-fns";
 import { HeartHandshakeIcon, RabbitIcon } from "lucide-react";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useMatches, useNavigate, useSubmit } from "react-router";
 import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
@@ -507,7 +513,7 @@ export const ActionItem = React.memo(function ActionItem({
             {...listeners}
             {...attributes}
             className={cn(
-              "group/action action-item-hour border-foreground/10 w-full cursor-pointer overflow-hidden border whitespace-nowrap group-hover:w-0 hover:w-full hover:shrink hover:grow-1",
+              "group/action action-item-hour border-foreground/10 flex w-full cursor-pointer justify-between gap-2 overflow-hidden border group-hover:w-0 hover:w-full hover:shrink hover:grow-1",
               className,
             )}
             style={{
@@ -524,7 +530,39 @@ export const ActionItem = React.memo(function ActionItem({
               setHover(false);
             }}
           >
-            {action.title}
+            <div className="overflow-hidden whitespace-nowrap">
+              {action.title}
+            </div>
+            <div
+              className={`${isHover ? "block" : "hidden"} flex items-center gap-4`}
+            >
+              <AvatarGroup
+                avatars={action.partners.map((partner) => ({
+                  item: {
+                    short: partner,
+                    title: partner,
+                    bg: "#fff",
+                    fg: state.color,
+                  },
+                  style: { "--tw-ring-color": state.color } as CSSProperties,
+                }))}
+                size="xs"
+              />
+              <Icons id={action.category} className="size-4" />
+              <AvatarGroup
+                avatars={getResponsibles(people, action.responsibles).map(
+                  (responsible) => ({
+                    item: {
+                      short: responsible.initials,
+                      title: responsible.name,
+                      image: responsible.image,
+                    },
+                    style: { "--tw-ring-color": state.color } as CSSProperties,
+                  }),
+                )}
+                size="xs"
+              />
+            </div>
             {isHover && (
               <ShortcutActions
                 action={action}

@@ -195,7 +195,7 @@ export function AvatarGroup({
           isLowerCase={isLowerCase}
           key={i}
           item={item}
-          className={`${className} ${ringColor}`}
+          className={cn(className, ringColor)}
           ring={true}
           size={size}
           style={style}
