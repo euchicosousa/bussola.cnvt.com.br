@@ -135,11 +135,9 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   if (!data?.action?.title) {
-    return [
-      { title: "ʙússoʟa - Domine, Crie e Conquiste." },
-    ];
+    return [{ title: "ʙússoʟa - Domine, Crie e Conquiste." }];
   }
-  
+
   return [
     {
       title: `${data.action.title} / ʙússoʟa`,
@@ -268,7 +266,6 @@ export default function ActionPage() {
         setAction={setAction}
         isWorking={isWorking}
         partner={partner}
-        topics={topics}
       />
     </div>
   );
@@ -1059,25 +1056,22 @@ function RightSide({
   ) : null;
 }
 
-function LowerBar({
+export function LowerBar({
   action,
   setAction,
   isWorking,
   partner,
-  topics,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
   partner: Partner;
-  topics: Topic[];
 }) {
   const matches = useMatches();
   const submit = useSubmit();
   const { toast } = useToast();
 
-  const { categories, priorities, areas, partners } = matches[1]
-    .data as DashboardRootType;
+  const { priorities, partners } = matches[1].data as DashboardRootType;
   const actionPartners = getPartners(action.partners, partners);
 
   const handleActions = (data: HandleActionsDataType) => {
@@ -1152,7 +1146,6 @@ function LowerBar({
           <TopicsAction
             partner={action.partners[0]}
             actionTopics={action.topics || []}
-            topics={topics}
             onCheckedChange={(topics) => setAction({ ...action, topics })}
             mode="command"
           />

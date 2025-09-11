@@ -207,14 +207,15 @@ export const ActionItem = React.memo(function ActionItem({
             {...listeners}
             {...attributes}
             style={style}
-            className={isDragging ? "z-10" : ""}
           >
             <div
-              className={`flex cursor-pointer items-center justify-between gap-2 overflow-hidden transition-all ${
-                isActionDelayed(action, state)
-                  ? "bg-error/5 hover:bg-error/20 text-error"
-                  : "hover:bg-muted/50"
-              }`}
+              className={cn(
+                `flex cursor-pointer items-center justify-between gap-2 overflow-hidden transition-all ${
+                  isActionDelayed(action, state)
+                    ? "bg-error/5 hover:bg-error/20 text-error"
+                    : "hover:bg-muted/50"
+                }`,
+              )}
               onMouseEnter={() => setHover?.(true)}
               onMouseLeave={() => setHover?.(false)}
               style={styleColors}
@@ -276,7 +277,10 @@ export const ActionItem = React.memo(function ActionItem({
             className="outline-none"
           >
             <div
-              className={`ring-ring group/action ring-offset-background relative cursor-pointer rounded-md ring-offset-2 outline-hidden focus-within:ring-3 ${getDelayClasses("content")}`}
+              className={cn(
+                `ring-ring group/action ring-offset-background relative cursor-pointer rounded-md ring-offset-2 outline-hidden focus-within:ring-3`,
+                getDelayClasses("content"),
+              )}
               onMouseEnter={() => {
                 setHover(true);
               }}
@@ -587,9 +591,10 @@ export const ActionItem = React.memo(function ActionItem({
             <div
               // [&>*]:border-red-500
               // estava aqui sem eu ver necessidade
-              className={`action group/action action-item items-center gap-2 hover:z-100 ${
-                isDragging ? "z-[100]" : "z-0"
-              } @container px-3 py-2 ${getDelayClasses(variant)}`}
+              className={cn(
+                `action group/action action-item @container items-center gap-2 px-3 py-2 hover:z-100`,
+                getDelayClasses(variant),
+              )}
               style={styleColors}
               onClick={(e) => {
                 e.preventDefault();
@@ -771,11 +776,10 @@ export const ActionItem = React.memo(function ActionItem({
               {dateDisplay && (
                 <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
                   <span
-                    className={
-                      isInstagramFeed(action.category)
-                        ? "group-hover/action:hidden"
-                        : ""
-                    }
+                    className={cn(
+                      isInstagramFeed(action.category) &&
+                        "group-hover/action:hidden",
+                    )}
                   >
                     {formatActionDatetime({
                       date: shouldUseInstagramDate

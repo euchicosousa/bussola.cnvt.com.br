@@ -374,7 +374,7 @@ input::-webkit-inner-spin-button {
 }
 
 .dragover {
-  @apply bg-accent z-0;
+  @apply bg-accent;
 }
 
 .scrollbars-h {

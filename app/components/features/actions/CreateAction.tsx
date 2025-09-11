@@ -343,9 +343,6 @@ export default function CreateAction({
             {isInstagramFeed(rawAction.category) && (
               <TopicsAction
                 actionTopics={rawAction.topics || []}
-                topics={topics.filter(
-                  (topic) => topic.partner_slug === rawAction.partners[0],
-                )}
                 onCheckedChange={(topics) => {
                   setRawAction({ ...rawAction, topics });
                 }}
@@ -543,7 +540,6 @@ export function PartnersDropdown({
 export function TopicsAction({
   size,
   actionTopics,
-  topics,
   partner,
   onCheckedChange,
   mode = "dropdown",
@@ -551,7 +547,6 @@ export function TopicsAction({
   size?: Size;
   partner: string;
   actionTopics: number[];
-  topics: Topic[];
   onCheckedChange: (topics: number[]) => void;
   mode?: "command" | "dropdown" | "context";
 }) {
@@ -561,6 +556,9 @@ export function TopicsAction({
   const _partner = (useMatches()[1].data as DashboardRootType).partners.find(
     (p) => p.slug === partner,
   ) as Partner;
+
+  let { topics } = useMatches()[1].data as { topics: Topic[] };
+  topics = topics.filter((topic) => topic.partner_slug === partner);
 
   useEffect(() => {
     if (

@@ -76,6 +76,8 @@ import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateVali
 import {
   DndContext,
   type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
   PointerSensor,
   useDroppable,
   useSensor,
@@ -98,6 +100,7 @@ import {
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
+import { createPortal } from "react-dom";
 
 export const config = { runtime: "edge" };
 
@@ -282,6 +285,8 @@ export default function Partner() {
   const [variant, setVariant] = useState<ActionVariant>(
     isInstagramDate || showFeed ? VARIANTS.CONTENT : VARIANTS.LINE,
   );
+
+  const [draggedAction, setDraggedAction] = useState<Action | null>(null);
 
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
@@ -468,9 +473,28 @@ export default function Partner() {
     return () => document.removeEventListener("keydown", handleSelectAll);
   }, [selectMultiple, calendar]);
 
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setDraggedAction(actions?.find((action) => action.id === active.id)!);
+
+    // const element = document.getElementById(
+    //   `day_${format(parseISO(active.data.current?.date || ""), "yyyy-MM-dd")}`,
+    // );
+
+    // if (element) {
+    //   element.style.zIndex = "100";
+    //   console.log(element, element.style.zIndex);
+    // }
+  };
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    // document.querySelectorAll("#calendar > div").forEach((element) => {
+    //   (element as HTMLDivElement).style.zIndex = "auto";
+    // });
+
     const newDateString = over?.id as string;
-    const draggedAction = actions?.find((action) => action.id === active.id)!;
+    setDraggedAction(actions?.find((action) => action.id === active.id)!);
+
+    if (!draggedAction) return;
 
     // Constrói a nova data mantendo o horário original
     const originalTime =
@@ -1247,7 +1271,12 @@ export default function Partner() {
         </div>
 
         {/* Calendário */}
-        <DndContext onDragEnd={handleDragEnd} sensors={sensors} id={id}>
+        <DndContext
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
+          id={id}
+        >
           <div className="overflow-x-auto overflow-y-hidden">
             <div
               className="main-container flex h-full w-full min-w-[1200px] flex-col"

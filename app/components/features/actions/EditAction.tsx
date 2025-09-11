@@ -1,6 +1,11 @@
 import { EditIcon, Grid3x3Icon, SaveIcon, TextIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Description, Header, Title } from "~/routes/dashboard.action.id.slug";
+import {
+  Description,
+  Header,
+  LowerBar,
+  Title,
+} from "~/routes/dashboard.action.id.slug";
 import { Button } from "~/components/ui/button";
 import { useNavigate, useSubmit } from "react-router";
 import { format, parseISO } from "date-fns";
@@ -139,7 +144,7 @@ export default function EditAction({
         )}
 
         <div className="mt-4 flex justify-between px-4">
-          <div>
+          <div className="flex items-center gap-2">
             <CategoryDropdown
               action={actionToRawAction(editingAction)}
               setAction={(action) => {
@@ -165,8 +170,7 @@ export default function EditAction({
                 });
               }}
             />
-          </div>
-          <div className="flex items-center">
+
             <DateTimeAndInstagramDate
               action={{
                 ...action,
