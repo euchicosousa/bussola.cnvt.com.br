@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import { Button } from "~/components/ui/button";
+import Color from "color";
+import { Input } from "~/components/ui/input";
+import { CheckIcon } from "lucide-react";
 
 export default function ColorPicker({
-  color,
+  color: currentColor,
   onChange,
   name,
 }: {
@@ -11,12 +18,12 @@ export default function ColorPicker({
   onChange?: (color: string) => void;
   name?: string;
 }) {
-  const [_color, setColor] = useState(color);
+  const [color, setColor] = useState(currentColor);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (onChange) onChange(_color);
-  }, [_color]);
+    if (onChange) onChange(color);
+  }, [color]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -24,14 +31,14 @@ export default function ColorPicker({
         <Button variant="ghost" className="size-8 rounded-full p-0">
           <input
             type="color"
-            value={_color}
+            value={color}
             onChange={(e) => setColor(e.target.value)}
             hidden
             name={name}
           />
           <div
             className="size-6 rounded-full border"
-            style={{ backgroundColor: _color }}
+            style={{ backgroundColor: color }}
           ></div>
         </Button>
       </PopoverTrigger>
@@ -48,6 +55,26 @@ export default function ColorPicker({
             }}
           ></div>
         ))}
+        <div className="col-span-11 flex items-center gap-2 p-2">
+          <Input
+            type="text"
+            value={color}
+            onChange={(e) => {
+              let color = e.target.value;
+              if (!/^#.*/.test(color)) {
+                color = "#" + color;
+              }
+              setColor(color);
+            }}
+          />
+          <Button
+            size={"icon"}
+            onClick={() => setOpen(false)}
+            className="shrink-0"
+          >
+            <CheckIcon />
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -288,3 +315,8 @@ const sexyColors = [
   "#bbbbbb", // Pastel mais suave
   "#eeeeee", // neutral-200 (original)
 ];
+
+function isValidHexColor(color: string) {
+  const regex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  return regex.test(color);
+}

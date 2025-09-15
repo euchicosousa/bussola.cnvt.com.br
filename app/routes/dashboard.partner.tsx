@@ -475,15 +475,6 @@ export default function Partner() {
 
   const handleDragStart = ({ active }: DragStartEvent) => {
     setDraggedAction(actions?.find((action) => action.id === active.id)!);
-
-    // const element = document.getElementById(
-    //   `day_${format(parseISO(active.data.current?.date || ""), "yyyy-MM-dd")}`,
-    // );
-
-    // if (element) {
-    //   element.style.zIndex = "100";
-    //   console.log(element, element.style.zIndex);
-    // }
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
