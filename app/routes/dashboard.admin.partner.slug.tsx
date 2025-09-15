@@ -440,7 +440,7 @@ export default function AdminPartners() {
                       ...currentTopics,
                       {
                         id: Date.now(),
-                        title: "",
+                        title: "Tópico",
                         color: partner.colors[0],
                         foreground: partner.colors[1],
                         created_at: new Date().toISOString(),
