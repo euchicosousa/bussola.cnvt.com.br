@@ -18,7 +18,7 @@ export function HoursView({ actions }: { actions: Action[] }) {
             return (
               <div key={j} className="flex min-h-11 gap-2 border-t py-2">
                 <div
-                  className={`text-xs font-bold ${
+                  className={`grid w-8 items-center text-xs font-bold ${
                     hourActions.length === 0 ? "opacity-15" : ""
                   }`}
                 >

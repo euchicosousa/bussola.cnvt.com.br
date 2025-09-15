@@ -543,7 +543,7 @@ export const ActionItem = React.memo(function ActionItem({
               <AvatarGroup
                 avatars={action.partners.map((partner) => ({
                   item: {
-                    short: partner,
+                    short: partners.find((p) => p.slug === partner)!.short,
                     title: partner,
                     bg: "#fff",
                     fg: state.color,
