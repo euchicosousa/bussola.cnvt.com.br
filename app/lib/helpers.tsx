@@ -256,7 +256,7 @@ export function Avatar({
               : size === "lg"
                 ? "size-12"
                 : "size-16",
-        ring ? "ring-2" : "",
+        ring ? (size === "xl" ? "ring-4" : "ring-2") : "",
 
         "ring-background block",
 
@@ -788,4 +788,29 @@ export function FinishedCheck({
       <CheckIcon className={sizes[size].icon} />
     </div>
   );
+}
+
+/**
+ * Extrai valores monetários das descriptions das actions, soma e formata como R$
+ * Remove tags HTML e converte valores encontrados em números
+ */
+export function getTotalPayment(actions: Action[]): string {
+  const total = actions.reduce((sum, action) => {
+    if (!action.description) return sum;
+
+    // Remove tags HTML
+    const cleanText = action.description.replace(/<[^>]*>/g, '').trim();
+
+    // Converte diretamente para número
+    const numValue = Number(cleanText);
+
+    // Só adiciona se for um número válido e positivo
+    return sum + (isNaN(numValue) ? 0 : numValue);
+  }, 0);
+
+  // Formata como moeda brasileira
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(total);
 }

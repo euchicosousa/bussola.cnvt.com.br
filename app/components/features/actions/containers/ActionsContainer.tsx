@@ -4,7 +4,7 @@ import { ExpandIcon, ShrinkIcon } from "lucide-react";
 import { Toggle } from "~/components/ui/toggle";
 import { sortActions } from "~/lib/helpers";
 import { ActionItem } from "../ActionItem";
-import { VARIANTS, type DateDisplay } from "~/lib/constants";
+import { ORDER_ACTIONS_BY, VARIANTS, type DateDisplay } from "~/lib/constants";
 
 const FOLD_MULTIPLIER = 4;
 
@@ -13,11 +13,11 @@ interface ActionsContainerProps {
 
   // Layout options
   variant?: typeof VARIANTS.LINE | typeof VARIANTS.BLOCK | typeof VARIANTS.HAIR;
-  columns?: 1 | 2 | 3 | 4 | 5 | 6;
+  columns?: 1 | 2 | 3 | 4 | 5 | 6; // de 4 pra cima não tem sentido
   maxItems?: number; // Substitui o max={1|2} do BlockOfActions
 
   // Ordering options
-  orderBy?: "state" | "priority" | "time";
+  orderBy?: ORDER_ACTIONS_BY;
   descending?: boolean;
 
   // Display options
@@ -45,7 +45,7 @@ export function ActionsContainer({
   variant = VARIANTS.LINE,
   columns = 1,
   maxItems,
-  orderBy = "state",
+  orderBy = ORDER_ACTIONS_BY.state,
   descending = false,
   showCategory,
   showPartner,
@@ -66,12 +66,7 @@ export function ActionsContainer({
 
   // Ordenação unificada
   actions = actions
-    ? sortActions(
-        actions,
-        orderBy as any,
-        descending ? "desc" : "asc",
-        states,
-      ) || []
+    ? sortActions(actions, orderBy, descending ? "desc" : "asc", states) || []
     : [];
 
   // Limitação por maxItems
@@ -83,7 +78,7 @@ export function ActionsContainer({
 
   // CSS classes baseado no variant e configurações
   const getContainerClasses = () => {
-    if (variant === VARIANTS.BLOCK) {
+    if (variant === VARIANTS.BLOCK || variant === VARIANTS.FINANCE) {
       if (maxItems === undefined) {
         return "grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))]";
       }
@@ -105,13 +100,15 @@ export function ActionsContainer({
   };
 
   const gapClass =
-    variant === VARIANTS.HAIR
-      ? "gap-y-[1px]"
-      : variant === VARIANTS.BLOCK
-        ? "gap-2"
-        : variant === VARIANTS.HOUR
-          ? "gap-0"
-          : "gap-2";
+    variant === VARIANTS.FINANCE
+      ? "gap-x-2 gap-y-8 pt-8"
+      : variant === VARIANTS.HAIR
+        ? "gap-y-[1px]"
+        : variant === VARIANTS.BLOCK
+          ? "gap-2"
+          : variant === VARIANTS.HOUR
+            ? "gap-0"
+            : "gap-2";
   const paddingClass = variant === VARIANTS.BLOCK ? "p-1 pb-8" : "";
   const scrollClass = isScrollable
     ? "scrollbars-v pt-1 pb-8"

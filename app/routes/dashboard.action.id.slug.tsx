@@ -1,13 +1,4 @@
-import {
-  addHours,
-  addMinutes,
-  format,
-  formatDistanceToNow,
-  isAfter,
-  isSameMonth,
-  parseISO,
-  subHours,
-} from "date-fns";
+import { format, formatDistanceToNow, isSameMonth, parseISO } from "date-fns";
 import {
   Link,
   type LoaderFunctionArgs,
@@ -52,8 +43,11 @@ import {
   StateDropdown,
   TopicsAction,
 } from "~/components/features/actions/CreateAction";
+import {
+  AlertProvider,
+  useAlert,
+} from "~/components/features/actions/shared/UnifiedAlertDialog";
 import { Button } from "~/components/ui/button";
-import { Timer } from "~/components/ui/timer";
 import {
   Command,
   CommandEmpty,
@@ -75,30 +69,33 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Popover, PopoverContent } from "~/components/ui/popover";
+import { Timer } from "~/components/ui/timer";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
 import { AI_INTENTS, INTENTS, TIMES } from "~/lib/constants";
-import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import {
   parametersOptimized,
   suggestionsParameters,
 } from "~/lib/constants/parametros";
 import { createClient } from "~/lib/database/supabase";
 import {
+  actionToRawAction,
   Avatar,
   Bia,
   Content,
   getBiaMessage,
   getInstagramFeed,
-  actionToRawAction,
   getPartners,
   getQueryString,
   getTypeOfTheContent,
   Icons,
   isInstagramFeed,
 } from "~/lib/helpers";
+import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
+import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
+import { Input } from "~/components/ui/input";
 
 export const config = { runtime: "edge" };
 
@@ -145,7 +142,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-export default function ActionPage() {
+function ActionPageContent() {
   const {
     action: baseAction,
     partner,
@@ -153,6 +150,8 @@ export default function ActionPage() {
   } = useLoaderData<typeof loader>();
 
   const [action, setAction] = useState(baseAction);
+  const { confirmDelete, showWarning } = useAlert();
+  const submit = useSubmit();
 
   const matches = useMatches();
 
@@ -176,6 +175,47 @@ export default function ActionPage() {
 
   const intent = fetcher.formData?.get("intent")?.toString();
 
+  // Hook para salvar campos individualmente
+  const { saveField } = useFieldSaver({
+    entity: action,
+    entityType: "action",
+  });
+
+  // Auto-save apenas para campos de texto (Title e Caption)
+  const lastSavedTextValues = useRef({
+    title: action.title,
+    instagram_caption: action.instagram_caption,
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      let hasChanges = false;
+
+      // Verificar title
+      if (action.title !== lastSavedTextValues.current.title) {
+        saveField("title", action.title);
+        lastSavedTextValues.current.title = action.title;
+        hasChanges = true;
+      }
+
+      // Verificar instagram_caption
+      if (
+        action.instagram_caption !==
+        lastSavedTextValues.current.instagram_caption
+      ) {
+        saveField("instagram_caption", action.instagram_caption);
+        lastSavedTextValues.current.instagram_caption =
+          action.instagram_caption;
+        hasChanges = true;
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [action.title, action.instagram_caption, saveField]);
+
+  // Refs para acessar conteúdo atual dos editors
+  const editorRef = useRef<any>(null);
+
   // Atualizar a Inserir o conteúdo da IA
   useEffect(() => {
     if (fetcher.data && intent) {
@@ -194,21 +234,21 @@ export default function ActionPage() {
       ) {
         const description = action.description || "";
         const index = action.description?.indexOf("<hr>") || -1;
-        setAction(() => ({
-          ...action,
-          description:
-            index < 0
-              ? description.concat(
+        const newDescription =
+          index < 0
+            ? description.concat(
+                getBiaMessage((fetcher.data as { message: string }).message),
+              )
+            : description
+                .substring(0, action.description?.indexOf("<hr>"))
+                .concat(
                   getBiaMessage((fetcher.data as { message: string }).message),
                 )
-              : description
-                  .substring(0, action.description?.indexOf("<hr>"))
-                  .concat(
-                    getBiaMessage(
-                      (fetcher.data as { message: string }).message,
-                    ),
-                  )
-                  .concat(description.substring(index)),
+                .concat(description.substring(index));
+
+        setAction(() => ({
+          ...action,
+          description: newDescription,
         }));
       } else if (
         fetcher.formData &&
@@ -249,6 +289,7 @@ export default function ActionPage() {
             setAction={setAction}
             isWorking={isWorking}
             partner={partner}
+            editorRef={editorRef}
           />
 
           {/* Arquivos e Legenda */}
@@ -266,8 +307,18 @@ export default function ActionPage() {
         setAction={setAction}
         isWorking={isWorking}
         partner={partner}
+        saveField={saveField}
+        showWarning={showWarning}
       />
     </div>
+  );
+}
+
+export default function ActionPage() {
+  return (
+    <AlertProvider>
+      <ActionPageContent />
+    </AlertProvider>
   );
 }
 
@@ -349,6 +400,8 @@ export function Title({
     navigation.state !== "idle" ||
     fetchers.filter((f) => f.formData).length > 0;
 
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+
   useEffect(() => {
     if (intent === "title") {
       setAction(() => ({
@@ -363,6 +416,7 @@ export function Title({
   return (
     <div className="flex items-start gap-4 pt-2">
       <textarea
+        ref={titleRef}
         value={action.title}
         className={`field-sizing-content w-full resize-none overflow-hidden border-none bg-transparent p-0 py-2 text-3xl leading-[85%] font-bold tracking-tighter outline-hidden ${
           isSideBar
@@ -455,14 +509,59 @@ export function Description({
   setAction,
   isWorking,
   partner,
+  editorRef,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
   partner: Partner;
+  editorRef: React.RefObject<any>;
 }) {
   const fetcher = useFetcher({ key: "action-page" });
   const promptRef = useRef<HTMLTextAreaElement>(null);
+
+  // Hook para salvar
+  const { saveMultipleFields, saveField } = useFieldSaver({
+    entity: action,
+    entityType: "action",
+  });
+
+  // Estado otimista - nunca re-renderiza o editor
+  const [localDescription, setLocalDescription] = useState(action.description);
+  const lastSavedDescription = useRef(action.description);
+
+  // Sync inicial quando action muda (navegação) ou quando description é atualizada pela IA
+  useEffect(() => {
+    // Só atualiza se realmente mudou (evita loops)
+    if (action.description !== localDescription) {
+      setLocalDescription(action.description);
+      lastSavedDescription.current = action.description;
+    }
+  }, [action.id, action.description]); // Quando muda de action OU quando description é atualizada
+
+  // Background auto-save a cada 3s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (editorRef.current) {
+        const currentContent = editorRef.current.getHTML();
+
+        if (currentContent !== lastSavedDescription.current) {
+          // Salva SEM atualizar estado local (não perde cursor)
+          const updates = {
+            description: currentContent,
+            updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+          };
+
+          saveMultipleFields(updates);
+          lastSavedDescription.current = currentContent;
+        }
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [action]);
 
   async function askBia(prompt?: string) {
     if (prompt) {
@@ -569,12 +668,20 @@ export function Description({
       </div>
 
       <Tiptap
-        content={action.description}
+        content={localDescription}
+        editorRef={editorRef}
         onBlur={(text: string | null) => {
+          // Salva no servidor
+          saveField("description", text);
+
+          // Sync com estado principal no onBlur (sem problemas de cursor)
           setAction({
             ...action,
             description: text,
+            updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
           });
+          setLocalDescription(text);
+          lastSavedDescription.current = text;
         }}
       />
     </div>
@@ -592,6 +699,8 @@ function RightSide({
   isWorking: boolean;
   partner: Partner;
 }) {
+  const instagramCaptionRef = useRef<HTMLTextAreaElement>(null);
+
   const [files, setFiles] = useState<{
     previews: { type: string; preview: string }[];
     files: string[];
@@ -616,17 +725,7 @@ function RightSide({
 
       // Client-side validation
       const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-      const allowedExtensions = [
-        "jpg",
-        "jpeg",
-        "png",
-        "gif",
-        "webp",
-        "pdf",
-        "txt",
-        "doc",
-        "docx",
-      ];
+      const allowedExtensions = ["jpg", "jpeg", "png", "mov", "mp4"];
 
       for (const file of acceptedFiles) {
         const fileName = file.name || "unknown";
@@ -715,7 +814,7 @@ function RightSide({
                 ...action,
                 previews: files ? files.previews : null,
               }}
-              aspect="full"
+              aspect="feed"
               partner={partner}
               currentFileIndex={currentFileIndex}
             />
@@ -1038,19 +1137,20 @@ function RightSide({
       </div>
 
       <textarea
+        ref={instagramCaptionRef}
         placeholder="Escreva sua legenda aqui ou peça à βIA para criar no botão superior direito."
         key={`instagram_caption-${action.id}`}
         name="instagram_caption"
-        onChange={(event) =>
+        onChange={(event) => {
           setAction({
             ...action,
             instagram_caption: event.target.value,
-          })
-        }
+          });
+        }}
         className={`field-sizing-content min-h-screen w-full text-base font-normal outline-hidden transition lg:min-h-auto lg:text-sm ${
           isInstagramFeed(action.category) ? "border-0 focus-within:ring-0" : ""
         }`}
-        value={action.instagram_caption ? action.instagram_caption : undefined}
+        value={action.instagram_caption || ""}
       ></textarea>
     </div>
   ) : null;
@@ -1061,11 +1161,15 @@ export function LowerBar({
   setAction,
   isWorking,
   partner,
+  saveField,
+  showWarning,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
   partner: Partner;
+  saveField: (field: string, value: any) => void;
+  showWarning: (message: string) => void;
 }) {
   const matches = useMatches();
   const submit = useSubmit();
@@ -1099,6 +1203,7 @@ export function LowerBar({
           partners={action.partners}
           onSelect={(partners) => {
             setAction({ ...action, partners });
+            saveField("partners", partners);
           }}
         />
 
@@ -1139,6 +1244,7 @@ export function LowerBar({
                 ...action,
                 state,
               });
+              saveField("state", state);
             }
           }}
         />
@@ -1146,7 +1252,11 @@ export function LowerBar({
           <TopicsAction
             partner={action.partners[0]}
             actionTopics={action.topics || []}
-            onCheckedChange={(topics) => setAction({ ...action, topics })}
+            onCheckedChange={(topics) => {
+              setAction({ ...action, topics });
+              // Salvar imediatamente
+              saveField("topics", topics);
+            }}
             mode="command"
           />
         )}
@@ -1169,6 +1279,7 @@ export function LowerBar({
                       ...action,
                       priority: priority.slug,
                     });
+                    saveField("priority", priority.slug);
                   }
                 }}
               >
@@ -1185,7 +1296,16 @@ export function LowerBar({
           size="md"
           responsibles={action.responsibles}
           onCheckedChange={(responsibles) => {
+            // Verificar se está tentando remover o último responsável
+            if (responsibles.length === 0) {
+              showWarning(
+                "É necessário ter pelo menos um responsável pela ação",
+              );
+              return; // Não permitir a remoção
+            }
+
             setAction({ ...action, responsibles });
+            saveField("responsibles", responsibles);
           }}
           partner={action.partners[0]}
         />
@@ -1214,6 +1334,7 @@ export function LowerBar({
                             ...action,
                             color,
                           });
+                          saveField("color", color);
                         }}
                       >
                         <div
@@ -1392,6 +1513,7 @@ function PopoverParameters({
   const fetcher = useFetcher({ key: "action-page" });
   const isWorking = fetcher.state !== "idle";
   const [intensity, setIntensity] = useState([1, 1, 1, 1, 1, 1]);
+  const [length, setLength] = useState(5);
   const [suggestion, setSuggestion] = useState<{
     title: string;
     values: number[];
@@ -1410,6 +1532,25 @@ function PopoverParameters({
         <SlidersIcon />
       </PopoverTrigger>
       <PopoverContent className="bg-content w-[80vw] divide-y overflow-hidden lg:w-3xl">
+        <div className="flex items-center justify-between gap-4 pb-3">
+          <div>Criar Conteúdo</div>
+
+          <div className="flex items-center gap-2">
+            {action.category === "carousel" ? (
+              <>
+                <input
+                  type="range"
+                  min={2}
+                  max={20}
+                  value={length}
+                  step={1}
+                  onChange={(e) => setLength(Number(e.target.value))}
+                />
+                <div className="w-8 text-center">{length}</div>
+              </>
+            ) : null}
+          </div>
+        </div>
         <div className="grid grid-cols-2 overflow-hidden">
           {parametersOptimized.map((parametro, index) => (
             <div
@@ -1428,8 +1569,6 @@ function PopoverParameters({
                   });
                 }}
               />
-
-              {/* <ParametroDropdown key={parametro.id} parametro={parametro} /> */}
             </div>
           ))}
         </div>
@@ -1439,19 +1578,19 @@ function PopoverParameters({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost">
-                  {suggestion?.title || "Sugestão"}
+                  {suggestion?.title || "Padrões úteis"}
                 </Button>
               </PopoverTrigger>
               <PopoverPortal>
-                <PopoverContent className="bg-content">
+                <PopoverContent className="bg-content overflow-hidden p-0">
                   <Command className="p-0">
                     <CommandInput value={query} onValueChange={setQuery} />
-                    <CommandList className="p-0">
+                    <CommandList className="p-2">
                       <CommandEmpty>Nenhuma sugestão</CommandEmpty>
                       {suggestionsParameters.map((parametro) => (
                         <CommandItem
                           key={parametro.title}
-                          value={parametro.values.join("-")}
+                          value={parametro.title}
                           onSelect={(value) => {
                             setSuggestion({
                               title: parametro.title,
@@ -1475,6 +1614,7 @@ function PopoverParameters({
               await fetcher.submit(
                 {
                   intent: AI_INTENTS.generateCarousel,
+                  length,
                   title: action.title,
                   description: action.description,
                   context: partner.context,

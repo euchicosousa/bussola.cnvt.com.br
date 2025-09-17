@@ -4,6 +4,13 @@ export const PRIORITIES = {
   high: "high",
 };
 
+export const ORDER_ACTIONS_BY = {
+  date: "date",
+  title: "title",
+  state: "state",
+  priority: "priority",
+} as const;
+
 export const INTENTS = {
   createAction: "actions-create",
   updateAction: "action-update",
@@ -17,6 +24,10 @@ export const INTENTS = {
   updatePerson: "person-update",
   updatePartner: "partner-update",
   createTopic: "topic-create",
+  updateTopic: "topic-update",
+  updateCategory: "category-update",
+  updateState: "state-update",
+  updatePriority: "priority-update",
   uploadFiles: "files-upload",
 };
 
@@ -67,22 +78,33 @@ export const VARIANTS = {
   GRID: "grid",
   CONTENT: "content",
   HOUR: "hour",
+  FINANCE: "finance",
 };
 
 export const DATE_FORMAT = {
-  NONE: 0,           // Sem data, só tempo
-  RELATIVE: 1,       // "há 2 horas" 
-  SHORT: 2,          // "15/12"
-  MEDIUM: 3,         // "15 de dez"
-  FULL: 4,           // "seg, 15 de dezembro"
+  NONE: 0, // Sem data, só tempo
+  RELATIVE: 1, // "há 2 horas"
+  SHORT: 2, // "15/12"
+  MEDIUM: 3, // "15 de dez"
+  FULL: 4, // "seg, 15 de dezembro"
 } as const;
 
 export const TIME_FORMAT = {
-  NONE: 0,           // Sem horário
-  WITH_TIME: 1,      // "15h30"
+  NONE: 0, // Sem horário
+  WITH_TIME: 1, // "15h30"
 } as const;
 
 export type DateDisplay = {
-  dateFormat?: typeof DATE_FORMAT[keyof typeof DATE_FORMAT];
-  timeFormat?: typeof TIME_FORMAT[keyof typeof TIME_FORMAT];
+  dateFormat?: (typeof DATE_FORMAT)[keyof typeof DATE_FORMAT];
+  timeFormat?: (typeof TIME_FORMAT)[keyof typeof TIME_FORMAT];
+};
+
+export const STATE = {
+  Ideia: "ideia",
+  Fazer: "do",
+  Fazendo: "doing",
+  Análise: "review",
+  Aprovado: "approved",
+  Feito: "done",
+  Concluído: "finished",
 };

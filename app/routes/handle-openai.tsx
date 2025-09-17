@@ -187,11 +187,12 @@ Tema a ser desenvolvido: ${title} - ${description}
         let complexidadeTecnica = intensity.split("-")[3];
         let orientacaoSolucao = intensity.split("-")[4];
         let suporteEmocional = intensity.split("-")[5];
+        let slides = length || 7;
 
         let tema = `${title} - ${description}`;
 
         content = `
-Crie um carrossel de 10 slides seguindo esta estrutura de micro-funil educacional:
+Crie um carrossel de ${slides} slides seguindo esta estrutura de micro-funil educacional:
 
 CONTEXTO BASE:
 Tema: ${tema} 
@@ -236,7 +237,23 @@ IMPORTANTE: Analise o contexto fornecido e extraia/infira:
 - Fontes de autoridade NOMEADAS
 - CTA com verbo de ação claro
 
-ESTRUTURA DO MICRO-FUNIL:
+REGRAS ANTI-VÍCIOS DE IA
+PROIBIÇÕES ABSOLUTAS: - 
+Frases curtas demais com ponto final a cada 3-4 palavra
+Estrutura "Não é X. É Y.
+Perguntas artificiais ("O resultado?", "O insight?"
+Bullet points com emojis desnecessário
+Repetição de ideias com palavras diferente
+Tom sensacionalista/dramático/forçad
+Excesso de adjetivos genérico
+Texto impessoal sem voz autora
+Abstrações vazias tentando parecer profundo
+OBRIGATÓRIO APLICAR: Fluidez natural na leitura 
+Voz autêntica e consistente 
+Informações concretas e úteis 
+Transições suaves entre ideias 
+
+ESTRUTURA DO MICRO-FUNIL (a quantidade de slides deve ser adaptada para o numero de ${slides}. NUNCA ULTRAPASSE ESSA QUANTIDADE):
 
 [SLIDE 1 - GANCHO/CAPTURA]
 - Pergunta que mencione situação específica vivida pelo público
@@ -308,6 +325,8 @@ A progressão deve sempre ESCALAR:
 - Benefício tangível da ação
 - Urgência baseada em fato (não "quanto antes melhor")
 
+
+
 DIRETRIZES DE COPY ESPECÍFICAS:
 - Se ${proximidadeConversacional} ≤ 2: Vocabulário formal do nicho
 - Se ${proximidadeConversacional} ≥ 4: Gírias/expressões do público
@@ -327,6 +346,13 @@ FORMATAÇÃO:
 - Cada slide deve ter um parágrafo em p
 - Não use tags de formatação e retorne apenas o texto, sem aspas
 
+SIGA ESSE MODELO:
+<h4>Slide 1 - Motivo do Slide</h4>
+<p>Conteúdo do Slide</p>
+<p><strong>Apresentação:</strong>Sugestão de apresentação, se é imagem, apenas texto, ou gráfico que ilustre melhor o conteúdo.</p>
+<p style={{ opacity: 0.5, text-size: '0.8rem'}}>Caso haja alguma observação necessária sobre o slide. Não necessáriamente completando o slide. Informação de fontes de notícia, deve estar no conteúdo do slide. aqui são observações para que vai fazer o carrossel.</p> 
+
+
 TESTE FINAL:
 Antes de finalizar, verifique:
 1. Cada slide tem pelo menos um elemento ESPECÍFICO (número, nome, momento)?
@@ -342,36 +368,7 @@ Lembre-se: Especificidade gera identificação. Genericidade gera esquecimento.
 
         break;
       }
-      //       case "carousel": {
-      //         content = `Sua missão é transformar o seguinte conteúdo em um post para Instagram, utilizando o modelo narrativo definido em ${storytellingModels.carrossel[model as keyof typeof storytellingModels.carrossel].title}.
 
-      //     Siga a estrutura abaixo:
-      // ${storytellingModels.carrossel[model as keyof typeof storytellingModels.carrossel].structure}
-
-      // O objetivo principal é gerar ${storytellingModels.carrossel[model as keyof typeof storytellingModels.carrossel].effect.toLowerCase()}.
-
-      // Importante:
-      // - Utilize linguagem acessível e humana, adaptada para Instagram.
-      // - Não use títulos genéricos. Comece com um gancho real que pare o scroll.
-      // - Limite cada bloco (slide, cena ou etapa) a no máximo 40 palavras.
-      // - Finalize com um CTA alinhado à intenção do modelo.
-      // - O formato de saída deve ser HTML puro, com a estrutura abaixo:
-
-      // <h4>Slide 1</h4>
-      // <p>Seu conteúdo aqui</p>
-
-      // <h4>Slide 2</h4>
-      // <p>Seu conteúdo aqui</p>
-
-      // ... e assim por diante até o encerramento com CTA
-      // Não use aspas, bullet points, markdown ou comentários adicionais.
-      // O resultado deve conter somente o texto solicitado.
-
-      // Tema a ser desenvolvido: ${title} - ${description}
-      // `;
-
-      //         break;
-      //       }
       case "title": {
         const _tense = SintagmaHooks.filter((t) => t.id === tense)[0];
         const _mission = _tense.missions.filter((m) => m.id === mission)[0];
@@ -382,7 +379,7 @@ Lembre-se: Especificidade gera identificação. Genericidade gera esquecimento.
         Importante:
         - Utilize linguagem acessível e humana, adaptada para Instagram.
         - Não use títulos genéricos. Comece com um gancho real que pare o scroll.
-        - Limite de 8 a 12 palavras.
+        - Limite de 8 a 12 palavras. JAMAIS ULTRAPASSE ESSE LIMITE.
         - O formato de saída deve ser sem nenhuma formatação puro
         - Não use aspas, bullet points, markdown ou comentários adicionais.
         - O resultado deve conter somente o texto solicitado.
@@ -391,21 +388,7 @@ Lembre-se: Especificidade gera identificação. Genericidade gera esquecimento.
 
         Esteja atento a esse contexto: ${context}
         `;
-        //         content = `Sua missão é transformar o seguinte conteúdo em um post para Instagram, utilizando o modelo narrativo definido em ${storytellingModels.titulos[model as keyof typeof storytellingModels.titulos].title}.
 
-        //     Siga os exemplos abaixo:
-        // ${storytellingModels.titulos[model as keyof typeof storytellingModels.titulos].examples.join("\n")}
-
-        // Importante:
-        // - Utilize linguagem acessível e humana, adaptada para Instagram.
-        // - Não use títulos genéricos. Comece com um gancho real que pare o scroll.
-        // - Limite de 8 a 12 palavras.
-        // - O formato de saída deve ser sem nenhuma formatação puro
-        // - Não use aspas, bullet points, markdown ou comentários adicionais.
-        // - O resultado deve conter somente o texto solicitado.
-
-        // Tema a ser desenvolvido: ${title} - ${description}
-        // `;
         break;
       }
       case "instagram_caption": {
@@ -426,6 +409,22 @@ Importante:
 - Não use tags, aspas, bullet points, markdown ou comentários adicionais.
 - O resultado deve conter somente o texto solicitado.
 - Inclua pelo menos um emoji por parágrafo
+
+REGRAS ANTI-VÍCIOS DE IA
+PROIBIÇÕES ABSOLUTAS: - 
+Frases curtas demais com ponto final a cada 3-4 palavra
+Estrutura "Não é X. É Y.
+Perguntas artificiais ("O resultado?", "O insight?"
+Bullet points com emojis desnecessário
+Repetição de ideias com palavras diferente
+Tom sensacionalista/dramático/forçad
+Excesso de adjetivos genérico
+Texto impessoal sem voz autora
+Abstrações vazias tentando parecer profundo
+OBRIGATÓRIO APLICAR: Fluidez natural na leitura 
+Voz autêntica e consistente 
+Informações concretas e úteis 
+Transições suaves entre ideias 
 
 Tema a ser desenvolvido: ${title} - ${description}
 
@@ -557,7 +556,7 @@ export const storytellingModels = {
       title: "Comparativo / A vs B",
       structure: `
   <h4>Slide 1</h4>
-  <p>Pergun"a ou título provocativo do tipo: “Você faz isso ou aquilo?"</p>,
+  <p>Pergunta ou título provocativo do tipo: “Você faz isso ou aquilo?"</p>,
   <h4>Slide 2–6</h4>
   <p>Comparações (ex: antes/depois, certo/errado, com/sem)</p>
   <h4>Slide Final</h4>
@@ -1670,52 +1669,9 @@ export const SintagmaHooks: SintagmaType[] = [
           },
         ],
       },
+
       {
         id: "t3-m3",
-        title: "Derrubar Objeções Silenciosas",
-        tension: "Eu sempre pensei isso, mas nunca tinha percebido o erro.",
-        role: "Desbloqueio de venda",
-        tactics: [
-          {
-            id: "t3-m2-t1",
-            title: "Objeção comum",
-            examples: [
-              "[pessoa] acredita que [objeção comum]… mas [racionalização que desmonta o argumento]",
-              "muita gente ainda repete que [mito popular]… só que isso não se sustenta",
-              "dizem que [crença limitante]… mas o que ninguém explica é [resposta lógica]",
-            ],
-          },
-          {
-            id: "t3-m2-t2",
-            title: "Pergunta camuflada",
-            examples: [
-              "[pergunta típica do público]… mas será que [reflexão que expõe a falha da lógica]?",
-              "será mesmo que [crença do público]… ou só parece verdade porque [fator psicológico]?",
-              "por que [comportamento comum] ainda é visto como normal… se [consequência negativa]?",
-            ],
-          },
-          {
-            id: "t3-m2-t3",
-            title: "Micro comparação",
-            examples: [
-              "[ação equivocada] é como [situação do dia a dia]… parece certo, mas gera o efeito contrário",
-              "imagina se [comparação banal]… pois é exatamente o que [público] faz quando [ação]",
-              "[decisão errada] se parece com [exemplo cotidiano]… mas o resultado é bem pior",
-            ],
-          },
-          {
-            id: "t3-m2-t4",
-            title: "Racional + Consequência",
-            examples: [
-              "se [ação baseada na objeção], então [consequência negativa]",
-              "seguir acreditando que [mito comum] resolve… só adia o problema",
-              "[cliente] insistia em [ação errada]… até perceber que isso custava [resultado perdido]",
-            ],
-          },
-        ],
-      },
-      {
-        id: "t3-m4",
         title: "Construir Referência Técnica",
         tension: "Essa pessoa realmente sabe o que está fazendo.",
         role: "Construção de autoridade",
@@ -1759,7 +1715,7 @@ export const SintagmaHooks: SintagmaType[] = [
         ],
       },
       {
-        id: "t3-m5",
+        id: "t3-m4",
         title: "Reforçar Princípios Não Negociáveis",
         tension: "Não é sobre agradar. É sobre deixar claro como funciona.",
         role: "Posicionamento",
@@ -1803,13 +1759,13 @@ export const SintagmaHooks: SintagmaType[] = [
         ],
       },
       {
-        id: "t3-m6",
+        id: "t3-m5",
         title: "Ancorar valor com provas reais",
         tension: "Se funcionou pra ela, talvez funcione pra mim também.",
         role: "Validação e prova social",
         tactics: [
           {
-            id: "t3-m6-t1",
+            id: "t3-m5-t1",
             title: "Relato breve",
             examples: [
               "a mãe achava que [comportamento da criança], hoje se emociona ao ver [nova conquista]",
@@ -1818,7 +1774,7 @@ export const SintagmaHooks: SintagmaType[] = [
             ],
           },
           {
-            id: "t3-m6-t2",
+            id: "t3-m5-t2",
             title: "Antes e depois real",
             examples: [
               "antes [situação antiga], agora [situação transformada]",
@@ -1827,7 +1783,7 @@ export const SintagmaHooks: SintagmaType[] = [
             ],
           },
           {
-            id: "t3-m6-t3",
+            id: "t3-m5-t3",
             title: "Situação–resolução",
             examples: [
               "foi difícil aceitar que [problema], mas quando entendeu, tudo mudou",
@@ -1836,7 +1792,7 @@ export const SintagmaHooks: SintagmaType[] = [
             ],
           },
           {
-            id: "t3-m6-t4",
+            id: "t3-m5-t4",
             title: "Citação com contexto",
             examples: [
               "‘[frase real do cliente]’, foi o que ela me disse. E por isso eu sabia que [decisão clínica]",

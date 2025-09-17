@@ -36,7 +36,10 @@
 
     --success: theme(--color-lime-700);
     --alert: theme(--color-yellow-800);
-    --error: theme(--color-rose-600);
+
+    --error: theme(--color-rose-500);
+    --error-background: theme(--color-rose-50);
+    --error-foreground: theme(--color-rose-700);
   }
 
   .dark {
@@ -69,7 +72,9 @@
     --input: 200 10% 16%;
     /* --ring: 200 10% 90%; */
 
-    --error: theme(--color-rose-400);
+    --error: theme(--color-rose-700);
+    --error-background: theme(--color-rose-950);
+    --error-foreground: theme(--color-rose-400);
   }
 
   * {
@@ -108,6 +113,8 @@
   --color-success: var(--success);
   --color-alert: var(--alert);
   --color-error: var(--error);
+  --color-error-background: var(--error-background);
+  --color-error-foreground: var(--error-foreground);
 
   --color-highlight: hsl(var(--highlight));
 
@@ -227,11 +234,7 @@ body {
 }
 
 .action-delayed {
-  @apply border-rose-300 bg-rose-50 text-rose-700 shadow-rose-700/20;
-}
-
-.dark .action-delayed {
-  @apply border-rose-900 bg-rose-950 text-rose-100;
+  @apply border-error bg-error-background text-error-foreground shadow-error/20;
 }
 
 .action-content-delayed > .late-border {

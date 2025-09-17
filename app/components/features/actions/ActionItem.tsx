@@ -14,6 +14,7 @@ import { ContextMenu, ContextMenuTrigger } from "~/components/ui/context-menu";
 import { SelectionCheckbox } from "~/components/ui/selection-checkbox";
 import { EditableTitle } from "~/components/ui/editable-title";
 import {
+  DATE_FORMAT,
   INTENTS,
   PRIORITIES,
   TIME_FORMAT,
@@ -113,6 +114,7 @@ export const ActionItem = React.memo(function ActionItem({
     (partner) => partner.slug === action.partners[0],
   ) as Partner;
   const actionPartners = getPartners(action.partners, partners);
+  const mainPartner = actionPartners[0];
   const responsibles = useMemo(
     () => getResponsibles(people, action.responsibles),
     [people, action.responsibles],
@@ -508,6 +510,83 @@ export const ActionItem = React.memo(function ActionItem({
           </div>
         );
 
+      case VARIANTS.FINANCE:
+        return (
+          <div ref={setNodeRef} {...attributes} {...listeners} style={style}>
+            <div
+              title={isHydrated ? action.title : undefined}
+              suppressHydrationWarning
+              className={cn(
+                "action group/action action-item-block @container cursor-pointer flex-col items-center justify-between gap-2 text-sm",
+                getDelayClasses("block"),
+                isDragging ? "z-[100]" : "z-0",
+                className,
+              )}
+              style={styleColors}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!edit && !selectMultiple) {
+                  navigate(
+                    `/dashboard/action/${action.id}/${action.partners[0]}${getQueryString()}`,
+                  );
+                }
+              }}
+              onMouseEnter={() => {
+                setHover(true);
+              }}
+              onMouseLeave={() => {
+                setHover(false);
+              }}
+            >
+              <StateBorder color={state.color} top />
+              {/* Title */}
+              <Avatar
+                className={cn("-mt-8", isDelayed ? "ring-error" : "ring-card")}
+                ring={true}
+                size="xl"
+                item={{
+                  short: mainPartner!.short,
+                  title: action.title,
+                  bg: mainPartner!.colors[0],
+                  fg: mainPartner!.colors[1],
+                }}
+              />
+
+              <div className="text-center text-2xl">
+                R$ {action.description?.replace(/(<([^>]+)>)/gi, "")}
+              </div>
+
+              <div className="text-center text-xs font-medium opacity-50 first-letter:uppercase">
+                {isDelayed
+                  ? formatActionDatetime({
+                      date: action.date,
+                      dateFormat: DATE_FORMAT.RELATIVE,
+                      prefix: "Em atraso ",
+                    })
+                  : formatActionDatetime({
+                      date: action.date,
+                      dateFormat: 4,
+                    })}
+              </div>
+
+              <div className="absolute -top-3 right-3">
+                {selectMultiple && setSelectedActions && (
+                  <SelectionCheckbox
+                    className="border-background"
+                    isSelected={
+                      selectedActions?.some((a) => a.id === action.id) || false
+                    }
+                    action={action}
+                    onSelectionChange={setSelectedActions}
+                    currentSelection={selectedActions || []}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
       case VARIANTS.HOUR:
         return (
           <div
@@ -865,10 +944,13 @@ function SprintIcon({
   );
 }
 
-function StateBorder({ color }: { color: string }) {
+function StateBorder({ color, top }: { color: string; top?: boolean }) {
+  const className = top
+    ? "right-0 h-1 -mx-[1px] -mt-[1px] rounded-t-[4px]"
+    : "bottom-0 -ml-[1px] -my-[1px] w-1 rounded-l-[4px]";
   return (
     <div
-      className="absolute top-0 bottom-0 left-0 -mt-[1px] -mb-[1px] -ml-[1px] w-1 shrink-0 rounded-l-[4px]"
+      className={cn("absolute top-0 left-0 shrink-0", className)}
       style={{ backgroundColor: color }}
     ></div>
   );

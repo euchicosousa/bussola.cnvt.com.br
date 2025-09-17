@@ -12,14 +12,12 @@ import {
 import { isInstagramFeed } from "~/shared/utils/validation/contentValidation";
 
 export function sortActions(
-  actions?: Action[] | null,
+  actions: Action[],
   orderActionsBy: ORDER_ACTIONS_BY = "date",
   order: "asc" | "desc" = "asc",
   states?: State[],
   useInstagramDate?: boolean,
 ) {
-  if (!actions) return null;
-
   switch (orderActionsBy) {
     case "state":
       if (!states) {

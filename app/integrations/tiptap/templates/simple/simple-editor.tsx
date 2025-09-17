@@ -186,9 +186,13 @@ const MobileToolbarContent = ({
 export function SimpleEditor({
   content,
   onBlur,
+  onChange,
+  editorRef,
 }: {
   content: string | undefined | null;
   onBlur: (text: string) => void;
+  onChange?: (text: string) => void;
+  editorRef?: React.MutableRefObject<any>;
 }) {
   const isMobile = useMobile();
   const windowSize = useWindowSize();
@@ -239,11 +243,23 @@ export function SimpleEditor({
     onBlur: ({ editor }) => {
       onBlur(editor.getHTML());
     },
+    onUpdate: ({ editor }) => {
+      if (onChange) {
+        onChange(editor.getHTML());
+      }
+    },
   });
 
   useEffect(() => {
     if (editor) editor.commands.setContent(content ?? "");
   }, [content]);
+
+  // Conectar ref ao editor
+  useEffect(() => {
+    if (editorRef && editor) {
+      editorRef.current = editor;
+    }
+  }, [editor, editorRef]);
 
   const isScrolling = useScrolling();
   const rect = useCursorVisibility({

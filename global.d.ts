@@ -21,7 +21,8 @@ declare global {
     [key: string]: string | number | null | string[] | boolean | number[];
   };
 
-  type ORDER_ACTIONS_BY = "date" | "title" | "state" | "priority";
+  type ORDER_ACTIONS_BY =
+    (typeof ORDER_ACTIONS_BY)[keyof typeof ORDER_ACTIONS_BY];
 
   type ActionFull = Action & {
     state: State;
@@ -116,5 +117,4 @@ declare global {
   };
 
   type Size = "xs" | "sm" | "md" | "lg" | "xl";
-
 }

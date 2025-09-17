@@ -42,7 +42,12 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Toggle } from "~/components/ui/toggle";
-import { VARIANTS, DATE_FORMAT } from "~/lib/constants";
+import {
+  VARIANTS,
+  DATE_FORMAT,
+  ORDER_ACTIONS_BY,
+  STATE,
+} from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
   getDelayedActions,
@@ -50,6 +55,7 @@ import {
   getThisWeekActions,
   getTodayActions,
   getTomorrowActions,
+  getTotalPayment,
   sortActions,
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
@@ -194,6 +200,14 @@ export default function DashboardIndex() {
             className="px-2 py-8 md:px-8 lg:py-24"
           />
         </div>
+
+        <FinancialView
+          actions={
+            actions?.filter(
+              (action) => action.category === "finance",
+            ) as Action[]
+          }
+        />
 
         {/* Mês */}
 
@@ -488,6 +502,51 @@ const ProgressBar = ({ actions }: { actions: ActionChart[] }) => {
             }}
           ></div>
         ))}
+    </div>
+  );
+};
+
+const FinancialView = ({ actions }: { actions: Action[] }) => {
+  const { partners } = useMatches()[1].data as DashboardRootType;
+  return (
+    <div className="relative" id="financial">
+      <div className="before:bg-border relative px-2 before:absolute before:-left-[100vw] before:h-px before:w-[200vw] md:px-8">
+        {/* Próximas ações */}
+        <div className="py-8 lg:py-24">
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex">
+              <h2 className="text-3xl font-semibold tracking-tight">
+                Pagamentos
+              </h2>
+              <Badge value={actions.length} />
+            </div>
+            <div className="flex items-center gap-4 text-2xl tracking-tighter">
+              <span className="text-error font-medium">
+                {getTotalPayment(
+                  actions.filter((action) => action.state !== STATE.Concluído),
+                )}
+              </span>
+              <span className="text-success font-medium">
+                {getTotalPayment(
+                  actions.filter((action) => action.state === STATE.Concluído),
+                )}
+              </span>
+
+              <div className="text-right font-semibold">
+                {getTotalPayment(actions)}
+              </div>
+            </div>
+          </div>
+          <div className="pt-4">
+            <ActionsContainer
+              variant={VARIANTS.FINANCE}
+              actions={actions}
+              orderBy={ORDER_ACTIONS_BY.state}
+              showDelay={true}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

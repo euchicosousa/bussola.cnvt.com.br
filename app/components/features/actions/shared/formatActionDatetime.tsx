@@ -23,10 +23,14 @@ export function formatActionDatetime({
   date,
   dateFormat,
   timeFormat,
+  prefix = "",
+  suffix = "",
 }: {
   date: Date | string;
   dateFormat?: DateDisplay["dateFormat"];
   timeFormat?: DateDisplay["timeFormat"];
+  prefix?: string;
+  suffix?: string;
 }) {
   if (dateFormat === undefined && timeFormat === undefined) {
     dateFormat = DATE_FORMAT.FULL;
@@ -36,7 +40,7 @@ export function formatActionDatetime({
   date = typeof date === "string" ? parseISO(date) : date;
 
   if (dateFormat === 1) {
-    return formatDistanceToNow(date, { locale: ptBR, addSuffix: true });
+    return `${prefix}${formatDistanceToNow(date, { locale: ptBR, addSuffix: true })}${suffix}`;
   }
 
   const formatString = (
@@ -65,5 +69,5 @@ export function formatActionDatetime({
       : "",
   );
 
-  return format(date, formatString, { locale: ptBR });
+  return `${prefix}${format(date, formatString, { locale: ptBR })}${suffix}`;
 }

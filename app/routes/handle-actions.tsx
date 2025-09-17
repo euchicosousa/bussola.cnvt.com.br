@@ -253,26 +253,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileName = file.name || filenames[i] || `file_${i}`;
-      
+
       if (file.size > MAX_FILE_SIZE) {
-        return { 
+        return {
           error: `File ${fileName} is too large. Max size: 10MB`,
-          success: false
+          success: false,
         };
       }
-      
+
       // Get file extension for fallback validation
-      const extension = fileName.toLowerCase().split('.').pop();
-      const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'doc', 'docx'];
-      
+      const extension = fileName.toLowerCase().split(".").pop();
+      const allowedExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "pdf",
+        "txt",
+        "doc",
+        "docx",
+      ];
+
       // Check MIME type or file extension
       const isValidType = file.type && ALLOWED_TYPES.includes(file.type);
-      const isValidExtension = extension && allowedExtensions.includes(extension);
-      
+      const isValidExtension =
+        extension && allowedExtensions.includes(extension);
+
       if (!isValidType && !isValidExtension) {
-        return { 
-          error: `File ${fileName} with type "${file.type || 'unknown'}" and extension "${extension || 'unknown'}" is not allowed`,
-          success: false
+        return {
+          error: `File ${fileName} with type "${file.type || "unknown"}" and extension "${extension || "unknown"}" is not allowed`,
+          success: false,
         };
       }
     }
@@ -315,22 +326,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       if (error) {
         console.error("Error updating action with files:", error);
-        return { 
+        return {
           error: "Failed to save files to action",
-          success: false
+          success: false,
         };
       }
 
-      return { 
+      return {
         data: updatedAction,
         urls: fileUrls,
-        success: true
+        success: true,
       };
     } catch (uploadError) {
       console.error("Upload error:", uploadError);
-      return { 
-        error: uploadError instanceof Error ? uploadError.message : "Upload failed",
-        success: false
+      return {
+        error:
+          uploadError instanceof Error ? uploadError.message : "Upload failed",
+        success: false,
       };
     }
   }
