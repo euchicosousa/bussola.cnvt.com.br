@@ -181,6 +181,7 @@ export default function Search({
     async function getActions() {
       if (supabase && sections) {
         setLoading(true);
+
         const partner_slug = partner
           ? [partner.slug]
           : partners.map((p) => p.slug)!;
@@ -207,16 +208,16 @@ export default function Search({
                     action.partners.join(" "),
                   ],
                   obs: {
-                    state: states.find((state) => state.slug === action.state)!,
+                    state: states.find((state) => state.slug === action.state),
                     category: categories.find(
                       (category) => category.slug === action.category,
-                    )!,
+                    ),
                     partner: partners.find((partner) => {
                       return partner.slug === action.partners[0];
-                    })!,
+                    }),
                     priority: priorities.find(
                       (priority) => priority.slug === action.priority,
-                    )!,
+                    ),
                     responsibles: people.filter(
                       (person) =>
                         action.responsibles.findIndex(
@@ -228,6 +229,8 @@ export default function Search({
                   },
                 }))
               : [];
+
+            console.log({ actions });
 
             setSections([
               {
@@ -288,7 +291,7 @@ export default function Search({
                   <div className="line-clamp-1 text-base">{item.title}</div>
                   {item.obs ? (
                     <div className="flex items-center gap-2">
-                      {item.obs.priority.slug === PRIORITIES.high ? (
+                      {item.obs.priority?.slug === PRIORITIES.high ? (
                         <Icons id="high" className="text-rose-500" />
                       ) : null}
                       <div className="flex">
@@ -304,30 +307,36 @@ export default function Search({
                           />
                         ))}
                       </div>
-                      <Avatar
-                        size="xs"
-                        item={{
-                          short: item.obs.partner.short,
-                          bg: item.obs.partner.colors[0],
-                          fg: item.obs.partner.colors[1],
-                        }}
-                      />
-                      <Icons
-                        id={item.obs.category.slug}
-                        className="opacity-50"
-                      />
+                      {item.obs.partner && (
+                        <Avatar
+                          size="xs"
+                          item={{
+                            short: item.obs.partner.short,
+                            bg: item.obs.partner.colors[0],
+                            fg: item.obs.partner.colors[1],
+                          }}
+                        />
+                      )}
+                      {item.obs.category && (
+                        <Icons
+                          id={item.obs.category.slug}
+                          className="opacity-50"
+                        />
+                      )}
                       <div className="w-12 text-center text-xs opacity-75">
                         {formatActionDatetime({
                           date: item.obs.date!,
                           dateFormat: 2,
                         })}
                       </div>
-                      <div
-                        className={`size-2 rounded-full`}
-                        style={{
-                          backgroundColor: item.obs.state.color,
-                        }}
-                      ></div>
+                      {item.obs.state && (
+                        <div
+                          className={`size-2 rounded-full`}
+                          style={{
+                            backgroundColor: item.obs.state.color,
+                          }}
+                        ></div>
+                      )}
                     </div>
                   ) : null}
                 </CommandItem>

@@ -201,6 +201,12 @@ export default function DashboardIndex() {
           />
         </div>
 
+        {/* Mês */}
+
+        <CalendarView actions={actions} />
+
+        {/* Financeiro */}
+
         <FinancialView
           actions={
             actions?.filter(
@@ -208,10 +214,6 @@ export default function DashboardIndex() {
             ) as Action[]
           }
         />
-
-        {/* Mês */}
-
-        <CalendarView actions={actions} />
 
         {/* Próximas Ações */}
         <NextActions actions={nextActions as Action[]} />

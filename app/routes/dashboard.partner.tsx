@@ -35,6 +35,7 @@ import {
   Rows3Icon,
   Rows4Icon,
   SearchIcon,
+  StarIcon,
   TimerIcon,
   UserIcon,
   UsersIcon,
@@ -1505,7 +1506,7 @@ export const CalendarDay = ({
                     {sortActions(
                       day.actions?.filter((action) =>
                         isInstagramFeed(action.category),
-                      ),
+                      ) as Action[],
                       orderActionsBy,
                       "asc",
                       states,
@@ -1593,9 +1594,13 @@ export const CalendarDay = ({
         </div>
 
         {day.celebrations && day.celebrations.length > 0 && (
-          <div className="mt-4 space-y-2 text-[10px] opacity-50">
+          <div className="mt-4 flex w-full flex-col space-y-2 text-sm opacity-50">
             {day.celebrations?.map((celebration) => (
-              <div key={celebration.id} className="leading-none">
+              <div
+                key={celebration.id}
+                title={celebration.title}
+                className="w-full overflow-hidden text-ellipsis whitespace-nowrap"
+              >
                 {celebration.title}
               </div>
             ))}
@@ -1640,7 +1645,7 @@ function CategoryActions({
   const { states } = useMatches()[1].data as DashboardRootType;
 
   actions = sortActions(
-    actions,
+    actions as Action[],
     orderActionsBy,
     "asc",
     states,
