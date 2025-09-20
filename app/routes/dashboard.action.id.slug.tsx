@@ -14,8 +14,6 @@ import {
 
 import { ptBR } from "date-fns/locale";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
   FilesIcon,
   LightbulbIcon,
   Link2Icon,
@@ -24,7 +22,6 @@ import {
   SparklesIcon,
   Trash2Icon,
   UploadCloudIcon,
-  XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import invariant from "tiny-invariant";
@@ -90,6 +87,13 @@ import {
 } from "~/lib/helpers";
 import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
+import {
+  getFileExtension,
+  getFileName,
+  isDocument,
+  isImage,
+  isVideo,
+} from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
 
@@ -138,165 +142,10 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-// Componente do item de arquivo
-function FileItem({
-  file,
-  index,
-  canReorder,
-  isFirst,
-  isLast,
-  onMoveUp,
-  onMoveDown,
-  onRemove,
-}: {
-  file: string;
-  index: number;
-  canReorder: boolean;
-  isFirst: boolean;
-  isLast: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onRemove: () => void;
-}) {
-  const isVideo = file.includes(".mp4") || file.includes("video");
-  const fileName = file.split("/").pop() || "Arquivo";
-
-  return (
-    <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
-      {canReorder && (
-        <div className="flex flex-col gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMoveUp}
-            disabled={isFirst}
-            className="text-muted-foreground hover:text-foreground h-6 w-6 p-0 disabled:opacity-30"
-          >
-            <ArrowUpIcon className="h-3 w-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMoveDown}
-            disabled={isLast}
-            className="text-muted-foreground hover:text-foreground h-6 w-6 p-0 disabled:opacity-30"
-          >
-            <ArrowDownIcon className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
-
-      <div className="flex-shrink-0">
-        {isVideo ? (
-          <video
-            src={file}
-            className="h-12 w-12 rounded border object-cover"
-            muted
-          />
-        ) : (
-          <img
-            src={file}
-            alt={fileName}
-            className="h-12 w-12 rounded border object-cover"
-            onError={(e) => {
-              e.currentTarget.style.display = "none";
-            }}
-          />
-        )}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{fileName}</p>
-        <p className="text-muted-foreground text-xs">
-          {isVideo ? "Vídeo" : "Imagem"} • Posição {index + 1}
-        </p>
-      </div>
-
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onRemove}
-        className="text-muted-foreground hover:text-destructive"
-      >
-        <XIcon className="h-4 w-4" />
-      </Button>
-    </div>
-  );
-}
-
-// Componente do popover de edição de arquivos de conteúdo
-function ContentFilesPopover({
-  tempContentFiles,
-  setTempContentFiles,
-  removeContentFileFromTemp,
-  moveContentFile,
-  cancelContentFilesChanges,
-  saveContentFilesChanges,
-  category,
-}: {
-  tempContentFiles: string[];
-  setTempContentFiles: (files: string[]) => void;
-  removeContentFileFromTemp: (index: number) => void;
-  moveContentFile: (fromIndex: number, toIndex: number) => void;
-  cancelContentFilesChanges: () => void;
-  saveContentFilesChanges: () => void;
-  category: string;
-}) {
-  const canReorder = category === "carousel" || category === "stories";
-
-  return (
-    <div className="flex flex-col">
-      <div className="border-b p-4">
-        <h4 className="font-semibold">Editar Arquivos de Conteúdo</h4>
-        <p className="text-muted-foreground text-sm">
-          {canReorder
-            ? "Use as setas para reordenar e clique no X para remover"
-            : "Clique no X para remover"}
-        </p>
-      </div>
-
-      <div className="max-h-80 overflow-y-auto p-4">
-        {tempContentFiles.length === 0 ? (
-          <p className="text-muted-foreground py-8 text-center">
-            Nenhum arquivo de conteúdo
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {tempContentFiles.map((file: string, index: number) => (
-              <FileItem
-                key={file}
-                file={file}
-                index={index}
-                canReorder={canReorder}
-                isFirst={index === 0}
-                isLast={index === tempContentFiles.length - 1}
-                onMoveUp={() => moveContentFile(index, index - 1)}
-                onMoveDown={() => moveContentFile(index, index + 1)}
-                onRemove={() => removeContentFileFromTemp(index)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-end gap-2 border-t p-4">
-        <Button variant="outline" size="sm" onClick={cancelContentFilesChanges}>
-          Cancelar
-        </Button>
-        <Button size="sm" onClick={saveContentFilesChanges}>
-          Salvar Alterações
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 export default function ActionPage() {
   const { action: baseAction, partner } = useLoaderData<typeof loader>();
 
   const [action, setAction] = useState(baseAction);
-
-  const [tempContentFiles, setTempContentFiles] = useState<string[]>([]);
 
   const matches = useMatches();
 
@@ -1595,20 +1444,27 @@ function FileUploadSection({
         updatedContentFiles = newFiles.slice(0, 1);
         break;
       case "reels":
-        const hasVideo = newFiles.some(
-          (file) => file.includes(".mp4") || file.includes("video"),
-        );
-        if (hasVideo) {
-          const videos = newFiles.filter(
-            (file) => file.includes(".mp4") || file.includes("video"),
-          );
-          const images = newFiles.filter(
-            (file) => !file.includes(".mp4") && !file.includes("video"),
-          );
-          updatedContentFiles = [...videos.slice(0, 1), ...images.slice(0, 1)];
-        } else {
-          updatedContentFiles = [...currentFiles, ...newFiles].slice(0, 2);
+        // Para reels: index 0 = vídeo, index 1 = capa/imagem
+        const currentVideo = currentFiles[0] || "";
+        const currentCover = currentFiles[1] || "";
+
+        const newVideos = newFiles.filter(isVideo);
+        const newImages = newFiles.filter((file) => !isVideo(file));
+
+        let finalVideo = currentVideo;
+        let finalCover = currentCover;
+
+        // Se enviou vídeo, substitui apenas o index 0
+        if (newVideos.length > 0) {
+          finalVideo = newVideos[0];
         }
+
+        // Se enviou imagem, substitui apenas o index 1
+        if (newImages.length > 0) {
+          finalCover = newImages[0];
+        }
+
+        updatedContentFiles = [finalVideo, finalCover];
         break;
       case "carousel":
         updatedContentFiles = [...currentFiles, ...newFiles].slice(0, 20);
@@ -1696,13 +1552,20 @@ function FileUploadSection({
                 </Button>
               </CloudinaryUpload>
               {currentContentCount > 0 && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="rounded-l-none"
+                <FilesPopover
+                  setAction={setAction}
+                  action={action}
+                  files={action.content_files}
+                  saveField={saveField}
                 >
-                  <FilesIcon />
-                </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="rounded-l-none"
+                  >
+                    <FilesIcon />
+                  </Button>
+                </FilesPopover>
               )}
             </div>
           )}
@@ -1738,11 +1601,201 @@ function FileUploadSection({
               </Button>
             </CloudinaryUpload>
             {currentWorkCount > 0 && (
-              <Button variant="secondary" size="sm" className="rounded-l-none">
-                <FilesIcon />
-              </Button>
+              <FilesPopover
+                action={action}
+                files={action.work_files}
+                setAction={setAction}
+                saveField={saveField}
+                isWorkFiles
+              >
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-l-none"
+                >
+                  <FilesIcon />
+                </Button>
+              </FilesPopover>
             )}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilesPopover({
+  action,
+  files,
+  children,
+  setAction,
+  saveField,
+  isWorkFiles,
+}: {
+  action: Action;
+  files: string[] | null;
+  children: React.ReactNode;
+  setAction: (action: Action) => void;
+  saveField: (field: string, value: any) => void;
+  isWorkFiles?: boolean;
+}) {
+  let renderContent: React.ReactNode;
+  let type = isWorkFiles ? "work_files" : action.category;
+
+  switch (type) {
+    case "post":
+      renderContent = (
+        <FilePopoverItem
+          file={files![0]}
+          onDelete={() => {
+            setAction({
+              ...action,
+              content_files: null,
+            });
+            saveField("content_files", null);
+          }}
+        />
+      );
+
+      break;
+    case "reels":
+      renderContent = (
+        <div className="grid grid-cols-2 gap-4">
+          {files && files[0] ? (
+            <FilePopoverItem
+              title="Vídeo"
+              file={files[0]}
+              onDelete={() => {
+                const updatedFiles = ["", files[1]];
+                setAction({
+                  ...action,
+                  content_files: updatedFiles,
+                });
+                saveField("content_files", updatedFiles);
+              }}
+            />
+          ) : (
+            <div className="bg-accent grid h-full min-h-[180px] w-full place-content-center rounded-lg border border-dashed p-4 text-lg font-bold">
+              Vídeo
+            </div>
+          )}
+          {files && files[1] ? (
+            <FilePopoverItem
+              title="Capa"
+              file={files[1]}
+              onDelete={() => {
+                const updatedFiles = [files[0], ""];
+                setAction({
+                  ...action,
+                  content_files: updatedFiles,
+                });
+                saveField("content_files", updatedFiles);
+              }}
+            />
+          ) : (
+            <div className="bg-accent grid h-full min-h-[180px] w-full place-content-center rounded-lg border border-dashed p-4 text-lg font-bold">
+              Capa
+            </div>
+          )}
+        </div>
+      );
+      break;
+    case "carousel":
+    case "stories":
+    default:
+      renderContent = (
+        <div
+          className={cn(
+            "grid gap-2 gap-y-4",
+            files && files.length > 8 ? "grid-cols-5" : "grid-cols-4",
+          )}
+        >
+          {files?.map((file, i) => (
+            <FilePopoverItem
+              key={i}
+              file={file}
+              onDelete={() => {
+                const updatedFiles = files.filter((_, index) => index !== i);
+                if (isWorkFiles) {
+                  setAction({
+                    ...action,
+                    work_files: updatedFiles,
+                  });
+                  saveField("work_files", updatedFiles);
+                } else {
+                  setAction({
+                    ...action,
+                    content_files: updatedFiles,
+                  });
+                  saveField("content_files", updatedFiles);
+                }
+              }}
+            />
+          ))}
+        </div>
+      );
+      break;
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <PopoverContent
+        className={cn(
+          "bg-content mx-4 flex max-h-[70vh] flex-col overflow-hidden",
+          type === "post"
+            ? "lg:w-xs"
+            : type === "reels"
+              ? "lg:w-sm"
+              : "lg:w-2xl",
+        )}
+      >
+        <div className="shrink-0 pb-2 text-2xl font-medium">Arquivos</div>
+        <div className="scrollbars-v h-full w-full grow">{renderContent}</div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function FilePopoverItem({
+  title,
+  file,
+
+  onDelete,
+}: {
+  title?: string;
+  file: string;
+
+  onDelete: () => void;
+}) {
+  const filename = getFileName(file, true);
+
+  return (
+    <div className="flex w-full flex-col items-center gap-2 overflow-hidden">
+      {title ? (
+        <div className="text-xl font-medium">{title}</div>
+      ) : (
+        <div className="flex w-full overflow-hidden px-1 text-xs">
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+            {filename}
+          </div>
+          <div>{getFileExtension(file)}</div>
+        </div>
+      )}
+      <div className="relative w-full">
+        <div className="overflow-hidden rounded-lg">
+          {isImage(file) && <img src={file} alt={title} />}
+          {isVideo(file) && <video src={file} controls />}
+          {isDocument(file) && (
+            <div className="bg-accent col-span-1 grid min-h-[180px] w-full place-content-center rounded-lg border p-4 text-2xl font-bold uppercase">
+              {getFileExtension(file)}
+            </div>
+          )}
+        </div>
+        <div className="absolute top-1 right-1">
+          <Button variant="ghost" size="sm" onClick={onDelete}>
+            <Trash2Icon />
+          </Button>
         </div>
       </div>
     </div>

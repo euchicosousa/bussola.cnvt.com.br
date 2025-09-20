@@ -8,6 +8,8 @@ import {
   BookmarkIcon,
   CameraIcon,
   CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   CircleFadingPlusIcon,
   ClapperboardIcon,
   ClipboardCheckIcon,
@@ -431,7 +433,7 @@ export const Content = ({
   showInfo,
   showFinished,
   dateDisplay,
-  currentFileIndex = 0,
+
   showVideo = false,
 }: {
   action: Action;
@@ -441,64 +443,227 @@ export const Content = ({
   showInfo?: boolean;
   showFinished?: boolean;
   dateDisplay?: DateDisplay;
-  currentFileIndex?: number;
+
   showVideo?: boolean;
 }) => {
-  let files =
-    action.content_files && action.content_files[0]
-      ? action.content_files.map((f: any) => ({
-          preview: f,
-          type: getTypeOfTheContent(f),
-        }))
-      : undefined;
-  // Lógica de seleção de arquivo por categoria
-  let currentFile;
+  let renderContent = (
+    <Post className={className} action={action} colors={partner!.colors} />
+  );
+  const hasValidFiles =
+    action.content_files &&
+    action.content_files.length > 0 &&
+    action.content_files[0] &&
+    !["", "null", null, "undefined"].includes(action.content_files[0]);
 
-  if (files && files.length > 0) {
-    const category = action.category;
+  if (hasValidFiles) {
+    //   renderContent = (
+    //     <Post className={className} action={action} colors={partner!.colors} />
+    //   );
+    // } else {
+    // ===== FILES PREPARATION =====
+    const files =
+      action.content_files?.map((f: any) => ({
+        preview: f,
+        type: getTypeOfTheContent(f),
+      })) || [];
 
-    switch(category) {
-      case 'reels':
-        // REELS: lógica específica vídeo/capa
+    // ===== CURRENT FILE SELECTION BY CATEGORY =====
+    let currentFile;
+
+    switch (action.category) {
+      case "reels": {
         const firstFile = files[0];
         const hasVideo = firstFile?.type === "video";
-        const hasCapa = files.length > 1;
+        const hasCover = files.length > 1;
 
-        if (hasVideo) {
-          if (showVideo) {
-            currentFile = firstFile; // Mostra vídeo
-          } else {
-            currentFile = hasCapa ? files[1] : firstFile; // Mostra capa se existir
-          }
-        } else {
-          currentFile = firstFile; // Se não for vídeo, mostra o que tem
+        const currentFile = hasVideo
+          ? showVideo
+            ? firstFile
+            : hasCover
+              ? files[1]
+              : firstFile
+          : firstFile;
+
+        renderContent =
+          currentFile?.type === "image" ? (
+            <img
+              src={currentFile.preview}
+              className={cn(
+                `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                className,
+              )}
+              style={{ backgroundColor: action.color }}
+            />
+          ) : (
+            <video
+              src={currentFile?.preview || ""}
+              className={cn(
+                `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                className,
+              )}
+              controls
+            />
+          );
+        break;
+      }
+
+      case "post": {
+        const currentFile = files[0];
+        if (currentFile?.type === "image") {
+          renderContent = (
+            <img
+              src={currentFile.preview}
+              className={cn(
+                `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                className,
+              )}
+              style={{ backgroundColor: action.color }}
+            />
+          );
         }
         break;
+      }
 
-      case 'post':
-        // POST: sempre o único arquivo
-        currentFile = files[0];
+      case "carousel":
+      case "stories": {
+        const [currentIndex, setCurrentIndex] = useState(0);
+
+        renderContent = (
+          <div className="relative w-full">
+            {/* Container dos slides */}
+            <div className="overflow-hidden">
+              <div
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              >
+                {files.map((file, index) => (
+                  <div key={index} className="w-full flex-shrink-0">
+                    {file.type === "image" ? (
+                      <img
+                        src={file.preview}
+                        className={cn(
+                          `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                          className,
+                        )}
+                        style={{ backgroundColor: action.color }}
+                      />
+                    ) : file.type === "video" ? (
+                      <video
+                        src={file.preview}
+                        className={cn(
+                          `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                          className,
+                        )}
+                        controls
+                      />
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Controles */}
+            {files.length > 1 && (
+              <>
+                {/* Botão anterior */}
+                <button
+                  onClick={() =>
+                    setCurrentIndex((prev) =>
+                      prev > 0 ? prev - 1 : files.length - 1,
+                    )
+                  }
+                  className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                >
+                  <ChevronLeftIcon className="size-4" />
+                </button>
+
+                {/* Botão próximo */}
+                <button
+                  onClick={() =>
+                    setCurrentIndex((prev) =>
+                      prev < files.length - 1 ? prev + 1 : 0,
+                    )
+                  }
+                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
+                >
+                  <ChevronRightIcon className="size-4" />
+                </button>
+
+                {/* Indicadores */}
+                <div className="absolute bottom-2 left-1/2 flex -translate-x-1/2 gap-1">
+                  {files.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentIndex(index)}
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        index === currentIndex ? "bg-white" : "bg-white/50"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        );
         break;
-
-      case 'carousel':
-      case 'stories':
-        // CAROUSEL/STORIES: usa currentFileIndex normalmente
-        currentFile = files.length > currentFileIndex ? files[currentFileIndex] : files[0];
-        break;
-
-      default:
-        // Outros: lógica atual
-        currentFile = files.length > currentFileIndex ? files[currentFileIndex] : files[0];
+      }
     }
   }
-  let isFile =
-    currentFile && !["", "null", null].find((p) => p === currentFile.preview);
+
+  // let files =
+  //   action.content_files && action.content_files[0]
+  //     ? action.content_files.map((f: any) => ({
+  //         preview: f,
+  //         type: getTypeOfTheContent(f),
+  //       }))
+  //     : undefined;
+  // Lógica de seleção de arquivo por categoria
+  // let currentFile;
+
+  // if (files && files.length > 0) {
+  //   const category = action.category;
+
+  //   switch (category) {
+  //     case "reels":
+  //       // REELS: lógica específica vídeo/capa
+  //       const firstFile = files[0];
+  //       const hasVideo = firstFile?.type === "video";
+  //       const hasCapa = files.length > 1;
+
+  //       if (hasVideo) {
+  //         if (showVideo) {
+  //           currentFile = firstFile; // Mostra vídeo
+  //         } else {
+  //           currentFile = hasCapa ? files[1] : firstFile; // Mostra capa se existir
+  //         }
+  //       } else {
+  //         currentFile = firstFile; // Se não for vídeo, mostra o que tem
+  //       }
+  //       break;
+
+  //     case "post":
+  //       // POST: sempre o único arquivo
+  //       currentFile = files[0];
+  //       break;
+
+  //     case "carousel":
+  //     case "stories":
+  //       // CAROUSEL/STORIES: usa currentFileIndex normalmente
+  //       currentFile = files[0];
+  //       break;
+
+  //     default:
+  //       // Outros: lógica atual
+  //       currentFile = files[0];
+  //   }
+  // }
 
   return (
     <div
-      className={`group/action relative overflow-hidden ${aspect === "feed" ? "aspect-4/5" : ""}`}
+      className={`relative overflow-hidden ${aspect === "feed" ? "aspect-4/5" : ""}`}
     >
-      {currentFile &&
+      {renderContent}
+      {/* {currentFile &&
       !["", "null", null].find((p) => p === currentFile.preview) ? (
         // Show current file based on index
         currentFile?.type === "image" ? (
@@ -522,7 +687,7 @@ export const Content = ({
         )
       ) : (
         <Post className={className} action={action} colors={partner!.colors} />
-      )}
+      )} */}
       {showFinished && action.state === "finished" && (
         <FinishedCheck className="absolute top-2 left-2" size="sm" />
       )}
