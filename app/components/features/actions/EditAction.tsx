@@ -1,5 +1,5 @@
 import { EditIcon, Grid3x3Icon, SaveIcon, TextIcon, XIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Description,
   Header,
@@ -27,6 +27,7 @@ export default function EditAction({
   const [editingAction, setEditingAction] = useState(action);
   const submit = useSubmit();
   const navigate = useNavigate();
+  const editorRef = useRef<any>(null);
 
   async function handleSave(editingAction: Action) {
     const data = { ...editingAction };
@@ -115,6 +116,7 @@ export default function EditAction({
               setAction={setEditingAction}
               partner={partner}
               isWorking={false}
+              editorRef={editorRef}
             />
           </div>
         ) : (

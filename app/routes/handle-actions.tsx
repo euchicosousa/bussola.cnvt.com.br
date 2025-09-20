@@ -39,6 +39,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       user_id: values["user_id"].toString(),
       color: values["color"].toString(),
       instagram_caption: "",
+      content_files: null,
+      work_files: null,
     };
 
     const { data, error } = await supabase
@@ -87,6 +89,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       //@ts-ignore
       values["files"] = null;
     }
+
+    // Handle content_files
+    if (values["content_files"] && values["content_files"] !== "null" && values["content_files"] !== "") {
+      //@ts-ignore
+      values["content_files"] = values["content_files"].toString().split(",").filter(Boolean);
+    } else {
+      //@ts-ignore
+      values["content_files"] = null;
+    }
+
+    // Handle work_files
+    if (values["work_files"] && values["work_files"] !== "null" && values["work_files"] !== "") {
+      //@ts-ignore
+      values["work_files"] = values["work_files"].toString().split(",").filter(Boolean);
+    } else {
+      //@ts-ignore
+      values["work_files"] = null;
+    }
+
     if (values["responsibles"] !== "null") {
       //@ts-ignore
       values["responsibles"] = values["responsibles"].toString().split(",");

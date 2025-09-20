@@ -432,12 +432,9 @@ export const Content = ({
   showFinished,
   dateDisplay,
   currentFileIndex = 0,
+  showVideo = false,
 }: {
-  action:
-    | Action
-    | (Action & {
-        previews: { preview: string; type: string }[] | null;
-      });
+  action: Action;
   aspect: "feed" | "full";
   partner: Partner;
   className?: string;
@@ -445,22 +442,55 @@ export const Content = ({
   showFinished?: boolean;
   dateDisplay?: DateDisplay;
   currentFileIndex?: number;
+  showVideo?: boolean;
 }) => {
   let files =
-    "previews" in action && action.previews
-      ? action.previews
-      : action.files && action.files[0]
-        ? action.files.map((f: any) => ({
-            preview: f,
-            type: getTypeOfTheContent(f),
-          }))
-        : undefined;
+    action.content_files && action.content_files[0]
+      ? action.content_files.map((f: any) => ({
+          preview: f,
+          type: getTypeOfTheContent(f),
+        }))
+      : undefined;
+  // Lógica de seleção de arquivo por categoria
+  let currentFile;
 
-  let isPreview = !(action.files !== null && action.files[0] !== "");
-  let currentFile =
-    files && files.length > currentFileIndex
-      ? files[currentFileIndex]
-      : files?.[0];
+  if (files && files.length > 0) {
+    const category = action.category;
+
+    switch(category) {
+      case 'reels':
+        // REELS: lógica específica vídeo/capa
+        const firstFile = files[0];
+        const hasVideo = firstFile?.type === "video";
+        const hasCapa = files.length > 1;
+
+        if (hasVideo) {
+          if (showVideo) {
+            currentFile = firstFile; // Mostra vídeo
+          } else {
+            currentFile = hasCapa ? files[1] : firstFile; // Mostra capa se existir
+          }
+        } else {
+          currentFile = firstFile; // Se não for vídeo, mostra o que tem
+        }
+        break;
+
+      case 'post':
+        // POST: sempre o único arquivo
+        currentFile = files[0];
+        break;
+
+      case 'carousel':
+      case 'stories':
+        // CAROUSEL/STORIES: usa currentFileIndex normalmente
+        currentFile = files.length > currentFileIndex ? files[currentFileIndex] : files[0];
+        break;
+
+      default:
+        // Outros: lógica atual
+        currentFile = files.length > currentFileIndex ? files[currentFileIndex] : files[0];
+    }
+  }
   let isFile =
     currentFile && !["", "null", null].find((p) => p === currentFile.preview);
 
@@ -475,7 +505,7 @@ export const Content = ({
           <img
             src={`${currentFile.preview}`}
             className={cn(
-              `object-cover transition-opacity ${isPreview && "opacity-50"} ${aspect === "feed" ? "aspect-4/5" : ""}`,
+              `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
               className,
             )}
             style={{ backgroundColor: action.color }}
@@ -567,10 +597,10 @@ function ContentLowerBar({
   return (
     <div
       className={`absolute bottom-0 left-0 flex w-full justify-between gap-2 overflow-hidden rounded-b-md p-2 pt-8 text-xs font-semibold drop-shadow-xs transition-opacity ${
-        action.files?.length ? "drop-shadow-sm" : ""
+        action.content_files?.length ? "drop-shadow-sm" : ""
       } `}
       style={
-        action.files?.length
+        action.content_files?.length
           ? ({
               color: "white",
               "--drop-shadow-xs": "0 1px 1px rgb(0 0 0 / 0.5)",
@@ -799,7 +829,7 @@ export function getTotalPayment(actions: Action[]): string {
     if (!action.description) return sum;
 
     // Remove tags HTML
-    const cleanText = action.description.replace(/<[^>]*>/g, '').trim();
+    const cleanText = action.description.replace(/<[^>]*>/g, "").trim();
 
     // Converte diretamente para número
     const numValue = Number(cleanText);
@@ -809,8 +839,8 @@ export function getTotalPayment(actions: Action[]): string {
   }, 0);
 
   // Formata como moeda brasileira
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
   }).format(total);
 }

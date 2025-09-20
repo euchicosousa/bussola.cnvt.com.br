@@ -58,6 +58,7 @@ export const links: Route.LinksFunction = () => [
 
 function AppWithTheme({ children }: { children: React.ReactNode }) {
   const [theme] = useTheme();
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="pt-br" className={clsx(theme)}>
@@ -72,6 +73,11 @@ function AppWithTheme({ children }: { children: React.ReactNode }) {
 
         <Meta />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.ENV = ${JSON.stringify(data.env)}`,
+          }}
+        />
       </head>
       <body>
         {children}

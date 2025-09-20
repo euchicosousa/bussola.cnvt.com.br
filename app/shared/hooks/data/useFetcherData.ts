@@ -64,8 +64,14 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           instagram_caption: String(fetcher.formData?.get("instagram_caption")),
           color: String(fetcher.formData?.get("color")),
           files: String(fetcher.formData?.get("files")).split(","),
-          archived: fetcher.formData?.has("archived") 
-            ? Boolean(fetcher.formData.get("archived")) 
+          content_files: fetcher.formData?.get("content_files")
+            ? String(fetcher.formData.get("content_files")).split(",")
+            : null,
+          work_files: fetcher.formData?.get("work_files")
+            ? String(fetcher.formData.get("work_files")).split(",")
+            : null,
+          archived: fetcher.formData?.has("archived")
+            ? Boolean(fetcher.formData.get("archived"))
             : null,
           partners: String(fetcher.formData?.get("partners")).split(","),
           topics: String(fetcher.formData?.get("topics"))

@@ -14,25 +14,26 @@ import {
 
 import { ptBR } from "date-fns/locale";
 import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DownloadIcon,
-  ImageIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  FilesIcon,
   LightbulbIcon,
   Link2Icon,
-  Loader2Icon,
   SaveIcon,
   SlidersIcon,
   SparklesIcon,
   Trash2Icon,
-  TrashIcon,
+  UploadCloudIcon,
+  XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useDropzone } from "react-dropzone-esm";
 import invariant from "tiny-invariant";
 
 import Tiptap from "~/components/features/content/Tiptap";
+import {
+  CloudinaryUpload,
+  type CloudinaryUploadResult,
+} from "~/components/ui/cloudinary-upload";
 
 import { PopoverPortal, PopoverTrigger } from "@radix-ui/react-popover";
 import {
@@ -43,10 +44,7 @@ import {
   StateDropdown,
   TopicsAction,
 } from "~/components/features/actions/CreateAction";
-import {
-  AlertProvider,
-  useAlert,
-} from "~/components/features/actions/shared/UnifiedAlertDialog";
+
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -87,7 +85,6 @@ import {
   getInstagramFeed,
   getPartners,
   getQueryString,
-  getTypeOfTheContent,
   Icons,
   isInstagramFeed,
 } from "~/lib/helpers";
@@ -95,7 +92,6 @@ import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
-import { Input } from "~/components/ui/input";
 
 export const config = { runtime: "edge" };
 
@@ -142,16 +138,165 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
   ];
 };
 
-function ActionPageContent() {
-  const {
-    action: baseAction,
-    partner,
-    topics,
-  } = useLoaderData<typeof loader>();
+// Componente do item de arquivo
+function FileItem({
+  file,
+  index,
+  canReorder,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onRemove,
+}: {
+  file: string;
+  index: number;
+  canReorder: boolean;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onRemove: () => void;
+}) {
+  const isVideo = file.includes(".mp4") || file.includes("video");
+  const fileName = file.split("/").pop() || "Arquivo";
+
+  return (
+    <div className="bg-card flex items-center gap-3 rounded-lg border p-3">
+      {canReorder && (
+        <div className="flex flex-col gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="text-muted-foreground hover:text-foreground h-6 w-6 p-0 disabled:opacity-30"
+          >
+            <ArrowUpIcon className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="text-muted-foreground hover:text-foreground h-6 w-6 p-0 disabled:opacity-30"
+          >
+            <ArrowDownIcon className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+
+      <div className="flex-shrink-0">
+        {isVideo ? (
+          <video
+            src={file}
+            className="h-12 w-12 rounded border object-cover"
+            muted
+          />
+        ) : (
+          <img
+            src={file}
+            alt={fileName}
+            className="h-12 w-12 rounded border object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = "none";
+            }}
+          />
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{fileName}</p>
+        <p className="text-muted-foreground text-xs">
+          {isVideo ? "Vídeo" : "Imagem"} • Posição {index + 1}
+        </p>
+      </div>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onRemove}
+        className="text-muted-foreground hover:text-destructive"
+      >
+        <XIcon className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+// Componente do popover de edição de arquivos de conteúdo
+function ContentFilesPopover({
+  tempContentFiles,
+  setTempContentFiles,
+  removeContentFileFromTemp,
+  moveContentFile,
+  cancelContentFilesChanges,
+  saveContentFilesChanges,
+  category,
+}: {
+  tempContentFiles: string[];
+  setTempContentFiles: (files: string[]) => void;
+  removeContentFileFromTemp: (index: number) => void;
+  moveContentFile: (fromIndex: number, toIndex: number) => void;
+  cancelContentFilesChanges: () => void;
+  saveContentFilesChanges: () => void;
+  category: string;
+}) {
+  const canReorder = category === "carousel" || category === "stories";
+
+  return (
+    <div className="flex flex-col">
+      <div className="border-b p-4">
+        <h4 className="font-semibold">Editar Arquivos de Conteúdo</h4>
+        <p className="text-muted-foreground text-sm">
+          {canReorder
+            ? "Use as setas para reordenar e clique no X para remover"
+            : "Clique no X para remover"}
+        </p>
+      </div>
+
+      <div className="max-h-80 overflow-y-auto p-4">
+        {tempContentFiles.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center">
+            Nenhum arquivo de conteúdo
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {tempContentFiles.map((file: string, index: number) => (
+              <FileItem
+                key={file}
+                file={file}
+                index={index}
+                canReorder={canReorder}
+                isFirst={index === 0}
+                isLast={index === tempContentFiles.length - 1}
+                onMoveUp={() => moveContentFile(index, index - 1)}
+                onMoveDown={() => moveContentFile(index, index + 1)}
+                onRemove={() => removeContentFileFromTemp(index)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-2 border-t p-4">
+        <Button variant="outline" size="sm" onClick={cancelContentFilesChanges}>
+          Cancelar
+        </Button>
+        <Button size="sm" onClick={saveContentFilesChanges}>
+          Salvar Alterações
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function ActionPage() {
+  const { action: baseAction, partner } = useLoaderData<typeof loader>();
 
   const [action, setAction] = useState(baseAction);
-  const { confirmDelete, showWarning } = useAlert();
-  const submit = useSubmit();
+
+  const [tempContentFiles, setTempContentFiles] = useState<string[]>([]);
 
   const matches = useMatches();
 
@@ -189,13 +334,10 @@ function ActionPageContent() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      let hasChanges = false;
-
       // Verificar title
       if (action.title !== lastSavedTextValues.current.title) {
         saveField("title", action.title);
         lastSavedTextValues.current.title = action.title;
-        hasChanges = true;
       }
 
       // Verificar instagram_caption
@@ -206,7 +348,6 @@ function ActionPageContent() {
         saveField("instagram_caption", action.instagram_caption);
         lastSavedTextValues.current.instagram_caption =
           action.instagram_caption;
-        hasChanges = true;
       }
     }, 5000);
 
@@ -291,7 +432,13 @@ function ActionPageContent() {
             partner={partner}
             editorRef={editorRef}
           />
-
+          {/* Upload de arquivos - apenas para Instagram */}
+          <FileUploadSection
+            action={action}
+            setAction={setAction}
+            saveField={saveField}
+            partner={partner}
+          />
           {/* Arquivos e Legenda */}
         </div>
         <RightSide
@@ -308,17 +455,8 @@ function ActionPageContent() {
         isWorking={isWorking}
         partner={partner}
         saveField={saveField}
-        showWarning={showWarning}
       />
     </div>
-  );
-}
-
-export default function ActionPage() {
-  return (
-    <AlertProvider>
-      <ActionPageContent />
-    </AlertProvider>
   );
 }
 
@@ -701,279 +839,21 @@ function RightSide({
 }) {
   const instagramCaptionRef = useRef<HTMLTextAreaElement>(null);
 
-  const [files, setFiles] = useState<{
-    previews: { type: string; preview: string }[];
-    files: string[];
-  } | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [currentFileIndex, setCurrentFileIndex] = useState(0);
-
   const [length, setLength] = useState(120);
 
-  const hasMultipleFiles =
-    (action.files?.length || 0) > 1 || (files?.files?.length || 0) > 1;
-  const totalFiles = (action.files?.length || 0) + (files?.files?.length || 0);
-
   const fetcher = useFetcher({ key: "action-page" });
-  const { getInputProps, getRootProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      // Clear previous errors and start upload
-      setUploadError(null);
-      setIsUploading(true);
-
-      // Client-side validation
-      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-      const allowedExtensions = ["jpg", "jpeg", "png", "mov", "mp4"];
-
-      for (const file of acceptedFiles) {
-        const fileName = file.name || "unknown";
-
-        if (file.size > MAX_FILE_SIZE) {
-          setUploadError(
-            `Arquivo ${fileName} é muito grande. Tamanho máximo: 10MB`,
-          );
-          setIsUploading(false);
-          return;
-        }
-
-        const extension = fileName.toLowerCase().split(".").pop();
-        if (!extension || !allowedExtensions.includes(extension)) {
-          setUploadError(
-            `Tipo de arquivo não permitido: ${fileName}. Tipos aceitos: ${allowedExtensions.join(", ")}`,
-          );
-          setIsUploading(false);
-          return;
-        }
-      }
-
-      const previews = acceptedFiles.map((f) => ({
-        preview: URL.createObjectURL(f),
-        type: getTypeOfTheContent(f.name || "unknown"),
-      }));
-      const filenames = acceptedFiles.map((f) => f.name || "unknown");
-
-      setFiles({
-        previews,
-        files: filenames,
-      });
-
-      // Create FormData and submit
-      const formData = new FormData();
-      acceptedFiles.forEach((file) => formData.append("files", file));
-      formData.append("intent", INTENTS.uploadFiles);
-      formData.append("partner", partner.slug);
-      formData.append("actionId", action.id);
-      formData.append("filenames", filenames.join(","));
-      formData.append(
-        "title",
-        action.title
-          .toLocaleLowerCase()
-          .replace(/\s/g, "-")
-          .replace(/[^0-9a-z-]/g, ""),
-      );
-
-      // Use handle-actions endpoint
-      fetch("/handle-actions", {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.success && data.data) {
-            setAction(data.data);
-            setFiles(null);
-            setUploadError(null);
-            setUploadSuccess(true);
-            setCurrentFileIndex(0); // Reset carousel index
-
-            // Hide success message after 2 seconds
-            setTimeout(() => setUploadSuccess(false), 2000);
-          } else if (data.error) {
-            setUploadError(data.error);
-          }
-        })
-        .catch((error) => {
-          setUploadError(error.message);
-        })
-        .finally(() => {
-          setIsUploading(false);
-        });
-    },
-  });
 
   return isInstagramFeed(action.category, true) ? (
     <div className="relative mt-8 w-full lg:mt-0 lg:w-1/4 lg:overflow-hidden lg:overflow-y-auto">
-      {/* Arquivo */}
-      {action.category !== "stories" && (
-        <>
-          <div className="relative min-h-[50px] overflow-hidden rounded">
-            <Content
-              action={{
-                ...action,
-                previews: files ? files.previews : null,
-              }}
-              aspect="feed"
-              partner={partner}
-              currentFileIndex={currentFileIndex}
-            />
+      <div className="relative mb-2">
+        <Content
+          action={action}
+          aspect="feed"
+          partner={partner}
+          className="rounded-2xl"
+        />
+      </div>
 
-            <div {...getRootProps()} className="absolute top-0 h-full w-full">
-              <input {...getInputProps()} multiple />
-
-              {isUploading && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center rounded bg-black/50 text-white">
-                  <Loader2Icon className="mb-2 size-8 animate-spin" />
-                  <span className="text-sm font-medium">
-                    Enviando arquivo...
-                  </span>
-                </div>
-              )}
-
-              {uploadSuccess && (
-                <div className="absolute inset-0 flex items-center justify-center rounded bg-green-500/90 text-white">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="size-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="font-medium">
-                      Arquivo enviado com sucesso!
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {uploadError && (
-                <div className="absolute inset-0 flex items-center justify-center rounded bg-red-500/80 p-4 text-center text-sm text-white">
-                  <div>
-                    <p className="mb-2 font-medium">Erro no upload:</p>
-                    <p>{uploadError}</p>
-                    <button
-                      onClick={() => setUploadError(null)}
-                      className="mt-2 rounded bg-white/20 px-3 py-1 text-xs hover:bg-white/30"
-                    >
-                      Fechar
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Carousel Navigation - Center positioned */}
-              {hasMultipleFiles && (
-                <>
-                  {/* Left Navigation Button */}
-                  {currentFileIndex > 0 && (
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        setCurrentFileIndex((prev) => prev - 1);
-                      }}
-                      className="absolute top-1/2 left-2 z-10 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-content-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70"
-                    >
-                      <ChevronLeftIcon className="size-5" />
-                    </button>
-                  )}
-
-                  {/* Right Navigation Button */}
-                  {currentFileIndex < totalFiles - 1 && (
-                    <button
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        event.preventDefault();
-                        setCurrentFileIndex((prev) => prev + 1);
-                      }}
-                      className="absolute top-1/2 right-2 z-10 grid h-8 w-8 -translate-y-1/2 cursor-pointer place-content-center rounded-full bg-black/50 text-white transition-all hover:bg-black/70"
-                    >
-                      <ChevronRightIcon className="size-5" />
-                    </button>
-                  )}
-
-                  {/* Dots indicator */}
-                  <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
-                    {Array.from({ length: totalFiles }).map((_, index) => (
-                      <div
-                        key={index}
-                        className={`h-1.5 w-1.5 rounded-full transition-all ${
-                          index === currentFileIndex
-                            ? "bg-white"
-                            : "bg-white/50"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {isDragActive &&
-              !isUploading &&
-              !uploadError &&
-              !uploadSuccess ? (
-                <div className="from-background/80 grid h-full w-full place-content-center bg-linear-to-b">
-                  <ImageIcon className="size-12 opacity-75" />
-                </div>
-              ) : (
-                <div
-                  className="flex items-center justify-end gap-2 p-2 text-right text-xs text-white"
-                  style={{
-                    textShadow: "rgba(0,0,0,0.5) 0px 1px 3px",
-                  }}
-                >
-                  {action.files || files ? (
-                    <>
-                      <button
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          event.preventDefault();
-                          setAction({
-                            ...action,
-                            files: null,
-                          });
-                          setFiles(null);
-                          setCurrentFileIndex(0);
-                        }}
-                        className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
-                      >
-                        <TrashIcon className="size-4" />
-                      </button>
-                      {action.files && action.files.length && (
-                        <button
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            event.preventDefault();
-
-                            const fileUrl =
-                              action.files![currentFileIndex] ||
-                              action.files![0];
-                            window.open(fileUrl, "_blank");
-                          }}
-                          className="grid h-6 w-6 cursor-pointer place-content-center rounded-sm p-1 text-white drop-shadow-xs drop-shadow-black/50 hover:drop-shadow-sm hover:drop-shadow-black/75"
-                        >
-                          <DownloadIcon className="size-4" />
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <>Arraste seus arquivos para cá.</>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-          {/* <LikeFooter liked={action.state === "finished"} /> */}
-        </>
-      )}
       {/* Legenda */}
       <div className="flex items-center justify-between gap-2">
         <div className="text-xs font-bold tracking-wider uppercase">
@@ -1162,14 +1042,12 @@ export function LowerBar({
   isWorking,
   partner,
   saveField,
-  showWarning,
 }: {
   action: Action;
   setAction: (action: Action) => void;
   isWorking: boolean;
   partner: Partner;
   saveField: (field: string, value: any) => void;
-  showWarning: (message: string) => void;
 }) {
   const matches = useMatches();
   const submit = useSubmit();
@@ -1298,9 +1176,9 @@ export function LowerBar({
           onCheckedChange={(responsibles) => {
             // Verificar se está tentando remover o último responsável
             if (responsibles.length === 0) {
-              showWarning(
-                "É necessário ter pelo menos um responsável pela ação",
-              );
+              // showWarning(
+              //   "É necessário ter pelo menos um responsável pela ação",
+              // );
               return; // Não permitir a remoção
             }
 
@@ -1591,7 +1469,7 @@ function PopoverParameters({
                         <CommandItem
                           key={parametro.title}
                           value={parametro.title}
-                          onSelect={(value) => {
+                          onSelect={() => {
                             setSuggestion({
                               title: parametro.title,
                               values: parametro.values,
@@ -1640,13 +1518,6 @@ function PopoverParameters({
     </Popover>
   );
 }
-
-type Parametro = {
-  id: number;
-  title: string;
-  description: string;
-  values: ParametroValue[];
-};
 
 type ParametroValue = {
   id: number;
@@ -1699,25 +1570,181 @@ function IntensityRange({
   );
 }
 
-function ParametroDropdown({ parametro }: { parametro: Parametro }) {
-  const [value, setValue] = useState<ParametroValue>();
+function FileUploadSection({
+  action,
+  setAction,
+  saveField,
+  partner,
+}: {
+  action: Action;
+  setAction: (action: Action) => void;
+  saveField: (field: string, value: any) => void;
+  partner: Partner;
+}) {
+  const handleContentUpload = (results: CloudinaryUploadResult[]) => {
+    const newFiles = results
+      .map((result) => result.uploadInfo?.secure_url || result.secure_url)
+      .filter(Boolean);
+
+    const category = action.category;
+    const currentFiles = action.content_files || [];
+    let updatedContentFiles: string[] = [];
+
+    switch (category) {
+      case "post":
+        updatedContentFiles = newFiles.slice(0, 1);
+        break;
+      case "reels":
+        const hasVideo = newFiles.some(
+          (file) => file.includes(".mp4") || file.includes("video"),
+        );
+        if (hasVideo) {
+          const videos = newFiles.filter(
+            (file) => file.includes(".mp4") || file.includes("video"),
+          );
+          const images = newFiles.filter(
+            (file) => !file.includes(".mp4") && !file.includes("video"),
+          );
+          updatedContentFiles = [...videos.slice(0, 1), ...images.slice(0, 1)];
+        } else {
+          updatedContentFiles = [...currentFiles, ...newFiles].slice(0, 2);
+        }
+        break;
+      case "carousel":
+        updatedContentFiles = [...currentFiles, ...newFiles].slice(0, 20);
+        break;
+      case "stories":
+        updatedContentFiles = [...currentFiles, ...newFiles].slice(0, 10);
+        break;
+      default:
+        updatedContentFiles = newFiles;
+    }
+
+    setAction({
+      ...action,
+      content_files:
+        updatedContentFiles.length > 0 ? updatedContentFiles : null,
+      updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+    });
+    saveField(
+      "content_files",
+      updatedContentFiles.length > 0 ? updatedContentFiles : null,
+    );
+  };
+
+  const handleWorkUpload = (results: CloudinaryUploadResult[]) => {
+    const newFiles = results
+      .map((result) => result.uploadInfo?.secure_url || result.secure_url)
+      .filter(Boolean);
+
+    const currentFiles = action.work_files || [];
+    const updatedWorkFiles = [...currentFiles, ...newFiles].slice(0, 5);
+
+    setAction({
+      ...action,
+      work_files: updatedWorkFiles.length > 0 ? updatedWorkFiles : null,
+      updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+    });
+    saveField(
+      "work_files",
+      updatedWorkFiles.length > 0 ? updatedWorkFiles : null,
+    );
+  };
+
+  const maxContentFiles =
+    action.category === "post"
+      ? 1
+      : action.category === "reels"
+        ? 2
+        : action.category === "carousel"
+          ? 20
+          : action.category === "stories"
+            ? 10
+            : 5;
+
+  const currentContentCount = action.content_files?.length || 0;
+  const currentWorkCount = action.work_files?.length || 0;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2">
-        {value?.value} <ChevronDownIcon className="size-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-content">
-        {parametro.values.map((value: ParametroValue) => (
-          <DropdownMenuItem
-            key={value.id}
-            className="bg-item"
-            onSelect={() => setValue(value)}
-          >
-            {value.value}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="mt-2 space-y-4">
+      <div className="flex shrink-0 items-center justify-between gap-8 overflow-hidden">
+        <div className="text-muted-foreground overflow-hidden text-sm text-ellipsis whitespace-nowrap">
+          Faça o upload dos arquivos aqui
+        </div>
+
+        <div className="flex gap-2">
+          {isInstagramFeed(action.category, true) && (
+            <div className="flex gap-[1px] overflow-hidden">
+              <CloudinaryUpload
+                onUploadSuccess={handleContentUpload}
+                maxFiles={Math.max(0, maxContentFiles - currentContentCount)}
+                allowedTypes={["image", "video"]}
+                partnerSlug={partner.slug}
+              >
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className={cn(
+                    "overflow-hidden",
+                    currentContentCount > 0 && "rounded-r-none",
+                  )}
+                >
+                  <UploadCloudIcon />
+                  <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                    Conteúdo ({currentContentCount}/{maxContentFiles})
+                  </div>
+                </Button>
+              </CloudinaryUpload>
+              {currentContentCount > 0 && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="rounded-l-none"
+                >
+                  <FilesIcon />
+                </Button>
+              )}
+            </div>
+          )}
+          <div className="flex gap-[1px] overflow-hidden">
+            <CloudinaryUpload
+              onUploadSuccess={handleWorkUpload}
+              maxFiles={5}
+              allowedTypes={[
+                "image",
+                "video",
+                "pdf",
+                "doc",
+                "docx",
+                "xls",
+                "xlsx",
+                "ppt",
+                "pptx",
+              ]}
+              partnerSlug={partner.slug}
+            >
+              <Button
+                variant="secondary"
+                size="sm"
+                className={cn(
+                  "overflow-hidden",
+                  currentWorkCount > 0 && "rounded-r-none",
+                )}
+              >
+                <UploadCloudIcon />
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                  Trabalho ({currentWorkCount})
+                </div>
+              </Button>
+            </CloudinaryUpload>
+            {currentWorkCount > 0 && (
+              <Button variant="secondary" size="sm" className="rounded-l-none">
+                <FilesIcon />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

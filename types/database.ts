@@ -20,6 +20,7 @@ export type Database = {
           caption: string | null
           category: string
           color: string
+          content_files: string[] | null
           created_at: string
           date: string
           description: string | null
@@ -37,12 +38,14 @@ export type Database = {
           topics: number[] | null
           updated_at: string
           user_id: string
+          work_files: string[] | null
         }
         Insert: {
           archived?: boolean | null
           caption?: string | null
           category: string
           color?: string
+          content_files?: string[] | null
           created_at: string
           date: string
           description?: string | null
@@ -60,12 +63,14 @@ export type Database = {
           topics?: number[] | null
           updated_at: string
           user_id?: string
+          work_files?: string[] | null
         }
         Update: {
           archived?: boolean | null
           caption?: string | null
           category?: string
           color?: string
+          content_files?: string[] | null
           created_at?: string
           date?: string
           description?: string | null
@@ -83,6 +88,7 @@ export type Database = {
           topics?: number[] | null
           updated_at?: string
           user_id?: string
+          work_files?: string[] | null
         }
         Relationships: []
       }
@@ -410,7 +416,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      buscar_actions: {
+        Args: { query: string }
+        Returns: {
+          archived: boolean | null
+          caption: string | null
+          category: string
+          color: string
+          content_files: string[] | null
+          created_at: string
+          date: string
+          description: string | null
+          files: string[] | null
+          id: string
+          instagram_caption: string | null
+          instagram_content: string | null
+          instagram_date: string
+          partners: string[]
+          priority: string
+          responsibles: string[]
+          state: string
+          time: number
+          title: string
+          topics: number[] | null
+          updated_at: string
+          user_id: string
+          work_files: string[] | null
+        }[]
+      }
     }
     Enums: {
       sow: "marketing" | "socialmedia" | "demand"
