@@ -23,6 +23,7 @@ export function GridOfActions({ actions, partner }: GridOfActionsProps) {
             action={action}
             variant={VARIANTS.GRID}
             partner={partner}
+            imageSize="thumbnail"
           />
         ))}
       </div>

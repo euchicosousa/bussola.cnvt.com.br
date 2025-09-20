@@ -700,6 +700,7 @@ function RightSide({
           aspect="feed"
           partner={partner}
           className="rounded-2xl"
+          imageSize="preview"
         />
       </div>
 

@@ -68,6 +68,7 @@ interface NewActionProps {
   partner?: Partner; // Para ActionGrid
   isInstagramDate?: boolean; // Para usar instagram_date quando appropriado
   className?: string;
+  imageSize?: "thumbnail" | "mini" | "preview" | "full";
 }
 
 /**
@@ -93,6 +94,7 @@ export const ActionItem = React.memo(function ActionItem({
   handleEditingAction,
   isInstagramDate,
   className,
+  imageSize,
 }: NewActionProps) {
   // Shared state
   const submit = useSubmit();
@@ -297,6 +299,7 @@ export const ActionItem = React.memo(function ActionItem({
                 showInfo
                 dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
                 className={`the-action-content aspect-[4/5] overflow-hidden rounded-md hover:opacity-75`}
+                imageSize={imageSize}
               />
 
               <div className="late-border border-background ring-error absolute inset-0 hidden rounded-md border ring-2"></div>

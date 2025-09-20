@@ -433,8 +433,8 @@ export const Content = ({
   showInfo,
   showFinished,
   dateDisplay,
-
   showVideo = false,
+  imageSize = "mini",
 }: {
   action: Action;
   aspect: "feed" | "full";
@@ -443,9 +443,46 @@ export const Content = ({
   showInfo?: boolean;
   showFinished?: boolean;
   dateDisplay?: DateDisplay;
-
   showVideo?: boolean;
+  imageSize?: "thumbnail" | "mini" | "preview" | "full";
 }) => {
+  const isCloudinaryUrl = (url: string): boolean => {
+    return url.includes("cloudinary.com") || url.includes("res.cloudinary.com");
+  };
+
+  const optimizeCloudinaryUrl = (
+    url: string,
+    imageSize: "thumbnail" | "mini" | "preview" | "full",
+  ) => {
+    if (!isCloudinaryUrl(url)) {
+      return url; // Bunny ou outras URLs ficam inalteradas
+    }
+
+    // Full não tem limite - retorna URL original
+    if (imageSize === "full") {
+      return url;
+    }
+
+    // Define larguras apenas para thumb e preview
+    const width =
+      imageSize === "thumbnail"
+        ? 150
+        : imageSize === "mini"
+          ? 200
+          : imageSize === "preview"
+            ? 300
+            : 150;
+
+    if (url.includes("/image/upload/")) {
+      return url.replace(
+        "/image/upload/",
+        `/image/upload/w_${width},c_fill,f_auto,q_auto/`,
+      );
+    }
+
+    return url;
+  };
+
   let renderContent = (
     <Post className={className} action={action} colors={partner!.colors} />
   );
@@ -487,7 +524,7 @@ export const Content = ({
         renderContent =
           currentFile?.type === "image" ? (
             <img
-              src={currentFile.preview}
+              src={optimizeCloudinaryUrl(currentFile.preview, imageSize)}
               className={cn(
                 `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
                 className,
@@ -512,9 +549,9 @@ export const Content = ({
         if (currentFile?.type === "image") {
           renderContent = (
             <img
-              src={currentFile.preview}
+              src={optimizeCloudinaryUrl(currentFile.preview, imageSize)}
               className={cn(
-                `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
                 className,
               )}
               style={{ backgroundColor: action.color }}
@@ -540,7 +577,7 @@ export const Content = ({
                   <div key={index} className="w-full flex-shrink-0">
                     {file.type === "image" ? (
                       <img
-                        src={file.preview}
+                        src={optimizeCloudinaryUrl(file.preview, imageSize)}
                         className={cn(
                           `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
                           className,
