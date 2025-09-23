@@ -4,6 +4,9 @@ export interface BaseComponentProps {
   children?: React.ReactNode;
 }
 
+// Image size types
+export type ImageSize = "thumbnail" | "mini" | "preview" | "full";
+
 // Action related types
 export interface ActionComponentProps extends BaseComponentProps {
   action?: any; // TODO: Define proper action type

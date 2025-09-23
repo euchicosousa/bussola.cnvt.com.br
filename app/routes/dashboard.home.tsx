@@ -108,7 +108,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .order("title", { ascending: true }),
     supabase
       .from("actions")
-      .select("category, state, date, partners, instagram_date")
+      .select("id, category, state, date, partners, instagram_date")
       .is("archived", false)
       .contains("responsibles", person?.admin ? [] : [user.id])
       .containedBy("partners", partners.map((p) => p.slug)!)
@@ -310,7 +310,7 @@ function Partners({ actions }: { actions?: Action[] }) {
   );
 }
 
-const ActionsProgress = () => {
+function ActionsProgress() {
   const matches = useMatches();
 
   const { actions } = matches[2].data as DashboardIndexType;
@@ -381,7 +381,7 @@ const ActionsProgress = () => {
       </div>
     </div>
   );
-};
+}
 
 function Sprint() {
   const matches = useMatches();

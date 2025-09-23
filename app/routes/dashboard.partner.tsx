@@ -35,12 +35,11 @@ import {
   Rows3Icon,
   Rows4Icon,
   SearchIcon,
-  StarIcon,
   TimerIcon,
   UserIcon,
   UsersIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   type LoaderFunctionArgs,
   type MetaFunction,
@@ -80,6 +79,7 @@ import {
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  pointerWithin,
   useDroppable,
   useSensor,
   useSensors,
@@ -93,15 +93,16 @@ import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
   AvatarGroup,
-  Icons,
   getCategoriesQueryString,
   getInstagramFeed,
   getResponsibles,
+  Icons,
   sortActions,
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
-import { createPortal } from "react-dom";
+import { DraggableItem } from "~/components/features/actions/shared/DraggableItem";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 export const config = { runtime: "edge" };
 
@@ -132,8 +133,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let { data } = await supabase
     .from("people")
     .select("*")
-    .match({ user_id: user.id })
-    .returns<Person[]>();
+    .match({ user_id: user.id });
 
   invariant(data);
 
@@ -147,20 +147,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .is("archived", false)
         .contains("responsibles", person?.admin ? [] : [user.id])
         .contains("partners", [params["partner"]!])
-        .order("title", { ascending: true })
-        .returns<Action[]>(),
+        .order("title", { ascending: true }),
       supabase
         .from("actions")
-        .select("category, state, date")
+        .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
         .contains("responsibles", person?.admin ? [] : [user.id])
-        .contains("partners", [params["partner"]!])
-        .returns<{ category: string; state: string; date: string }[]>(),
-      supabase
-        .from("partners")
-        .select()
-        .match({ slug: params["partner"]! })
-        .returns<Partner[]>(),
+        .contains("partners", [params["partner"]!]),
+      supabase.from("partners").select().match({ slug: params["partner"]! }),
     ]);
   invariant(partners);
 
@@ -184,7 +178,7 @@ export default function Partner() {
   const matches = useMatches();
   const submit = useSubmit();
   const navigate = useNavigate();
-  const id = useId();
+
   const [searchParams, setSearchParams] = useSearchParams(useLocation().search);
   const [responsiblesFilter, setResponsiblesFilter] = useState<string[]>(
     partner.users_ids,
@@ -233,27 +227,6 @@ export default function Partner() {
     ],
   );
 
-  // Hybrid feed handler: instant UX + background URL sync
-  const handleFeedToggle = useCallback(
-    (show: boolean) => {
-      // Update global state FIRST for instant UX
-      setShowFeed(show);
-
-      // Then sync URL in background without blocking user
-      const newParams = new URLSearchParams(searchParams);
-      if (show) {
-        newParams.set("show_feed", "true");
-        // Remove editing if active to avoid conflicts
-        newParams.delete("editing_action");
-        setEditingAction(null);
-      } else {
-        newParams.delete("show_feed");
-      }
-      setSearchParams(newParams, { replace: true });
-    },
-    [searchParams, setSearchParams, setShowFeed, setEditingAction],
-  );
-
   const fullEditingAction = (actions as Action[])?.find(
     (action) => action.id === editingAction,
   );
@@ -292,6 +265,8 @@ export default function Partner() {
   const { actions: pendingActions } = usePendingDataSafe();
   const { actions: deletingIDsActions } = useIDsToRemoveSafe();
 
+  const isMobile = useIsMobile();
+
   // Calcs
 
   const actionsMap = new Map<string, Action>(
@@ -321,7 +296,7 @@ export default function Partner() {
   });
 
   // People of this partner
-  const partnerResponsibles = partner.users_ids
+  const partnerResponsibles = (partner as Partner).users_ids
     .map((user_id) => people.find((person) => person.user_id === user_id))
     .filter((person): person is Person => person !== undefined);
 
@@ -479,12 +454,8 @@ export default function Partner() {
   };
 
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    // document.querySelectorAll("#calendar > div").forEach((element) => {
-    //   (element as HTMLDivElement).style.zIndex = "auto";
-    // });
-
     const newDateString = over?.id as string;
-    setDraggedAction(actions?.find((action) => action.id === active.id)!);
+    // setDraggedAction(actions?.find((action) => action.id === active.id)!);
 
     if (!draggedAction) return;
 
@@ -529,13 +500,20 @@ export default function Partner() {
         },
       );
     }
+
+    setDraggedAction(null);
   };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
+      activationConstraint: isMobile
+        ? {
+            delay: 100,
+            tolerance: 10,
+          }
+        : {
+            distance: 8,
+          },
     }),
   );
 
@@ -1267,7 +1245,7 @@ export default function Partner() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           sensors={sensors}
-          id={id}
+          collisionDetection={pointerWithin}
         >
           <div className="overflow-x-auto overflow-y-hidden">
             <div
@@ -1325,6 +1303,14 @@ export default function Partner() {
               </div>
             </div>
           </div>
+          <DragOverlay
+            dropAnimation={{ duration: 150, easing: "ease-in-out" }}
+            adjustScale={false}
+          >
+            {draggedAction && (
+              <ActionItem action={draggedAction} variant={variant} />
+            )}
+          </DragOverlay>
         </DndContext>
       </div>
 
@@ -1512,23 +1498,25 @@ export const CalendarDay = ({
                       states,
                       isInstagramDate,
                     )?.map((action) => (
-                      <ActionItem
-                        variant={variant}
-                        selectedActions={selectedActions}
-                        editingAction={editingAction}
-                        handleEditingAction={handleEditingAction}
-                        selectMultiple={selectMultiple}
-                        showResponsibles={showResponsibles}
-                        showColor={showColor}
-                        setSelectedActions={setSelectedActions}
-                        showDelay
-                        action={action}
-                        key={action.id}
-                        dateDisplay={{
-                          timeFormat: TIME_FORMAT.WITH_TIME,
-                        }}
-                        isInstagramDate={isInstagramDate}
-                      />
+                      <DraggableItem id={action.id}>
+                        <ActionItem
+                          variant={variant}
+                          selectedActions={selectedActions}
+                          editingAction={editingAction}
+                          handleEditingAction={handleEditingAction}
+                          selectMultiple={selectMultiple}
+                          showResponsibles={showResponsibles}
+                          showColor={showColor}
+                          setSelectedActions={setSelectedActions}
+                          showDelay
+                          action={action}
+                          key={action.id}
+                          dateDisplay={{
+                            timeFormat: TIME_FORMAT.WITH_TIME,
+                          }}
+                          isInstagramDate={isInstagramDate}
+                        />
+                      </DraggableItem>
                     ))}
                   </div>
                 </>
@@ -1662,23 +1650,24 @@ function CategoryActions({
 
       <div className={`flex flex-col gap-1`}>
         {actions?.map((action) => (
-          <ActionItem
-            variant={variant}
-            selectedActions={selectedActions}
-            editingAction={editingAction}
-            handleEditingAction={handleEditingAction}
-            selectMultiple={selectMultiple}
-            showResponsibles={showResponsibles}
-            showColor={showColor}
-            showDelay
-            action={action}
-            key={action.id}
-            dateDisplay={{
-              timeFormat: TIME_FORMAT.WITH_TIME,
-            }}
-            setSelectedActions={setSelectedActions}
-            isInstagramDate={isInstagramDate}
-          />
+          <DraggableItem id={action.id} key={action.id}>
+            <ActionItem
+              variant={variant}
+              selectedActions={selectedActions}
+              editingAction={editingAction}
+              handleEditingAction={handleEditingAction}
+              selectMultiple={selectMultiple}
+              showResponsibles={showResponsibles}
+              showColor={showColor}
+              showDelay
+              action={action}
+              dateDisplay={{
+                timeFormat: TIME_FORMAT.WITH_TIME,
+              }}
+              setSelectedActions={setSelectedActions}
+              isInstagramDate={isInstagramDate}
+            />
+          </DraggableItem>
         ))}
       </div>
     </div>

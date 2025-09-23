@@ -4,7 +4,6 @@ import {
   redirect,
   useOutletContext,
 } from "react-router";
-import type { Config } from "tailwind-merge";
 import Layout from "~/components/features/dashboard/Layout";
 import { createClient } from "~/lib/database/supabase";
 

@@ -39,16 +39,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   }
 
   const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase
-      .from("people")
-      .select("*")
-      .match({ user_id: user.id })
-      .returns<Person[]>(),
-    supabase
-      .from("partners")
-      .select("slug")
-      .match({ archived: false })
-      .returns<Partner[]>(),
+    supabase.from("people").select("*").match({ user_id: user.id }),
+    supabase.from("partners").select("slug").match({ archived: false }),
   ]);
 
   invariant(people);
@@ -68,25 +60,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .containedBy("partners", partners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
       .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
-      .order("title", { ascending: true })
-      .returns<Action[]>(),
+      .order("title", { ascending: true }),
     supabase
       .from("actions")
-      .select("category, state, date, partners, instagram_date")
+      .select("id, category, state, date, partners, instagram_date")
       .is("archived", false)
       .contains("responsibles", person?.admin ? [] : [user.id])
       .containedBy("partners", partners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
-      .returns<
-        {
-          category: string;
-          state: string;
-          date: string;
-          partners: string[];
-          instagram_date: string;
-        }[]
-      >(),
+      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),
   ]);
 
   return { actions, actionsChart };

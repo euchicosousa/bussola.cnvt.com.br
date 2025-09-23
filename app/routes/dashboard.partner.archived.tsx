@@ -41,18 +41,16 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .contains("responsibles", person?.admin ? [] : [user.id])
         .neq("state", "finished")
         .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .order("title", { ascending: true })
-        .returns<Action[]>(),
+        .order("title", { ascending: true }),
 
       supabase
         .from("actions")
-        .select("state, date")
+        .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
         .like("partner", partner_slug || "%")
         .contains("responsibles", person?.admin ? [] : [user.id])
         .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .returns<{ state: string; date: string }[]>(),
+        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss")),
       supabase
         .from("partners")
         .select()
@@ -85,7 +83,10 @@ export default function LatePage() {
         <div className="mx-auto pb-32">
           <ActionsContainer
             actions={actions}
-            dateDisplay={{ dateFormat: DATE_FORMAT.FULL, timeFormat: TIME_FORMAT.WITH_TIME }}
+            dateDisplay={{
+              dateFormat: DATE_FORMAT.FULL,
+              timeFormat: TIME_FORMAT.WITH_TIME,
+            }}
             orderBy="time"
             showCategory
           />

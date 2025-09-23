@@ -13,3 +13,4 @@ export { getNewDateValues } from "~/lib/helpers";
 export { default as CreateAction } from "./CreateAction";
 export { default as EditAction } from "./EditAction";
 export { KanbanView } from "./views/KanbanView";
+export { FilesPopover } from "./shared/FilesPopover";

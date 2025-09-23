@@ -461,24 +461,6 @@ const ActionlistReport = ({ action }: { action: Action }) => {
           )}
         </div>
       </div>
-      {/* {/.(png|jpe?g)/gi.test(action.files[0]) ? (
-              <img src={action.files[0]} />
-            ) : /https:\/\/iframe/.test(action.files[0]) ? (
-              <div className="relative h-80 w-full">
-                <iframe
-                  id="bunny-stream-embed"
-                  src={action.files[0]}
-                  className="absolute bottom-0 left-0 right-0 top-0 h-full w-full"
-                  allowFullScreen={true}
-                ></iframe>
-              </div>
-            ) : (
-              <video
-                src={action.files[0]}
-                className="aspect-9/16 w-full bg-black"
-                controls
-              />
-            )} */}
     </div>
   );
 };

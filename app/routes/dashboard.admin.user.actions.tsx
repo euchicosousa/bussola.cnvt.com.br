@@ -22,16 +22,8 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   invariant(id);
   const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase
-      .from("people")
-      .select("*")
-      .match({ user_id: id })
-      .returns<Person[]>(),
-    supabase
-      .from("partners")
-      .select("slug")
-      .match({ archived: false })
-      .returns<{ slug: string }[]>(),
+    supabase.from("people").select("*").match({ user_id: id }),
+    supabase.from("partners").select("slug").match({ archived: false }),
   ]);
 
   const person = people?.[0];
@@ -45,9 +37,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     .is("archived", false)
     .contains("responsibles", [id])
     .order("date", { ascending: true })
-    .containedBy("partners", partners.map((p) => p.slug)!)
-    .returns<Action[]>();
-
+    .containedBy("partners", partners.map((p) => p.slug)!);
   if (!person) throw redirect("/dashboard/admin/users");
 
   return { person, actions };
@@ -118,7 +108,10 @@ export default function AdminPartners() {
           orderBy="time"
           showCategory
           showPartner
-          dateDisplay={{ dateFormat: DATE_FORMAT.SHORT, timeFormat: TIME_FORMAT.WITH_TIME }}
+          dateDisplay={{
+            dateFormat: DATE_FORMAT.SHORT,
+            timeFormat: TIME_FORMAT.WITH_TIME,
+          }}
         />
       </div>
     </div>

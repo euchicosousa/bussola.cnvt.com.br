@@ -55,8 +55,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     .from("partners")
     //@ts-ignore
     .insert(data)
-    .select()
-    .returns<Partner[]>();
+    .select();
   if (partner) {
     return redirect(`/dashboard/${partner[0].slug}`);
   } else {

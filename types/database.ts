@@ -17,14 +17,12 @@ export type Database = {
       actions: {
         Row: {
           archived: boolean | null
-          caption: string | null
           category: string
           color: string
           content_files: string[] | null
           created_at: string
           date: string
           description: string | null
-          files: string[] | null
           id: string
           instagram_caption: string | null
           instagram_content: string | null
@@ -42,14 +40,12 @@ export type Database = {
         }
         Insert: {
           archived?: boolean | null
-          caption?: string | null
           category: string
           color?: string
           content_files?: string[] | null
           created_at: string
           date: string
           description?: string | null
-          files?: string[] | null
           id?: string
           instagram_caption?: string | null
           instagram_content?: string | null
@@ -67,14 +63,12 @@ export type Database = {
         }
         Update: {
           archived?: boolean | null
-          caption?: string | null
           category?: string
           color?: string
           content_files?: string[] | null
           created_at?: string
           date?: string
           description?: string | null
-          files?: string[] | null
           id?: string
           instagram_caption?: string | null
           instagram_content?: string | null
@@ -420,14 +414,12 @@ export type Database = {
         Args: { query: string }
         Returns: {
           archived: boolean | null
-          caption: string | null
           category: string
           color: string
           content_files: string[] | null
           created_at: string
           date: string
           description: string | null
-          files: string[] | null
           id: string
           instagram_caption: string | null
           instagram_content: string | null

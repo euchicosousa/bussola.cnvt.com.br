@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { flushSync } from "react-dom";
+import { cn } from "~/lib/ui";
 
 interface EditableTitleProps {
   title: string;
@@ -7,6 +8,7 @@ interface EditableTitleProps {
   setIsEditing: (editing: boolean) => void;
   onSave: (newTitle: string) => void;
   className?: string;
+  isDragging?: boolean;
 }
 
 export function EditableTitle({
@@ -15,6 +17,7 @@ export function EditableTitle({
   setIsEditing,
   onSave,
   className = "",
+  isDragging,
 }: EditableTitleProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -67,7 +70,7 @@ export function EditableTitle({
 
   return (
     <div className={className}>
-      {isEditing ? (
+      {isEditing && !isDragging ? (
         <input
           ref={inputRef}
           type="text"
@@ -80,7 +83,10 @@ export function EditableTitle({
       ) : (
         <button
           ref={buttonRef}
-          className="relative w-full cursor-text items-center overflow-hidden text-left text-ellipsis whitespace-nowrap outline-hidden select-none"
+          className={cn(
+            "relative w-full items-center overflow-hidden text-left text-ellipsis whitespace-nowrap outline-hidden select-none",
+            !isDragging && "cursor-text",
+          )}
           onClick={handleButtonClick}
         >
           <span suppressHydrationWarning>{title}</span>

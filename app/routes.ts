@@ -41,5 +41,5 @@ export default [
   route("set-theme", "routes/set-theme.tsx"),
   route("report/:partner", "routes/report.partner.tsx"),
 
-  route("upper", "routes/upper.tsx"),
+  route("sortable", "routes/sortable.tsx"),
 ] satisfies RouteConfig;

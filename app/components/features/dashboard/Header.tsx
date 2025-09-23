@@ -21,7 +21,6 @@ import {
 import { Fragment, useState } from "react";
 import {
   Link,
-  useFetchers,
   useLocation,
   useMatches,
   useNavigate,
@@ -70,6 +69,7 @@ import {
 import { Theme, useTheme } from "remix-themes";
 import Badge from "~/components/common/forms/Badge";
 import { getMonthsActions } from "~/lib/helpers";
+import { ActionsContainer } from "../actions";
 
 export default function Header({
   setOpen,
@@ -83,7 +83,8 @@ export default function Header({
   const [theme, setTheme] = useTheme();
   const isLoading = navigation.state !== "idle";
 
-  const { showFeed, setShowFeed, editingAction, setEditingAction } = useOutletContext() as ContextType;
+  const { showFeed, setShowFeed, editingAction, setEditingAction } =
+    useOutletContext() as ContextType;
 
   const { person } = matches[1].data as DashboardRootType;
   let { actions, actionsChart, partner } = (
@@ -127,12 +128,16 @@ export default function Header({
           <Bussola className="hidden md:block" size="xs" />
         </Link>
         {/* Atrasados */}
-        <Link
+        <PopoverLateActions
+          link={`/dashboard/late${partner ? `?partner_slug=${partner?.slug}` : ""}`}
+          actions={lateActions}
+        />
+        {/* <Link
           to={`/dashboard/late${partner ? `?partner_slug=${partner?.slug}` : ""}`}
           className="ring-ring ring-offset-background absolute top-0 right-1 translate-x-full rounded-full ring-offset-2 outline-none focus:ring-2"
         >
           <Badge value={lateActions.length} isDynamic size="sm" />
-        </Link>
+        </Link> */}
       </div>
       <div className="flex items-center gap-4 md:gap-4">
         {/* Revisão e Instagram */}
@@ -146,7 +151,7 @@ export default function Header({
                   if (showFeed) {
                     // Update global state FIRST for instant UX
                     setShowFeed(false);
-                    
+
                     // Then sync URL in background
                     const newParams = new URLSearchParams(searchParams);
                     newParams.delete("show_feed");
@@ -156,7 +161,7 @@ export default function Header({
                     setShowFeed(true);
                     // Remove editing if active to avoid conflicts
                     setEditingAction(null);
-                    
+
                     // Then sync URL in background
                     const newParams = new URLSearchParams(searchParams);
                     newParams.set("show_feed", "true");
@@ -463,4 +468,33 @@ function PartnerCombobox() {
       </PopoverContent>
     </Popover>
   );
+}
+
+function PopoverLateActions({
+  link,
+  actions,
+}: {
+  link: string;
+  actions: Action[];
+}) {
+  const { actions: actionsFull } = useMatches()[2].data as {
+    actions: Action[];
+  };
+
+  if (!actionsFull) return null;
+
+  const lateActions = actionsFull.filter((af) =>
+    actions.find((a) => a.id === af.id),
+  );
+
+  return actions ? (
+    <Popover>
+      <PopoverTrigger>
+        <Badge value={actions.length} isDynamic size="sm" />
+      </PopoverTrigger>
+      <PopoverContent className="scrollbars-v max-h-[50vh] min-w-80">
+        <ActionsContainer actions={lateActions} orderBy="date" />
+      </PopoverContent>
+    </Popover>
+  ) : null;
 }

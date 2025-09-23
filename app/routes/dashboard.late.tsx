@@ -27,11 +27,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   }
 
   const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase
-      .from("people")
-      .select("*")
-      .match({ user_id: user.id })
-      .returns<Person[]>(),
+    supabase.from("people").select("*").match({ user_id: user.id }),
 
     partner_slug
       ? supabase
@@ -39,12 +35,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
           .select("slug")
           .match({ slug: partner_slug })
           .match({ archived: false })
-          .returns<Partner[]>()
-      : supabase
-          .from("partners")
-          .select("slug")
-          .match({ archived: false })
-          .returns<Partner[]>(),
+      : supabase.from("partners").select("slug").match({ archived: false }),
   ]);
 
   const person = people?.[0];
@@ -63,19 +54,17 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         //@ts-ignore
         .neq("state", "finished")
         .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .order("title", { ascending: true })
-        .returns<Action[]>(),
+        .order("title", { ascending: true }),
 
       supabase
         .from("actions")
-        .select("state, date")
+        .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
         .contains("responsibles", person?.admin ? [] : [user.id])
         .contains("partners", [partner_slug])
         //@ts-ignore
         .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .returns<ActionChart[]>(),
+        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss")),
       supabase
         .from("partners")
         .select()
@@ -105,7 +94,10 @@ export default function LatePage() {
       <div className="mx-auto pb-32">
         <ActionsContainer
           actions={actions}
-          dateDisplay={{ dateFormat: DATE_FORMAT.FULL, timeFormat: TIME_FORMAT.WITH_TIME }}
+          dateDisplay={{
+            dateFormat: DATE_FORMAT.FULL,
+            timeFormat: TIME_FORMAT.WITH_TIME,
+          }}
           orderBy="time"
           showCategory
         />

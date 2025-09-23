@@ -82,13 +82,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (values.color === "" || values.color === null) delete values.color;
 
-    if (values["files"] !== "null") {
-      //@ts-ignore
-      values["files"] = values["files"].toString().split(",");
-    } else {
-      //@ts-ignore
-      values["files"] = null;
-    }
 
     // Handle content_files
     if (values["content_files"] && values["content_files"] !== "null" && values["content_files"] !== "") {
@@ -340,7 +333,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Save files to database
       const { data: updatedAction, error } = await supabase
         .from("actions")
-        .update({ files: fileUrls })
+        .update({ content_files: fileUrls })
         .eq("id", actionId)
         .select()
         .single();

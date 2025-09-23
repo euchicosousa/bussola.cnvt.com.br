@@ -33,31 +33,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const user = {
     name: String(formData.get("name")),
     email: String(formData.get("email")),
-
-    // short: String(formData.get("short")),
-    // slug: String(formData.get("slug")),
-    // colors: [String(formData.get("bg")), String(formData.get("fg"))],
-    // sow: String(formData.get("sow")),
-    // context: String(formData.get("context")),
-    // users_ids: String(formData.getAll("user_id")).split(","),
-    // archived: false,
   };
 
   console.log({ formData });
-
-  //   const { data: partner, error } = await supabase
-  //     .from("partners")
-  //     //@ts-ignore
-  //     .insert(data)
-  //     .select()
-  //     .returns<Partner[]>();
-  //   if (partner) {
-  //     return redirect(`/dashboard/${partner[0].slug}`);
-  //   } else {
-  //     console.log(error);
-  //   }
-
-  //   return { ok: true };
 };
 
 export default function UserNew() {

@@ -14,6 +14,7 @@ import {
 
 import { ptBR } from "date-fns/locale";
 import {
+  DownloadCloudIcon,
   FilesIcon,
   LightbulbIcon,
   Link2Icon,
@@ -67,7 +68,7 @@ import { Popover, PopoverContent } from "~/components/ui/popover";
 import { Timer } from "~/components/ui/timer";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
-import { AI_INTENTS, INTENTS, TIMES } from "~/lib/constants";
+import { AI_INTENTS, INTENTS, TIMES, IMAGE_SIZES } from "~/lib/constants";
 import {
   parametersOptimized,
   suggestionsParameters,
@@ -84,6 +85,7 @@ import {
   getQueryString,
   Icons,
   isInstagramFeed,
+  optimizeCloudinaryUrl,
 } from "~/lib/helpers";
 import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
@@ -96,6 +98,7 @@ import {
 } from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
+import { FilesPopover } from "~/components/features/actions";
 
 export const config = { runtime: "edge" };
 
@@ -700,7 +703,7 @@ function RightSide({
           aspect="feed"
           partner={partner}
           className="rounded-2xl"
-          imageSize="preview"
+          imageSize={IMAGE_SIZES.PREVIEW}
         />
       </div>
 
@@ -714,7 +717,7 @@ function RightSide({
             type="range"
             min={60}
             max={300}
-            step={60}
+            step={30}
             value={length}
             onChange={(e) => setLength(e.target.valueAsNumber)}
             className="bg-accent h-2 w-20 cursor-pointer appearance-none rounded-full"
@@ -1619,184 +1622,6 @@ function FileUploadSection({
               </FilesPopover>
             )}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FilesPopover({
-  action,
-  files,
-  children,
-  setAction,
-  saveField,
-  isWorkFiles,
-}: {
-  action: Action;
-  files: string[] | null;
-  children: React.ReactNode;
-  setAction: (action: Action) => void;
-  saveField: (field: string, value: any) => void;
-  isWorkFiles?: boolean;
-}) {
-  let renderContent: React.ReactNode;
-  let type = isWorkFiles ? "work_files" : action.category;
-
-  switch (type) {
-    case "post":
-      renderContent = (
-        <FilePopoverItem
-          file={files![0]}
-          onDelete={() => {
-            setAction({
-              ...action,
-              content_files: null,
-            });
-            saveField("content_files", null);
-          }}
-        />
-      );
-
-      break;
-    case "reels":
-      renderContent = (
-        <div className="grid grid-cols-2 gap-4">
-          {files && files[0] ? (
-            <FilePopoverItem
-              title="Vídeo"
-              file={files[0]}
-              onDelete={() => {
-                const updatedFiles = ["", files[1]];
-                setAction({
-                  ...action,
-                  content_files: updatedFiles,
-                });
-                saveField("content_files", updatedFiles);
-              }}
-            />
-          ) : (
-            <div className="bg-accent grid h-full min-h-[180px] w-full place-content-center rounded-lg border border-dashed p-4 text-lg font-bold">
-              Vídeo
-            </div>
-          )}
-          {files && files[1] ? (
-            <FilePopoverItem
-              title="Capa"
-              file={files[1]}
-              onDelete={() => {
-                const updatedFiles = [files[0], ""];
-                setAction({
-                  ...action,
-                  content_files: updatedFiles,
-                });
-                saveField("content_files", updatedFiles);
-              }}
-            />
-          ) : (
-            <div className="bg-accent grid h-full min-h-[180px] w-full place-content-center rounded-lg border border-dashed p-4 text-lg font-bold">
-              Capa
-            </div>
-          )}
-        </div>
-      );
-      break;
-    case "carousel":
-    case "stories":
-    default:
-      renderContent = (
-        <div
-          className={cn(
-            "grid gap-2 gap-y-4",
-            files && files.length > 8 ? "grid-cols-5" : "grid-cols-4",
-          )}
-        >
-          {files?.map((file, i) => (
-            <FilePopoverItem
-              key={i}
-              file={file}
-              onDelete={() => {
-                const updatedFiles = files.filter((_, index) => index !== i);
-                if (isWorkFiles) {
-                  setAction({
-                    ...action,
-                    work_files: updatedFiles,
-                  });
-                  saveField("work_files", updatedFiles);
-                } else {
-                  setAction({
-                    ...action,
-                    content_files: updatedFiles,
-                  });
-                  saveField("content_files", updatedFiles);
-                }
-              }}
-            />
-          ))}
-        </div>
-      );
-      break;
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        className={cn(
-          "bg-content mx-4 flex max-h-[70vh] flex-col overflow-hidden",
-          type === "post"
-            ? "lg:w-xs"
-            : type === "reels"
-              ? "lg:w-sm"
-              : "lg:w-2xl",
-        )}
-      >
-        <div className="shrink-0 pb-2 text-2xl font-medium">Arquivos</div>
-        <div className="scrollbars-v h-full w-full grow">{renderContent}</div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function FilePopoverItem({
-  title,
-  file,
-
-  onDelete,
-}: {
-  title?: string;
-  file: string;
-
-  onDelete: () => void;
-}) {
-  const filename = getFileName(file, true);
-
-  return (
-    <div className="flex w-full flex-col items-center gap-2 overflow-hidden">
-      {title ? (
-        <div className="text-xl font-medium">{title}</div>
-      ) : (
-        <div className="flex w-full overflow-hidden px-1 text-xs">
-          <div className="overflow-hidden text-ellipsis whitespace-nowrap">
-            {filename}
-          </div>
-          <div>{getFileExtension(file)}</div>
-        </div>
-      )}
-      <div className="relative w-full">
-        <div className="overflow-hidden rounded-lg">
-          {isImage(file) && <img src={file} alt={title} />}
-          {isVideo(file) && <video src={file} controls />}
-          {isDocument(file) && (
-            <div className="bg-accent col-span-1 grid min-h-[180px] w-full place-content-center rounded-lg border p-4 text-2xl font-bold uppercase">
-              {getFileExtension(file)}
-            </div>
-          )}
-        </div>
-        <div className="absolute top-1 right-1">
-          <Button variant="ghost" size="sm" onClick={onDelete}>
-            <Trash2Icon />
-          </Button>
         </div>
       </div>
     </div>

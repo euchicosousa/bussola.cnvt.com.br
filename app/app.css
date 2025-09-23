@@ -73,8 +73,8 @@
     /* --ring: 200 10% 90%; */
 
     --error: theme(--color-rose-700);
-    --error-background: theme(--color-rose-950);
-    --error-foreground: theme(--color-rose-400);
+    --error-background: #301;
+    --error-foreground: theme(--color-rose-300);
   }
 
   * {
@@ -213,7 +213,7 @@ body {
 }
 
 .action-item {
-  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full cursor-pointer rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
+  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
 }
 
 .action-item-hour {
@@ -221,7 +221,7 @@ body {
 }
 
 .action-item-block {
-  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full cursor-pointer rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
+  @apply ring-ring ring-offset-background bg-card hover:bg-popover relative z-0 flex w-full rounded-xs border border-transparent shadow-sm outline-hidden transition-[box-shadow,background] select-none focus-within:ring-2 hover:z-10 hover:shadow-xl focus:ring-2 focus:ring-offset-2;
   @apply isolate px-4 py-3;
 }
 
@@ -443,4 +443,12 @@ input::-webkit-inner-spin-button {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.border_after {
+  @apply after:bg-border after:absolute after:bottom-0 after:-left-[100vw] after:h-px after:w-[200vw] dark:after:bg-white/10;
+}
+
+.border_before {
+  @apply before:bg-border before:absolute before:top-0 before:-left-[100vw] before:h-px before:w-[200vw] dark:before:bg-white/10;
 }

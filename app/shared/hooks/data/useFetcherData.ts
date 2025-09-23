@@ -63,7 +63,6 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           priority: String(fetcher.formData?.get("priority")),
           instagram_caption: String(fetcher.formData?.get("instagram_caption")),
           color: String(fetcher.formData?.get("color")),
-          files: String(fetcher.formData?.get("files")).split(","),
           content_files: fetcher.formData?.get("content_files")
             ? String(fetcher.formData.get("content_files")).split(",")
             : null,
@@ -77,7 +76,6 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           topics: String(fetcher.formData?.get("topics"))
             .split(",")
             .map(Number),
-          caption: String(fetcher.formData?.get("caption")) || null,
           instagram_content: String(fetcher.formData?.get("instagram_content")) || null,
         };
 

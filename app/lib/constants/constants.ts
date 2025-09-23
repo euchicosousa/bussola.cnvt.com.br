@@ -4,6 +4,20 @@ export const PRIORITIES = {
   high: "high",
 };
 
+export const IMAGE_SIZES = {
+  THUMBNAIL: "thumbnail",
+  MINI: "mini",
+  PREVIEW: "preview",
+  FULL: "full",
+} as const;
+
+export const IMAGE_WIDTHS = {
+  thumbnail: 150,
+  mini: 200,
+  preview: 300,
+  full: null, // sem limite - imagem original
+} as const;
+
 export const ORDER_ACTIONS_BY = {
   date: "date",
   title: "title",

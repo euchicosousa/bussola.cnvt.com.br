@@ -56,7 +56,14 @@ declare global {
     topics: Topic[];
   };
 
-  type ActionChart = { category: string; date: string; state: string };
+  type ActionChart = {
+    id: string;
+    partners: string[];
+    category: string;
+    date: string;
+    instagram_date: string;
+    state: string;
+  };
 
   type DashboardIndexType = {
     actions: Action[];

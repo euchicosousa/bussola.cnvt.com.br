@@ -1,5 +1,7 @@
 import clsx from "clsx";
 import { Link, useMatches } from "react-router";
+import type { ImageSize } from "../../types";
+import { IMAGE_WIDTHS, IMAGE_SIZES } from "./constants";
 // @ts-ignore
 import { endOfDay, endOfWeek, format, startOfDay, startOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -425,6 +427,36 @@ export function Bia({
   );
 }
 
+const isCloudinaryUrl = (url: string): boolean => {
+  return url.includes("cloudinary.com") || url.includes("res.cloudinary.com");
+};
+
+export const optimizeCloudinaryUrl = (
+  url: string,
+  imageSize: ImageSize = IMAGE_SIZES.PREVIEW,
+) => {
+  if (!isCloudinaryUrl(url)) {
+    return url; // Bunny ou outras URLs ficam inalteradas
+  }
+
+  // Full não tem limite - retorna URL original
+  if (imageSize === IMAGE_SIZES.FULL) {
+    return url;
+  }
+
+  // Obter largura da constante
+  const width = IMAGE_WIDTHS[imageSize] || IMAGE_WIDTHS.thumbnail;
+
+  if (url.includes("/image/upload/")) {
+    return url.replace(
+      "/image/upload/",
+      `/image/upload/w_${width},c_fill,f_auto,q_auto/`,
+    );
+  }
+
+  return url;
+};
+
 export const Content = ({
   action,
   aspect,
@@ -434,7 +466,7 @@ export const Content = ({
   showFinished,
   dateDisplay,
   showVideo = false,
-  imageSize = "mini",
+  imageSize = IMAGE_SIZES.MINI,
 }: {
   action: Action;
   aspect: "feed" | "full";
@@ -444,45 +476,8 @@ export const Content = ({
   showFinished?: boolean;
   dateDisplay?: DateDisplay;
   showVideo?: boolean;
-  imageSize?: "thumbnail" | "mini" | "preview" | "full";
+  imageSize?: ImageSize;
 }) => {
-  const isCloudinaryUrl = (url: string): boolean => {
-    return url.includes("cloudinary.com") || url.includes("res.cloudinary.com");
-  };
-
-  const optimizeCloudinaryUrl = (
-    url: string,
-    imageSize: "thumbnail" | "mini" | "preview" | "full",
-  ) => {
-    if (!isCloudinaryUrl(url)) {
-      return url; // Bunny ou outras URLs ficam inalteradas
-    }
-
-    // Full não tem limite - retorna URL original
-    if (imageSize === "full") {
-      return url;
-    }
-
-    // Define larguras apenas para thumb e preview
-    const width =
-      imageSize === "thumbnail"
-        ? 150
-        : imageSize === "mini"
-          ? 200
-          : imageSize === "preview"
-            ? 300
-            : 150;
-
-    if (url.includes("/image/upload/")) {
-      return url.replace(
-        "/image/upload/",
-        `/image/upload/w_${width},c_fill,f_auto,q_auto/`,
-      );
-    }
-
-    return url;
-  };
-
   let renderContent = (
     <Post className={className} action={action} colors={partner!.colors} />
   );
@@ -568,7 +563,7 @@ export const Content = ({
         renderContent = (
           <div className="relative w-full">
             {/* Container dos slides */}
-            <div className="overflow-hidden">
+            <div className={cn("overflow-hidden", className)}>
               <div
                 className="flex transition-transform duration-300 ease-in-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -580,7 +575,6 @@ export const Content = ({
                         src={optimizeCloudinaryUrl(file.preview, imageSize)}
                         className={cn(
                           `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
-                          className,
                         )}
                         style={{ backgroundColor: action.color }}
                       />
@@ -589,7 +583,6 @@ export const Content = ({
                         src={file.preview}
                         className={cn(
                           `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
-                          className,
                         )}
                         controls
                       />
@@ -647,84 +640,12 @@ export const Content = ({
     }
   }
 
-  // let files =
-  //   action.content_files && action.content_files[0]
-  //     ? action.content_files.map((f: any) => ({
-  //         preview: f,
-  //         type: getTypeOfTheContent(f),
-  //       }))
-  //     : undefined;
-  // Lógica de seleção de arquivo por categoria
-  // let currentFile;
-
-  // if (files && files.length > 0) {
-  //   const category = action.category;
-
-  //   switch (category) {
-  //     case "reels":
-  //       // REELS: lógica específica vídeo/capa
-  //       const firstFile = files[0];
-  //       const hasVideo = firstFile?.type === "video";
-  //       const hasCapa = files.length > 1;
-
-  //       if (hasVideo) {
-  //         if (showVideo) {
-  //           currentFile = firstFile; // Mostra vídeo
-  //         } else {
-  //           currentFile = hasCapa ? files[1] : firstFile; // Mostra capa se existir
-  //         }
-  //       } else {
-  //         currentFile = firstFile; // Se não for vídeo, mostra o que tem
-  //       }
-  //       break;
-
-  //     case "post":
-  //       // POST: sempre o único arquivo
-  //       currentFile = files[0];
-  //       break;
-
-  //     case "carousel":
-  //     case "stories":
-  //       // CAROUSEL/STORIES: usa currentFileIndex normalmente
-  //       currentFile = files[0];
-  //       break;
-
-  //     default:
-  //       // Outros: lógica atual
-  //       currentFile = files[0];
-  //   }
-  // }
-
   return (
     <div
       className={`relative overflow-hidden ${aspect === "feed" ? "aspect-4/5" : ""}`}
     >
       {renderContent}
-      {/* {currentFile &&
-      !["", "null", null].find((p) => p === currentFile.preview) ? (
-        // Show current file based on index
-        currentFile?.type === "image" ? (
-          <img
-            src={`${currentFile.preview}`}
-            className={cn(
-              `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
-              className,
-            )}
-            style={{ backgroundColor: action.color }}
-          />
-        ) : (
-          <video
-            src={currentFile?.preview || ""}
-            className={clsx(
-              `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
-              className,
-            )}
-            controls
-          />
-        )
-      ) : (
-        <Post className={className} action={action} colors={partner!.colors} />
-      )} */}
+
       {showFinished && action.state === "finished" && (
         <FinishedCheck className="absolute top-2 left-2" size="sm" />
       )}

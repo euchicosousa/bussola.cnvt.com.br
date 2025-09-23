@@ -34,12 +34,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(slug);
 
   const [{ data: partner }, { data: topics }] = await Promise.all([
-    supabase
-      .from("partners")
-      .select("*")
-      .match({ slug })
-      .returns<Partner[]>()
-      .single(),
+    supabase.from("partners").select("*").match({ slug }).single(),
     supabase.from("topics").select().match({ partner_slug: slug }),
   ]);
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { isAfter } from "date-fns";
 import { ActionItem } from "../ActionItem";
-import { VARIANTS } from "~/lib/constants";
+import { VARIANTS, IMAGE_SIZES } from "~/lib/constants";
 
 interface GridOfActionsProps {
   actions?: Action[];
@@ -23,7 +23,7 @@ export function GridOfActions({ actions, partner }: GridOfActionsProps) {
             action={action}
             variant={VARIANTS.GRID}
             partner={partner}
-            imageSize="thumbnail"
+            imageSize={IMAGE_SIZES.THUMBNAIL}
           />
         ))}
       </div>
