@@ -49,8 +49,7 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-
-export default function Login() {
+const Login = () => {
   const actionData = useActionData<typeof action>();
   const [showPassword, setShowPassword] = useState(false);
   return (
@@ -105,4 +104,6 @@ export default function Login() {
       <div className="border-l"></div>
     </div>
   );
-}
+};
+
+export default Login;

@@ -1582,7 +1582,7 @@ export const CalendarDay = ({
         </div>
 
         {day.celebrations && day.celebrations.length > 0 && (
-          <div className="mt-4 flex w-full flex-col space-y-2 text-sm opacity-50">
+          <div className="mt-4 flex w-full flex-col space-y-2 text-xs opacity-50">
             {day.celebrations?.map((celebration) => (
               <div
                 key={celebration.id}

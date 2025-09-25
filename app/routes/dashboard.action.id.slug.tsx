@@ -14,7 +14,6 @@ import {
 
 import { ptBR } from "date-fns/locale";
 import {
-  DownloadCloudIcon,
   FilesIcon,
   LightbulbIcon,
   Link2Icon,
@@ -43,6 +42,7 @@ import {
   TopicsAction,
 } from "~/components/features/actions/CreateAction";
 
+import { FilesPopover } from "~/components/features/actions";
 import { Button } from "~/components/ui/button";
 import {
   Command,
@@ -68,7 +68,7 @@ import { Popover, PopoverContent } from "~/components/ui/popover";
 import { Timer } from "~/components/ui/timer";
 import { ToastAction } from "~/components/ui/toast";
 import { useToast } from "~/components/ui/use-toast";
-import { AI_INTENTS, INTENTS, TIMES, IMAGE_SIZES } from "~/lib/constants";
+import { AI_INTENTS, IMAGE_SIZES, INTENTS, TIMES } from "~/lib/constants";
 import {
   parametersOptimized,
   suggestionsParameters,
@@ -85,20 +85,12 @@ import {
   getQueryString,
   Icons,
   isInstagramFeed,
-  optimizeCloudinaryUrl,
 } from "~/lib/helpers";
 import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
-import {
-  getFileExtension,
-  getFileName,
-  isDocument,
-  isImage,
-  isVideo,
-} from "~/shared/utils/validation/contentValidation";
+import { isVideo } from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
-import { FilesPopover } from "~/components/features/actions";
 
 export const config = { runtime: "edge" };
 
@@ -626,9 +618,7 @@ export function Description({
 
           {isInstagramFeed(action.category, true) && (
             <Button
-              disabled={
-                isWorking || !action.description?.replace(/(<([^>]+)>)/gi, "")
-              }
+              disabled={isWorking}
               size={"sm"}
               className={` ${
                 isWorking &&
