@@ -6,8 +6,6 @@ import { Avatar } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
 import { Heading } from "~/components/common/forms/Headings";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = await createClient(request);
 

@@ -39,8 +39,6 @@ import {
 } from "~/lib/helpers";
 import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants/constants";
 
-export const config = { runtime: "edge" };
-
 type loaderData = {
   action?: Action;
   actions?: Action[];

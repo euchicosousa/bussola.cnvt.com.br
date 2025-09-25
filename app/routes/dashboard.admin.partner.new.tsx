@@ -22,8 +22,6 @@ import { SOW } from "~/lib/constants";
 import { Avatar } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export const meta: MetaFunction = () => {
   return [
     { tile: "Novo parceiro - ʙússoʟa" },

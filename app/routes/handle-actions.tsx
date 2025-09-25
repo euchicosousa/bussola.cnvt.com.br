@@ -3,7 +3,6 @@ import { type ActionFunctionArgs } from "react-router";
 import { INTENTS, PRIORITIES, TIMES } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
 const ACCESS_KEY = process.env.BUNNY_ACCESS_KEY;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -82,20 +81,33 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (values.color === "" || values.color === null) delete values.color;
 
-
     // Handle content_files
-    if (values["content_files"] && values["content_files"] !== "null" && values["content_files"] !== "") {
+    if (
+      values["content_files"] &&
+      values["content_files"] !== "null" &&
+      values["content_files"] !== ""
+    ) {
       //@ts-ignore
-      values["content_files"] = values["content_files"].toString().split(",").filter(Boolean);
+      values["content_files"] = values["content_files"]
+        .toString()
+        .split(",")
+        .filter(Boolean);
     } else {
       //@ts-ignore
       values["content_files"] = null;
     }
 
     // Handle work_files
-    if (values["work_files"] && values["work_files"] !== "null" && values["work_files"] !== "") {
+    if (
+      values["work_files"] &&
+      values["work_files"] !== "null" &&
+      values["work_files"] !== ""
+    ) {
       //@ts-ignore
-      values["work_files"] = values["work_files"].toString().split(",").filter(Boolean);
+      values["work_files"] = values["work_files"]
+        .toString()
+        .split(",")
+        .filter(Boolean);
     } else {
       //@ts-ignore
       values["work_files"] = null;

@@ -10,8 +10,6 @@ import { ActionsContainer } from "~/components/features/actions";
 import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
 

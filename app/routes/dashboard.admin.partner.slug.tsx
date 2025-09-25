@@ -24,8 +24,6 @@ import { Textarea } from "~/components/ui/textarea";
 import { createClient } from "~/lib/database/supabase";
 import { Avatar } from "~/lib/helpers";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = await createClient(request);
 

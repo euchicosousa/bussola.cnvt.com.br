@@ -2,8 +2,6 @@ import type { MetaFunction } from "react-router";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const config = { runtime: "edge" };
-
 export const meta: MetaFunction = () => {
   return [
     { title: "ʙússoʟa - Domine, Crie e Conquiste." },
@@ -245,12 +243,14 @@ export default function Index() {
       shortcuts: [
         {
           title: "Estados",
-          description: "Use F (Fazer), Z (Fazendo), P (Aprovado), T (Feito), etc.",
+          description:
+            "Use F (Fazer), Z (Fazendo), P (Aprovado), T (Feito), etc.",
           shortcut: "Tecla simples",
         },
         {
           title: "Prioridades",
-          description: "Use teclas definidas no banco de dados para cada prioridade.",
+          description:
+            "Use teclas definidas no banco de dados para cada prioridade.",
           shortcut: "Tecla simples",
         },
       ],

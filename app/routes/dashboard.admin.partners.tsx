@@ -12,8 +12,6 @@ import { INTENTS } from "~/lib/constants";
 import { Avatar, AvatarGroup, getResponsibles } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = await createClient(request);
 

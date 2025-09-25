@@ -18,8 +18,6 @@ import { Label } from "~/components/ui/label";
 import { createClient } from "~/lib/database/supabase";
 import { Bussola } from "~/lib/helpers";
 
-export const config = { runtime: "edge" };
-
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const email = formData.get("email") as string;

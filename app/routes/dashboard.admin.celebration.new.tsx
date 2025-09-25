@@ -24,8 +24,6 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export const meta: MetaFunction = () => {
   return [
     { title: "NOVA DATA COMEMORATIVA - ʙússoʟa" },

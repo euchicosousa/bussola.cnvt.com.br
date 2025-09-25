@@ -2,8 +2,6 @@ import { OpenAI } from "openai";
 import type { ActionFunctionArgs } from "react-router";
 import { AI_INTENTS } from "~/lib/constants";
 
-export const config = { runtime: "edge" };
-
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   let {

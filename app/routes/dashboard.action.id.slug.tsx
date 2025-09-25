@@ -92,8 +92,6 @@ import { isVideo } from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { SintagmaHooks, storytellingModels } from "./handle-openai";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
   const { id } = params;

@@ -7,8 +7,6 @@ import { Toggle } from "~/components/ui/toggle";
 import { Avatar, AvatarGroup, Icons } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase } = createClient(request);
 
