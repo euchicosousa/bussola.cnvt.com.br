@@ -13,7 +13,6 @@ import {
 import {
   arrayMove,
   rectSortingStrategy,
-  rectSwappingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
@@ -28,7 +27,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import { redirect, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { createClient } from "~/lib/database/supabase";
 import { cn } from "~/lib/ui";

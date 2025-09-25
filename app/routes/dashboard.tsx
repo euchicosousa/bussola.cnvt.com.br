@@ -7,8 +7,6 @@ import {
 import Layout from "~/components/features/dashboard/Layout";
 import { createClient } from "~/lib/database/supabase";
 
-export const config = { runtime: "edge" };
-
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase } = createClient(request);
 

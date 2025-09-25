@@ -61,7 +61,6 @@ import {
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 
-export const config = { runtime: "edge" };
 gsap.registerPlugin(useGSAP);
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

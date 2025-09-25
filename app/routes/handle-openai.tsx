@@ -1,5 +1,3 @@
-import { subMilliseconds } from "date-fns";
-import { loggerFor } from "node_modules/openai/internal/utils/log.mjs";
 import { OpenAI } from "openai";
 import type { ActionFunctionArgs } from "react-router";
 import { AI_INTENTS } from "~/lib/constants";

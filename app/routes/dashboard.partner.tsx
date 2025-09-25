@@ -104,8 +104,6 @@ import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 import { DraggableItem } from "~/components/features/actions/shared/DraggableItem";
 import { useIsMobile } from "~/hooks/use-mobile";
 
-export const config = { runtime: "edge" };
-
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let _date = new URL(request.url).searchParams.get("date");
 
