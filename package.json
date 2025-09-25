@@ -66,6 +66,7 @@
     "@tiptap/react": "^3.0.9",
     "@tiptap/starter-kit": "^3.0.9",
     "@vercel/node": "^5.3.10",
+    "@vercel/react-router": "^1.2.3",
     "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.7.0",
