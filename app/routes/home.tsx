@@ -1,12 +1,11 @@
 import { useGSAP } from "@gsap/react";
-import { ArrowRightIcon } from "lucide-react";
-import { Link, useNavigate, type MetaFunction } from "react-router";
-import type { Route } from "./+types/home";
 import { gsap } from "gsap";
+import { ArrowRightIcon } from "lucide-react";
+import { Link, type MetaFunction } from "react-router";
 
 gsap.registerPlugin(useGSAP);
 
-export const meta: MetaFunction<typeof loader> = () => {
+export const meta: MetaFunction = () => {
   return [
     { title: `ʙússoʟa` },
     {
@@ -16,9 +15,6 @@ export const meta: MetaFunction<typeof loader> = () => {
     },
   ];
 };
-export function loader({ context }: Route.LoaderArgs) {
-  return { message: context.VALUE_FROM_VERCEL };
-}
 
 export default function Home() {
   useGSAP(() => {
