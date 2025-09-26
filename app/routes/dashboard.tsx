@@ -10,13 +10,13 @@ import { createClient } from "~/lib/database/supabase";
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase } = createClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
+
+  const user_id = data.claims.sub;
 
   const [
     { data: partners },
@@ -34,7 +34,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       .from("partners")
       .select("*")
       .is("archived", false)
-      .contains("users_ids", [user.id])
+      .contains("users_ids", [user_id])
       .order("title", { ascending: true }),
     supabase
       .from("people")
@@ -45,9 +45,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
     supabase.from("states").select("*").order("order", { ascending: true }),
     supabase.from("priorities").select("*").order("order", { ascending: true }),
     supabase.from("areas").select("*").order("order", { ascending: true }),
-    supabase.from("sprints").select("*").match({ user_id: user.id }),
+    supabase.from("sprints").select("*").match({ user_id: user_id }),
     supabase.from("celebrations").select("*"),
-    supabase.from("config").select("*").match({ user_id: user.id }),
+    supabase.from("config").select("*").match({ user_id: user_id }),
 
     supabase.from("topics").select("*"),
   ]);
@@ -55,12 +55,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const config = configs?.[0] || {
     id: 1,
     created_at: new Date().toISOString(),
-    creative: user.id,
+    creative: user_id,
     theme: "light",
-    user_id: user.id,
+    user_id: user_id,
   };
 
-  const person = people?.find((person) => person.user_id === user.id) as Person;
+  const person = people?.find((person) => person.user_id === user_id) as Person;
   const url = new URL(request.url);
 
   return {
@@ -68,7 +68,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     partners,
     people,
     categories,
-    user,
+    user_id,
     states,
     priorities,
     person,

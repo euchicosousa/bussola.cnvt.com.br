@@ -10,14 +10,13 @@ import { createClient } from "~/lib/database/supabase";
 export async function loader({ request }: LoaderFunctionArgs) {
   const { supabase } = createClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
 
+  const user_id = data.claims.sub;
   const [
     { data: partners },
     { data: people },
@@ -28,7 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     supabase
       .from("partners")
       .select("*")
-      .contains("users_ids", [user.id])
+      .contains("users_ids", [user_id])
       .order("title", { ascending: true }),
     supabase
       .from("people")
@@ -40,13 +39,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
     supabase.from("priorities").select("*").order("order", { ascending: true }),
   ]);
 
-  // const person = people?.find((person) => person.user_id === user.id) as Person;
+  // const person = people?.find((person) => person.user_id === user_id) as Person;
 
   return {
     partners,
     people,
     categories,
-    user,
+    user_id,
     states,
     priorities,
   };

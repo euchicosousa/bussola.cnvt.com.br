@@ -35,13 +35,13 @@ import { cn } from "~/lib/ui";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
+
+  const user_id = data.claims.sub;
 
   const start = startOfWeek(startOfMonth(new Date()));
   const end = endOfDay(endOfWeek(endOfMonth(new Date())));
@@ -70,7 +70,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     supabase.from("areas").select("*"),
   ]);
 
-  const person = people?.find((person: Person) => person.user_id === user.id);
+  const person = people?.find((person: Person) => person.user_id === user_id);
 
   return {
     actions,

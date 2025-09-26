@@ -72,18 +72,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // });
   // const folders = await result.json() as [];
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
 
-  user.id;
+  const user_id = data.claims.sub;
 
   const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase.from("people").select("*").match({ user_id: user.id }),
+    supabase.from("people").select("*").match({ user_id: user_id }),
     supabase.from("partners").select("slug").match({ archived: false }),
   ]);
 
@@ -100,7 +98,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .from("actions")
       .select("*")
       .is("archived", false)
-      .contains("responsibles", person.admin ? [] : [user.id])
+      .contains("responsibles", person.admin ? [] : [user_id])
       .containedBy("partners", partners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
       .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
@@ -109,7 +107,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .from("actions")
       .select("id, category, state, date, partners, instagram_date")
       .is("archived", false)
-      .contains("responsibles", person?.admin ? [] : [user.id])
+      .contains("responsibles", person?.admin ? [] : [user_id])
       .containedBy("partners", partners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
       .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),

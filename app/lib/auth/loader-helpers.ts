@@ -7,41 +7,35 @@ import invariant from "tiny-invariant";
  */
 export async function authenticateUser(request: Request) {
   const { supabase } = createClient(request);
-  
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
+
+  const { data } = await supabase.auth.getClaims();
+
+  if (!data?.claims) {
     throw redirect("/login");
   }
-  
-  return { supabase, user };
+
+  return { supabase, user_id: data.claims.sub };
 }
 
 /**
  * Gets user with permissions data (person and partners)
  */
 export async function getUserWithPermissions(request: Request) {
-  const { supabase, user } = await authenticateUser(request);
-  
-  const [
-    { data: people },
-    { data: partners }
-  ] = await Promise.all([
-    supabase
-      .from("people")
-      .select("*")
-      .match({ user_id: user.id }),
+  const { supabase, user_id } = await authenticateUser(request);
+
+  const [{ data: people }, { data: partners }] = await Promise.all([
+    supabase.from("people").select("*").match({ user_id: user_id }),
     supabase
       .from("partners")
       .select("*")
       .is("archived", false)
-      .contains("users_ids", [user.id])
-      .order("title", { ascending: true })
+      .contains("users_ids", [user_id])
+      .order("title", { ascending: true }),
   ]);
 
   invariant(people, "People data not found");
   invariant(partners, "Partners data not found");
-  
+
   const person = people[0];
   invariant(person, "Person not found");
 
@@ -49,7 +43,7 @@ export async function getUserWithPermissions(request: Request) {
     supabase,
     person,
     people,
-    partners
+    partners,
   };
 }
 
@@ -65,13 +59,13 @@ export async function getActionsForUser(
     dateRange?: { start: string; end: string };
     stateFilter?: string;
     includeArchived?: boolean;
-  } = {}
+  } = {},
 ) {
   const {
-    partnersFilter = partners.map(p => p.slug),
+    partnersFilter = partners.map((p) => p.slug),
     includeArchived = false,
     dateRange,
-    stateFilter
+    stateFilter,
   } = options;
 
   let query = supabase
@@ -83,9 +77,7 @@ export async function getActionsForUser(
     .order("date", { ascending: true });
 
   if (dateRange) {
-    query = query
-      .gte("date", dateRange.start)
-      .lte("date", dateRange.end);
+    query = query.gte("date", dateRange.start).lte("date", dateRange.end);
   }
 
   if (stateFilter) {
@@ -93,6 +85,6 @@ export async function getActionsForUser(
   }
 
   const { data: actions } = await query;
-  
+
   return actions || [];
 }

@@ -16,16 +16,16 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const partner_slug = new URL(request.url).searchParams.get("partner_slug");
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
 
+  const user_id = data.claims.sub;
+
   const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase.from("people").select("*").match({ user_id: user.id }),
+    supabase.from("people").select("*").match({ user_id: user_id }),
 
     partner_slug
       ? supabase
@@ -47,7 +47,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .from("actions")
         .select("*")
         .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .contains("partners", partners.map((p) => p.slug)!)
         //@ts-ignore
         .neq("state", "finished")
@@ -58,7 +58,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .from("actions")
         .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .contains("partners", [partner_slug])
         //@ts-ignore
         .neq("state", "finished")

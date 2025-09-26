@@ -48,7 +48,7 @@ declare global {
     categories: Category[];
     states: State[];
     person: Person;
-    user: User;
+    user_id: string;
     priorities: Priority[];
     areas: Area[];
     sprints: Sprint[];

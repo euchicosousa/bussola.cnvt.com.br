@@ -120,22 +120,22 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const { supabase } = createClient(request);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
 
-  let { data } = await supabase
+  const user_id = data.claims.sub;
+
+  let { data: people } = await supabase
     .from("people")
     .select("*")
-    .match({ user_id: user.id });
+    .match({ user_id: user_id });
 
-  invariant(data);
+  invariant(people);
 
-  let person = data[0];
+  let person = people[0];
 
   const [{ data: actions }, { data: actionsChart }, { data: partners }] =
     await Promise.all([
@@ -143,14 +143,14 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .from("actions")
         .select("*")
         .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .contains("partners", [params["partner"]!])
         .order("title", { ascending: true }),
       supabase
         .from("actions")
         .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .contains("partners", [params["partner"]!]),
       supabase.from("partners").select().match({ slug: params["partner"]! }),
     ]);

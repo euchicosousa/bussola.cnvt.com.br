@@ -70,8 +70,7 @@ export default function CreateAction({
   mode: "fixed" | "day" | "button" | "plus";
   shortcut?: boolean;
 }) {
-  const { categories, partners, user, areas, topics } = useMatches()[1]
-    .data as DashboardRootType;
+  const { partners, user_id } = useMatches()[1].data as DashboardRootType;
   const matches = useMatches();
   const location = useLocation();
 
@@ -100,12 +99,11 @@ export default function CreateAction({
     date: newDate,
     instagram_date: addMinutes(newDate, TIMES[DEFAULT_CATEGORY]),
     description: "",
-    responsibles: [user.id], // Default responsible is the user
-    // [user.id]
+    responsibles: [user_id], // Default responsible is the user
     partners: partner ? [partner.slug] : [],
     state: "idea",
     title: "",
-    user_id: user.id,
+    user_id: user_id,
     color: partner ? partner.colors[0] : BASE_COLOR,
     time: TIMES[DEFAULT_CATEGORY],
     topics: [],

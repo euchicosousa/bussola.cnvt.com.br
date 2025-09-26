@@ -15,18 +15,18 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const partner_slug = params["partner"];
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getClaims();
 
-  if (!user) {
+  if (!data?.claims) {
     return redirect("/login");
   }
+
+  const user_id = data.claims.sub;
 
   const { data: person } = await supabase
     .from("people")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", user_id)
     .single();
 
   const [{ data: actions }, { data: actionsChart }, { data: partner }] =
@@ -36,7 +36,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .select("*")
         .is("archived", true)
         .like("partner", partner_slug || "%")
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .neq("state", "finished")
         .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
         .order("title", { ascending: true }),
@@ -46,7 +46,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .select("id, category, state, date, partners, instagram_date")
         .is("archived", false)
         .like("partner", partner_slug || "%")
-        .contains("responsibles", person?.admin ? [] : [user.id])
+        .contains("responsibles", person?.admin ? [] : [user_id])
         .neq("state", "finished")
         .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss")),
       supabase
