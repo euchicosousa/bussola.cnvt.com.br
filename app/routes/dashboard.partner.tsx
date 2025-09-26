@@ -1306,7 +1306,15 @@ export default function Partner() {
             adjustScale={false}
           >
             {draggedAction && (
-              <ActionItem action={draggedAction} variant={variant} />
+              <ActionItem
+                action={draggedAction}
+                variant={
+                  variant === "content" &&
+                  !isInstagramFeed(draggedAction.category)
+                    ? VARIANTS.LINE
+                    : variant
+                }
+              />
             )}
           </DragOverlay>
         </DndContext>
