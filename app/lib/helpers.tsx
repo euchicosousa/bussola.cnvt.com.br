@@ -521,7 +521,7 @@ export const Content = ({
             <img
               src={optimizeCloudinaryUrl(currentFile.preview, imageSize)}
               className={cn(
-                `object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
+                `w-full object-cover ${aspect === "feed" ? "aspect-4/5" : ""}`,
                 className,
               )}
               style={{ backgroundColor: action.color }}

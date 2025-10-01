@@ -87,8 +87,10 @@ import {
 import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
 import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
+import { DraggableItem } from "~/components/features/actions/shared/DraggableItem";
 import { Input } from "~/components/ui/input";
-import { INTENTS, TIME_FORMAT, VARIANTS } from "~/lib/constants";
+import { useIsMobile } from "~/hooks/use-mobile";
+import { IMAGE_SIZES, INTENTS, TIME_FORMAT, VARIANTS } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
   Avatar,
@@ -101,8 +103,6 @@ import {
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
-import { DraggableItem } from "~/components/features/actions/shared/DraggableItem";
-import { useIsMobile } from "~/hooks/use-mobile";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let _date = new URL(request.url).searchParams.get("date");
@@ -1521,6 +1521,7 @@ export const CalendarDay = ({
                             timeFormat: TIME_FORMAT.WITH_TIME,
                           }}
                           isInstagramDate={isInstagramDate}
+                          imageSize={IMAGE_SIZES.PREVIEW}
                         />
                       </DraggableItem>
                     ))}
