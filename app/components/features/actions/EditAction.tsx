@@ -1,18 +1,13 @@
+import { format, parseISO } from "date-fns";
 import { EditIcon, Grid3x3Icon, SaveIcon, TextIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import {
-  Description,
-  Header,
-  LowerBar,
-  Title,
-} from "~/routes/dashboard.action.id.slug";
-import { Button } from "~/components/ui/button";
 import { useNavigate, useSubmit } from "react-router";
-import { format, parseISO } from "date-fns";
+import { Button } from "~/components/ui/button";
 import { INTENTS, TIMES } from "~/lib/constants";
 import { actionToRawAction, isInstagramFeed, Post } from "~/lib/helpers";
-import { CategoryDropdown, DateTimeAndInstagramDate } from "./CreateAction";
+import { Description, Header, Title } from "~/routes/dashboard.action.id.slug";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
+import { CategoryDropdown, DateTimeAndInstagramDate } from "./CreateAction";
 
 export default function EditAction({
   action,
@@ -172,6 +167,7 @@ export default function EditAction({
                 });
               }}
             />
+            {/*
 
             <DateTimeAndInstagramDate
               action={{
@@ -225,7 +221,7 @@ export default function EditAction({
 
                 setEditingAction(updates);
               }}
-            />
+            /> */}
           </div>
           <div className="flex justify-end gap-2">
             <Button

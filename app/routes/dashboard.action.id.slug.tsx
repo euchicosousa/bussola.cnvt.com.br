@@ -174,27 +174,27 @@ export default function ActionPage() {
     instagram_caption: action.instagram_caption,
   });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Verificar title
-      if (action.title !== lastSavedTextValues.current.title) {
-        saveField("title", action.title);
-        lastSavedTextValues.current.title = action.title;
-      }
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     // Verificar title
+  //     if (action.title !== lastSavedTextValues.current.title) {
+  //       saveField("title", action.title);
+  //       lastSavedTextValues.current.title = action.title;
+  //     }
 
-      // Verificar instagram_caption
-      if (
-        action.instagram_caption !==
-        lastSavedTextValues.current.instagram_caption
-      ) {
-        saveField("instagram_caption", action.instagram_caption);
-        lastSavedTextValues.current.instagram_caption =
-          action.instagram_caption;
-      }
-    }, 5000);
+  //     // Verificar instagram_caption
+  //     if (
+  //       action.instagram_caption !==
+  //       lastSavedTextValues.current.instagram_caption
+  //     ) {
+  //       saveField("instagram_caption", action.instagram_caption);
+  //       lastSavedTextValues.current.instagram_caption =
+  //         action.instagram_caption;
+  //     }
+  //   }, 5000);
 
-    return () => clearInterval(interval);
-  }, [action.title, action.instagram_caption, saveField]);
+  //   return () => clearInterval(interval);
+  // }, [action.title, action.instagram_caption, saveField]);
 
   // Refs para acessar conteúdo atual dos editors
   const editorRef = useRef<any>(null);
@@ -520,28 +520,28 @@ export function Description({
   }, [action.id, action.description]); // Quando muda de action OU quando description é atualizada
 
   // Background auto-save a cada 3s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (editorRef.current) {
-        const currentContent = editorRef.current.getHTML();
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     if (editorRef.current) {
+  //       const currentContent = editorRef.current.getHTML();
 
-        if (currentContent !== lastSavedDescription.current) {
-          // Salva SEM atualizar estado local (não perde cursor)
-          const updates = {
-            description: currentContent,
-            updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-          };
+  //       if (currentContent !== lastSavedDescription.current) {
+  //         // Salva SEM atualizar estado local (não perde cursor)
+  //         const updates = {
+  //           description: currentContent,
+  //           updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+  //         };
 
-          saveMultipleFields(updates);
-          lastSavedDescription.current = currentContent;
-        }
-      }
-    }, 5000);
+  //         saveMultipleFields(updates);
+  //         lastSavedDescription.current = currentContent;
+  //       }
+  //     }
+  //   }, 5000);
 
-    return () => {
-      clearInterval(interval);
-    };
-  }, [action]);
+  //   return () => {
+  //     clearInterval(interval);
+  //   };
+  // }, [action]);
 
   async function askBia(prompt?: string) {
     if (prompt) {
