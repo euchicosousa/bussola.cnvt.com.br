@@ -64,7 +64,9 @@ export function usePendingData(): { actions: Action[] } {
             .map(Number),
           instagram_content:
             String(fetcher.formData?.get("instagram_content")) || null,
-          sprints: String(fetcher.formData?.get("sprints")).split(","),
+          sprints: String(fetcher.formData?.get("sprints"))
+            ? String(fetcher.formData?.get("sprints")).split(",")
+            : null,
         };
 
         return { ...action };

@@ -278,7 +278,7 @@ export async function handleCustomShortcut(
     }
   } else if (modifiers.shift && key === "u") {
     handleActions({
-      id: action.id,
+      ...action,
       intent: INTENTS.updateAction,
       sprints: toggleSprint(action, person.user_id),
     });

@@ -301,7 +301,7 @@ export default function Partner() {
   const calendar = days.map((day) => {
     return {
       date: format(day, "yyyy-MM-dd"),
-      actions: actions?.filter(
+      actions: actionsArray?.filter(
         (action) =>
           isSameDay(
             isInstagramDate && isInstagramFeed(action.category, true)

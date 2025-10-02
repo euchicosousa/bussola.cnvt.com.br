@@ -14,7 +14,6 @@ import { StarterKit } from "@tiptap/starter-kit";
 
 // --- UI Primitives ---
 import { Button } from "~/integrations/tiptap/primitives/button";
-import { Spacer } from "~/integrations/tiptap/primitives/spacer";
 import {
   Toolbar,
   ToolbarGroup,
@@ -28,7 +27,6 @@ import "~/integrations/tiptap/nodes/tiptap-node/heading-node/heading-node.scss";
 import { HorizontalRule } from "~/integrations/tiptap/nodes/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
 import "~/integrations/tiptap/nodes/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss";
 import "~/integrations/tiptap/nodes/tiptap-node/image-node/image-node.scss";
-import { ImageUploadNode } from "~/integrations/tiptap/nodes/tiptap-node/image-upload-node/image-upload-node-extension";
 import "~/integrations/tiptap/nodes/tiptap-node/list-node/list-node.scss";
 import "~/integrations/tiptap/nodes/tiptap-node/paragraph-node/paragraph-node.scss";
 
@@ -41,7 +39,6 @@ import {
   ColorHighlightPopoverContent,
 } from "~/integrations/tiptap/ui/color-highlight-popover";
 import { HeadingDropdownMenu } from "~/integrations/tiptap/ui/heading-dropdown-menu";
-import { ImageUploadButton } from "~/integrations/tiptap/ui/image-upload-button";
 import {
   LinkButton,
   LinkContent,
@@ -59,19 +56,17 @@ import { LinkIcon } from "~/integrations/tiptap/icons/link-icon";
 
 // --- Hooks ---
 import { useCursorVisibility } from "~/hooks/use-cursor-visibility";
-import { useMobile } from "~/shared/hooks/ui/useMobile";
 import { useScrolling } from "~/hooks/use-scrolling";
 import { useWindowSize } from "~/hooks/use-window-size";
+import { useMobile } from "~/shared/hooks/ui/useMobile";
 
 // --- Components ---
-import { ThemeToggle } from "~/integrations/tiptap/templates/simple/theme-toggle";
 
 // --- Lib ---
-import { handleImageUpload, MAX_FILE_SIZE } from "~/lib/tiptap-utils";
 
 // --- Styles ---
-import "~/integrations/tiptap/templates/simple/simple-editor.scss";
 import { useEffect } from "react";
+import "~/integrations/tiptap/templates/simple/simple-editor.scss";
 
 // import content from "~/integrations/tiptap/templates/simple/data/content.json";
 
