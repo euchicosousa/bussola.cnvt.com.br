@@ -19,8 +19,8 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { SOW } from "~/lib/constants";
-import { Avatar } from "~/lib/helpers";
 import { createClient } from "~/lib/database/supabase";
+import { Avatar } from "~/lib/helpers";
 
 export const meta: MetaFunction = () => {
   return [

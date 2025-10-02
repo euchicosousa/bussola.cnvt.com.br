@@ -107,8 +107,8 @@ export const ActionItem = React.memo(function ActionItem({
   const [deleteAction, setDeleteAction] = useState<Action | null>(null);
 
   // Shared data from matches
-  const { categories, states, sprints, partners, people, priorities, person } =
-    matches[1].data as DashboardRootType;
+  const { categories, states, partners, people, person } = matches[1]
+    .data as DashboardRootType;
 
   // Shared computed values
   const state = states.find((state) => state.slug === action.state) as State;
@@ -316,7 +316,7 @@ export const ActionItem = React.memo(function ActionItem({
                     currentSelection={selectedActions || []}
                   />
                 )}
-                {isSprint(action.id, sprints) && (
+                {isSprint(action, person.user_id) && (
                   <SprintIcon hasBackground className="size-6" />
                 )}
 
@@ -436,7 +436,7 @@ export const ActionItem = React.memo(function ActionItem({
               <div className="flex items-center justify-between gap-4 overflow-x-hidden py-1">
                 <div className="flex items-center gap-2">
                   {/* Sprint */}
-                  {isSprint(action.id, sprints) && <SprintIcon />}
+                  {isSprint(action, person.user_id) && <SprintIcon />}
                   {/* Partners | Clientes  */}
                   <AvatarGroup
                     partners={actionPartners}
@@ -719,7 +719,7 @@ export const ActionItem = React.memo(function ActionItem({
               <StateBorder color={state.color} />
 
               {/* Sprint */}
-              {isSprint(action.id, sprints) && <SprintIcon />}
+              {isSprint(action, person.user_id) && <SprintIcon />}
 
               {/* Title */}
               <EditableTitle
@@ -774,7 +774,7 @@ export const ActionItem = React.memo(function ActionItem({
                   ) : (
                     <AvatarGroup
                       ringColor={
-                        isSprint(action.id, sprints)
+                        isSprint(action, person.user_id)
                           ? "ring-primary"
                           : "ring-card"
                       }

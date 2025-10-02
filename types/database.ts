@@ -30,6 +30,7 @@ export type Database = {
           partners: string[]
           priority: string
           responsibles: string[]
+          sprints: string[] | null
           state: string
           time: number
           title: string
@@ -53,6 +54,7 @@ export type Database = {
           partners: string[]
           priority: string
           responsibles: string[]
+          sprints?: string[] | null
           state: string
           time?: number
           title: string
@@ -76,6 +78,7 @@ export type Database = {
           partners?: string[]
           priority?: string
           responsibles?: string[]
+          sprints?: string[] | null
           state?: string
           time?: number
           title?: string
@@ -308,35 +311,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sprints: {
-        Row: {
-          action_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          action_id: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          action_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sprints_action_id_fkey"
-            columns: ["action_id"]
-            isOneToOne: false
-            referencedRelation: "actions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       states: {
         Row: {
           color: string
@@ -427,6 +401,7 @@ export type Database = {
           partners: string[]
           priority: string
           responsibles: string[]
+          sprints: string[] | null
           state: string
           time: number
           title: string
@@ -435,6 +410,37 @@ export type Database = {
           user_id: string
           work_files: string[] | null
         }[]
+      }
+      get_user_actions: {
+        Args: { end_date: string; start_date: string; user_id_param: string }
+        Returns: {
+          archived: boolean | null
+          category: string
+          color: string
+          content_files: string[] | null
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          instagram_caption: string | null
+          instagram_content: string | null
+          instagram_date: string
+          partners: string[]
+          priority: string
+          responsibles: string[]
+          sprints: string[] | null
+          state: string
+          time: number
+          title: string
+          topics: number[] | null
+          updated_at: string
+          user_id: string
+          work_files: string[] | null
+        }[]
+      }
+      is_user_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {

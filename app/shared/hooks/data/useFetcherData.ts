@@ -3,7 +3,6 @@ import { INTENTS } from "~/lib/constants";
 
 export function useIDsToRemove(): {
   actions: string[];
-  sprints: { action_id: string; user_id: string }[];
 } {
   return {
     actions: useFetchers()
@@ -16,23 +15,10 @@ export function useIDsToRemove(): {
       .map((fetcher) => {
         return String(fetcher.formData?.get("id"));
       }),
-    sprints: useFetchers()
-      .filter((fetcher) => {
-        if (!fetcher.formData) {
-          return false;
-        }
-        return fetcher.formData.get("intent") === INTENTS.unsetSprint;
-      })
-      .map((fetcher) => {
-        return {
-          action_id: String(fetcher.formData?.get("action_id")),
-          user_id: String(fetcher.formData?.get("user_id")),
-        };
-      }),
   };
 }
 
-export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
+export function usePendingData(): { actions: Action[] } {
   return {
     actions: useFetchers()
       .filter((fetcher) => {
@@ -76,27 +62,12 @@ export function usePendingData(): { actions: Action[]; sprints: Sprint[] } {
           topics: String(fetcher.formData?.get("topics"))
             .split(",")
             .map(Number),
-          instagram_content: String(fetcher.formData?.get("instagram_content")) || null,
+          instagram_content:
+            String(fetcher.formData?.get("instagram_content")) || null,
+          sprints: String(fetcher.formData?.get("sprints")).split(","),
         };
 
         return { ...action };
       }) as Action[],
-    sprints: useFetchers()
-      .filter((fetcher) => {
-        if (!fetcher.formData) {
-          return false;
-        }
-        return fetcher.formData.get("intent") === INTENTS.setSprint;
-      })
-      .map((fetcher) => {
-        const sprint: Sprint = {
-          id: String(fetcher.formData?.get("id")),
-          action_id: String(fetcher.formData?.get("action_id")),
-          user_id: String(fetcher.formData?.get("user_id")),
-          created_at: String(fetcher.formData?.get("created_at")),
-        };
-
-        return { ...sprint };
-      }) as Sprint[],
   };
 }

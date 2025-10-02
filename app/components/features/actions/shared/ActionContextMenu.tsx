@@ -43,6 +43,7 @@ import {
 import { cn } from "~/lib/ui/utils";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
 import { formatActionDatetime } from "./formatActionDatetime";
+import { toggleSprint } from "~/shared";
 
 // Componente interno para seleção de data e hora
 interface DateTimePickerProps {
@@ -169,16 +170,8 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
   onDeleteAction,
 }: ActionContextMenuProps) {
   const matches = useMatches();
-  const {
-    people,
-    states,
-    categories,
-    priorities,
-    areas,
-    partners,
-    person,
-    sprints,
-  } = matches[1].data as DashboardRootType;
+  const { people, states, categories, priorities, areas, partners, person } =
+    matches[1].data as DashboardRootType;
 
   const state = states.find((state) => state.slug === action.state);
 
@@ -202,17 +195,13 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         onSelect={() => {
           handleActions({
             id: window.crypto.randomUUID(),
-            user_id: person.user_id,
-            action_id: action.id,
-            created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-            intent: isSprint(action.id, sprints)
-              ? INTENTS.unsetSprint
-              : INTENTS.setSprint,
+            intent: INTENTS.updateAction,
+            sprints: toggleSprint(action, person.user_id),
           });
         }}
       >
         <RabbitIcon className="size-3" />
-        {isSprint(action.id, sprints) ? (
+        {isSprint(action, person.user_id) ? (
           <span>Retirar do Sprint</span>
         ) : (
           <span>Colocar no Sprint</span>

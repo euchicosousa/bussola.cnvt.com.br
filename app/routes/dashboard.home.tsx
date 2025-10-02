@@ -180,7 +180,7 @@ export default function DashboardIndex() {
         </div>
 
         {/* Sprint */}
-        <Sprint />
+        <Sprint actions={actions} />
 
         {/* Parceiros */}
         <Partners actions={actions as Action[]} />
@@ -380,37 +380,14 @@ function ActionsProgress() {
   );
 }
 
-function Sprint() {
-  const matches = useMatches();
-  let { actions } = useLoaderData<typeof loader>();
-  let { sprints } = matches[1].data as DashboardRootType;
-
-  const { sprints: pendingSprints } = usePendingDataSafe();
-  const { sprints: deletingIDsSprints } = useIDsToRemoveSafe();
-
-  //Sprints
-  // Transform into a Map
-  const sprintsMap = new Map<string, Sprint>(
-    sprints.map((sprint) => [sprint.action_id, sprint]),
-  );
-  // Add pending Created/Updated Actions
-  for (const sprint of pendingSprints as Sprint[]) {
-    sprintsMap.set(sprint.action_id, sprint);
-  }
-  // Remove pending deleting Actions
-  for (const ids of deletingIDsSprints) {
-    sprintsMap.delete(ids.action_id);
-  }
-  // transform
-  sprints = Array.from(sprintsMap, ([, v]) => v);
+function Sprint({ actions }: { actions?: Action[] }) {
+  actions = actions?.filter((a) => (a.sprints ? true : false)) || [];
 
   const [order, setOrder] = useState<ORDER>("state");
   const [descending, setDescending] = useState(false);
-  const ids = new Set(sprints?.map((s) => s.action_id));
+  // const ids = new Set(sprints?.map((s) => s.action_id));
 
-  actions = actions?.filter((a) => ids.has(a.id)) || [];
-
-  return sprints.length > 0 ? (
+  return actions.length > 0 ? (
     <div className="before:bg-border relative shrink-0 grow px-2 py-8 before:absolute before:top-0 before:-left-[100vw] before:h-px before:w-[200vw] md:px-8">
       <div className="flex h-auto items-start justify-between py-8">
         <div className="relative flex">
@@ -466,6 +443,7 @@ function Sprint() {
           orderBy={order}
           descending={descending}
           showDelay={true}
+          columns={6}
         />
       ) : (
         <div className="flex items-center gap-2">

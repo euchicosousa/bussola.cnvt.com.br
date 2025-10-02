@@ -1,7 +1,23 @@
-import { format, eachDayOfInterval, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, parseISO } from "date-fns";
-import { sortActions, isInstagramFeed, isSprint, getNewDateValues, getQueryString } from "~/lib/helpers";
+import {
+  format,
+  eachDayOfInterval,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  isSameDay,
+  parseISO,
+} from "date-fns";
+import {
+  sortActions,
+  isInstagramFeed,
+  isSprint,
+  getNewDateValues,
+  getQueryString,
+} from "~/lib/helpers";
 import { getCategoryShortcuts, type ShortcutDefinition } from "./shortcuts";
 import { INTENTS } from "~/lib/constants";
+import { toggleSprint } from "~/shared";
 
 /**
  * Merges actions with pending updates and handles deletions
@@ -9,12 +25,12 @@ import { INTENTS } from "~/lib/constants";
 export function mergeActionsWithPending(
   actions: Action[] | null,
   pendingActions: Action[] = [],
-  deletingIds: string[] = []
+  deletingIds: string[] = [],
 ): Action[] {
   if (!actions) return [];
-  
+
   const actionsMap = new Map<string, Action>(
-    actions.map((action) => [action.id, action])
+    actions.map((action) => [action.id, action]),
   );
 
   // Apply pending updates
@@ -41,7 +57,7 @@ export function generateCalendarData(
     stateFilter?: State;
     responsiblesFilter?: string[];
     isInstagramDate?: boolean;
-  }
+  },
 ) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentDate)),
@@ -49,39 +65,44 @@ export function generateCalendarData(
   });
 
   return days.map((day) => {
-    let filteredActions = actions?.filter((action) => {
-      // Date comparison
-      const actionDate = filters?.isInstagramDate && isInstagramFeed(action.category, true)
-        ? parseISO(action.instagram_date)
-        : parseISO(action.date);
-        
-      if (!isSameDay(actionDate, day)) {
-        return false;
-      }
+    let filteredActions =
+      actions?.filter((action) => {
+        // Date comparison
+        const actionDate =
+          filters?.isInstagramDate && isInstagramFeed(action.category, true)
+            ? parseISO(action.instagram_date)
+            : parseISO(action.date);
 
-      // Category filter
-      if (filters?.categoryFilter && filters.categoryFilter.length > 0) {
-        const hasCategory = filters.categoryFilter.find(
-          (category) => category.slug === action.category
-        );
-        if (!hasCategory) return false;
-      }
+        if (!isSameDay(actionDate, day)) {
+          return false;
+        }
 
-      // State filter  
-      if (filters?.stateFilter && action.state !== filters.stateFilter.slug) {
-        return false;
-      }
+        // Category filter
+        if (filters?.categoryFilter && filters.categoryFilter.length > 0) {
+          const hasCategory = filters.categoryFilter.find(
+            (category) => category.slug === action.category,
+          );
+          if (!hasCategory) return false;
+        }
 
-      // Responsibles filter
-      if (filters?.responsiblesFilter) {
-        const hasResponsible = action.responsibles.find((responsible: string) =>
-          filters.responsiblesFilter?.find((user_id) => user_id === responsible)
-        );
-        if (!hasResponsible) return false;
-      }
+        // State filter
+        if (filters?.stateFilter && action.state !== filters.stateFilter.slug) {
+          return false;
+        }
 
-      return true;
-    }) || [];
+        // Responsibles filter
+        if (filters?.responsiblesFilter) {
+          const hasResponsible = action.responsibles.find(
+            (responsible: string) =>
+              filters.responsiblesFilter?.find(
+                (user_id) => user_id === responsible,
+              ),
+          );
+          if (!hasResponsible) return false;
+        }
+
+        return true;
+      }) || [];
 
     return {
       date: format(day, "yyyy-MM-dd"),
@@ -95,14 +116,14 @@ export function generateCalendarData(
  */
 export function groupActionsByState(actions: Action[], states: State[]) {
   const groupedActions = new Map<string, Action[]>();
-  
+
   // Initialize groups
-  states.forEach(state => {
+  states.forEach((state) => {
     groupedActions.set(state.slug, []);
   });
 
   // Group actions
-  actions.forEach(action => {
+  actions.forEach((action) => {
     const stateActions = groupedActions.get(action.state) || [];
     stateActions.push(action);
     groupedActions.set(action.state, stateActions);
@@ -114,15 +135,19 @@ export function groupActionsByState(actions: Action[], states: State[]) {
 /**
  * Filters actions based on search query
  */
-export function filterActionsBySearch(actions: Action[], query: string): Action[] {
+export function filterActionsBySearch(
+  actions: Action[],
+  query: string,
+): Action[] {
   if (!query || query.length < 2) return actions;
-  
+
   const searchTerm = query.toLowerCase();
-  
-  return actions.filter(action => 
-    action.title.toLowerCase().includes(searchTerm) ||
-    action.description?.toLowerCase().includes(searchTerm) ||
-    action.id.includes(searchTerm)
+
+  return actions.filter(
+    (action) =>
+      action.title.toLowerCase().includes(searchTerm) ||
+      action.description?.toLowerCase().includes(searchTerm) ||
+      action.id.includes(searchTerm),
   );
 }
 
@@ -211,13 +236,13 @@ export async function handleCustomShortcut(
     handleActions: any;
     isInstagramDate: boolean;
     person: any;
-    sprints: any[];
     confirmDelete?: (callback: () => void) => void;
   },
 ) {
   if (!context) return;
 
-  const { navigate, handleActions, isInstagramDate, person, sprints, confirmDelete } = context;
+  const { navigate, handleActions, isInstagramDate, person, confirmDelete } =
+    context;
   const { key, modifiers } = shortcut;
 
   // Atalhos de ações principais
@@ -254,12 +279,8 @@ export async function handleCustomShortcut(
   } else if (modifiers.shift && key === "u") {
     handleActions({
       id: window.crypto.randomUUID(),
-      action_id: action.id,
-      user_id: person.user_id,
-      created_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-      intent: isSprint(action.id, sprints)
-        ? INTENTS.unsetSprint
-        : INTENTS.setSprint,
+      intent: INTENTS.updateAction,
+      sprints: toggleSprint(action, person.user_id),
     });
   }
 
@@ -316,4 +337,3 @@ export async function handleCustomShortcut(
     });
   }
 }
-

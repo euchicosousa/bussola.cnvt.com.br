@@ -92,9 +92,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .toString()
         .split(",")
         .filter(Boolean);
-    } else {
-      //@ts-ignore
-      values["content_files"] = null;
     }
 
     // Handle work_files
@@ -108,18 +105,40 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .toString()
         .split(",")
         .filter(Boolean);
-    } else {
-      //@ts-ignore
-      values["work_files"] = null;
     }
 
-    if (values["responsibles"] !== "null") {
+    // Handle sprint
+    if (
+      values["sprints"] &&
+      values["sprints"] !== "null" &&
+      values["sprints"] !== ""
+    ) {
+      //@ts-ignore
+      values["sprints"] = values["sprints"]
+        .toString()
+        .split(",")
+        .filter(Boolean);
+    }
+
+    console.log({ values });
+
+    if (
+      values["responsibles"] &&
+      values["responsibles"] !== "null" &&
+      values["responsibles"] !== ""
+    ) {
       //@ts-ignore
       values["responsibles"] = values["responsibles"].toString().split(",");
     }
 
-    //@ts-ignore
-    values["partners"] = values["partners"].toString().split(",");
+    if (
+      values["partners"] &&
+      values["partners"] !== "null" &&
+      values["partners"] !== ""
+    ) {
+      //@ts-ignore
+      values["partners"] = values["partners"].toString().split(",");
+    }
     //@ts-ignore
     values["topics"] = values["topics"]
       ? values["topics"].toString().split(",")
@@ -131,6 +150,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         ...values,
       } as any)
       .match({ id });
+
+    console.log(data, error);
 
     if (error) console.log({ from: "UPDATE ACTION", error });
 
@@ -202,39 +223,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         ...values,
       } as any)
       .match({ id });
-
-    if (error) console.log({ error });
-
-    return { data, error };
-  } else if (intent === INTENTS.setSprint) {
-    const sprint = {
-      id: id.toString(),
-      created_at: values["created_at"].toString(),
-      action_id: values["action_id"].toString(),
-      user_id: values["user_id"].toString(),
-    };
-
-    const { data, error } = await supabase
-      .from("sprints")
-      .insert({ ...sprint } as any)
-      .select()
-      .single();
-
-    if (error) console.log({ error });
-
-    return { data, error };
-  } else if (intent === INTENTS.unsetSprint) {
-    const sprint = {
-      action_id: values["action_id"].toString(),
-      user_id: values["user_id"].toString(),
-    };
-
-    const { data, error } = await supabase
-      .from("sprints")
-      .delete()
-      .match(sprint)
-      .select()
-      .single();
 
     if (error) console.log({ error });
 

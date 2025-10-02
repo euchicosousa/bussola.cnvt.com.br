@@ -78,7 +78,10 @@ export function ActionsContainer({
 
   // CSS classes baseado no variant e configurações
   const getContainerClasses = () => {
-    if (variant === VARIANTS.BLOCK || variant === VARIANTS.FINANCE) {
+    if (
+      !columns &&
+      (variant === VARIANTS.BLOCK || variant === VARIANTS.FINANCE)
+    ) {
       if (maxItems === undefined) {
         return "grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))]";
       }

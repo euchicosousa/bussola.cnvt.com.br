@@ -12,7 +12,6 @@ declare global {
   type Priority = Tables<"priorities">;
   type Action = Tables<"actions">;
   type Area = Tables<"areas">;
-  type Sprint = Tables<"sprints">;
   type Celebration = Tables<"celebrations">;
   type Topic = Tables<"topics">;
   type Sow = Tables<"sow">;
@@ -51,7 +50,6 @@ declare global {
     user_id: string;
     priorities: Priority[];
     areas: Area[];
-    sprints: Sprint[];
     celebrations: Celebration[];
     topics: Topic[];
   };

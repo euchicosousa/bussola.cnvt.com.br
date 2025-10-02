@@ -25,7 +25,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     { data: states },
     { data: priorities },
     { data: areas },
-    { data: sprints },
     { data: celebrations },
     { data: configs },
     { data: topics },
@@ -45,7 +44,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     supabase.from("states").select("*").order("order", { ascending: true }),
     supabase.from("priorities").select("*").order("order", { ascending: true }),
     supabase.from("areas").select("*").order("order", { ascending: true }),
-    supabase.from("sprints").select("*").match({ user_id: user_id }),
     supabase.from("celebrations").select("*"),
     supabase.from("config").select("*").match({ user_id: user_id }),
 
@@ -73,7 +71,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     priorities,
     person,
     areas,
-    sprints,
     celebrations,
     config,
     topics,

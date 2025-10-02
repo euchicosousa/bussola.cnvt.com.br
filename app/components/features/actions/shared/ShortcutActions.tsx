@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect } from "react";
-import { useNavigate, useSubmit, useMatches, useSearchParams } from "react-router";
+import {
+  useNavigate,
+  useSubmit,
+  useMatches,
+  useSearchParams,
+} from "react-router";
 import { format } from "date-fns";
 import { INTENTS } from "~/lib/constants";
 import {
@@ -65,9 +70,8 @@ export const ShortcutActions = React.memo(function ShortcutActions({
   const [searchParams] = useSearchParams();
   const isInstagramDate = !!searchParams.get("instagram_date");
 
-  const { states, categories, priorities, person, sprints } = matches[1]
+  const { states, categories, priorities, person } = matches[1]
     .data as DashboardRootType;
-
 
   const handleActions = useCallback(
     (data: HandleActionsDataType) => {
@@ -77,10 +81,10 @@ export const ShortcutActions = React.memo(function ShortcutActions({
           action: "/handle-actions",
           method: "post",
           navigate: false,
-        }
+        },
       );
     },
-    [submit]
+    [submit],
   );
 
   const keyDownHandler = useCallback(
@@ -127,7 +131,6 @@ export const ShortcutActions = React.memo(function ShortcutActions({
               handleActions,
               isInstagramDate,
               person,
-              sprints,
               confirmDelete: () => {
                 onDeleteAction(action);
               },
@@ -165,9 +168,8 @@ export const ShortcutActions = React.memo(function ShortcutActions({
       states,
       priorities,
       person,
-      sprints,
       onDeleteAction,
-    ]
+    ],
   );
 
   useEffect(() => {

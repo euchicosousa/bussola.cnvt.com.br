@@ -477,7 +477,11 @@ function PopoverLateActions({
   link: string;
   actions: Action[];
 }) {
-  const { actions: actionsFull } = useMatches()[2].data as {
+  const data = useMatches()[2].data;
+  if (!data) {
+    return null;
+  }
+  const { actions: actionsFull } = data as {
     actions: Action[];
   };
 
