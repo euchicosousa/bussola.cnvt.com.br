@@ -194,7 +194,7 @@ export const ActionContextMenu = React.memo(function ActionContextMenu({
         className="bg-item flex items-center gap-2"
         onSelect={() => {
           handleActions({
-            id: window.crypto.randomUUID(),
+            id: action.id,
             intent: INTENTS.updateAction,
             sprints: toggleSprint(action, person.user_id),
           });

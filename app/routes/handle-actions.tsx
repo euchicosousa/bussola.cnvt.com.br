@@ -92,6 +92,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .toString()
         .split(",")
         .filter(Boolean);
+    } else {
+      //@ts-ignore
+      values["content_files"] = null;
     }
 
     // Handle work_files
@@ -105,6 +108,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .toString()
         .split(",")
         .filter(Boolean);
+    } else {
+      //@ts-ignore
+      values["work_files"] = null;
     }
 
     // Handle sprint
@@ -118,9 +124,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         .toString()
         .split(",")
         .filter(Boolean);
+    } else {
+      //@ts-ignore
+      values["sprints"] = null;
     }
-
-    console.log({ values });
 
     if (
       values["responsibles"] &&
@@ -140,18 +147,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       values["partners"] = values["partners"].toString().split(",");
     }
     //@ts-ignore
-    values["topics"] = values["topics"]
-      ? values["topics"].toString().split(",")
-      : null;
+    if (
+      values["topics"] &&
+      values["topics"] !== "null" &&
+      values["topics"] !== ""
+    ) {
+      //@ts-ignore
+      values["topics"] = values["topics"].toString().split(",");
+    } else {
+      //@ts-ignore
+      values["topics"] = null;
+    }
 
     const { data, error } = await supabase
       .from("actions")
       .update({
         ...values,
       } as any)
-      .match({ id });
-
-    console.log(data, error);
+      .match({ id })
+      .select();
 
     if (error) console.log({ from: "UPDATE ACTION", error });
 

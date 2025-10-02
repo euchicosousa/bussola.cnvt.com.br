@@ -230,8 +230,6 @@ export default function Search({
                 }))
               : [];
 
-            console.log({ actions });
-
             setSections([
               {
                 name: "Ações",

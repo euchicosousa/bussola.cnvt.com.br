@@ -730,11 +730,6 @@ export const ActionItem = React.memo(function ActionItem({
                   />
                 ) : (
                   <AvatarGroup
-                    ringColor={
-                      isSprint(action, person.user_id)
-                        ? "ring-primary"
-                        : "ring-card"
-                    }
                     avatars={getPartners(action.partners, partners).map(
                       (partner) => ({
                         item: {
