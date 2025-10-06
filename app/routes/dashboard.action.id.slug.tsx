@@ -169,10 +169,10 @@ export default function ActionPage() {
   });
 
   // Auto-save apenas para campos de texto (Title e Caption)
-  const lastSavedTextValues = useRef({
-    title: action.title,
-    instagram_caption: action.instagram_caption,
-  });
+  // const lastSavedTextValues = useRef({
+  //   title: action.title,
+  //   instagram_caption: action.instagram_caption,
+  // });
 
   // useEffect(() => {
   //   const interval = setInterval(() => {
@@ -374,6 +374,8 @@ export function Title({
   const navigation = useNavigation();
   const fetchers = useFetchers();
 
+  const [localTitle, setLocalTitle] = useState(action.title);
+
   const fetcher = useFetcher({ key: "action-page" });
   const intent = fetcher.formData?.get("intent")?.toString();
   const isWorking =
@@ -397,7 +399,7 @@ export function Title({
     <div className="flex items-start gap-4 pt-2">
       <textarea
         ref={titleRef}
-        value={action.title}
+        value={localTitle}
         className={`field-sizing-content w-full resize-none overflow-hidden border-none bg-transparent p-0 py-2 text-3xl leading-[85%] font-bold tracking-tighter outline-hidden ${
           isSideBar
             ? "text-2xl"
@@ -406,7 +408,10 @@ export function Title({
               : "md:text-6xl"
         }`}
         rows={1}
-        onChange={(event) =>
+        onChange={(event) => {
+          setLocalTitle(event.target.value);
+        }}
+        onBlur={(event) =>
           setAction({
             ...action,
             title: event.target.value,

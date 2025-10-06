@@ -5,6 +5,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  isSameMonth,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -207,7 +208,9 @@ export default function DashboardIndex() {
         <FinancialView
           actions={
             actions?.filter(
-              (action) => action.category === "finance",
+              (action) =>
+                action.category === "finance" &&
+                isSameMonth(new Date(), action.date),
             ) as Action[]
           }
         />
@@ -485,6 +488,7 @@ const ProgressBar = ({ actions }: { actions: ActionChart[] }) => {
 
 const FinancialView = ({ actions }: { actions: Action[] }) => {
   const { partners } = useMatches()[1].data as DashboardRootType;
+  actions.filter((action) => action.category === "finance");
   return (
     <div className="relative" id="financial">
       <div className="before:bg-border relative px-2 before:absolute before:-left-[100vw] before:h-px before:w-[200vw] md:px-8">
@@ -516,6 +520,7 @@ const FinancialView = ({ actions }: { actions: Action[] }) => {
           </div>
           <div className="pt-4">
             <ActionsContainer
+              columns={6}
               variant={VARIANTS.FINANCE}
               actions={actions}
               orderBy={ORDER_ACTIONS_BY.state}
