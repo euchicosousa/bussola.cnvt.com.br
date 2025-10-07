@@ -867,7 +867,7 @@ function RightSide({
         placeholder="Escreva sua legenda aqui ou peça à βIA para criar no botão superior direito."
         key={`instagram_caption-${action.id}`}
         name="instagram_caption"
-        onChange={(event) => {
+        onBlur={(event) => {
           setAction({
             ...action,
             instagram_caption: event.target.value,
@@ -876,7 +876,7 @@ function RightSide({
         className={`field-sizing-content min-h-screen w-full text-base font-normal outline-hidden transition lg:min-h-auto lg:text-sm ${
           isInstagramFeed(action.category) ? "border-0 focus-within:ring-0" : ""
         }`}
-        value={action.instagram_caption || ""}
+        defaultValue={action.instagram_caption || ""}
       ></textarea>
     </div>
   ) : null;
