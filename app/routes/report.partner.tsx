@@ -115,7 +115,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .neq("state", "idea")
         .contains("partners", [slug])
         // @ts-ignore
-        .in("category", ["post", "reels", "carousel", "stories"])
+        .in("category", ["post", "reels", "carousel"])
         .gte("instagram_date", start)
         .lte("instagram_date", end)
         .order("instagram_date", { ascending: true }),
