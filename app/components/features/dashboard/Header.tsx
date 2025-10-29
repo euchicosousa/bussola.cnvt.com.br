@@ -108,7 +108,7 @@ export default function Header({
       ? (matches[2].data as { partner: Partner }).partner
       : partner;
 
-  const lateActions = getDelayedActions({ actions: actionsChart as Action[] });
+  let lateActions = getDelayedActions({ actions: actions as Action[] });
 
   const date = searchParams.get("date")
     ? parseISO(searchParams.get("date") as string)
@@ -477,28 +477,32 @@ function PopoverLateActions({
   link: string;
   actions: Action[];
 }) {
-  const data = useMatches()[2].data;
-  if (!data) {
+  // const data = useMatches()[2].data;
+  // if (!data) {
+  //   return null;
+  // }
+  // const { actions: actionsFull } = data as {
+  //   actions: Action[];
+  // };
+
+  // if (!actionsFull || actionsFull.length === 0) return null;
+
+  // const lateActions = actionsFull.filter((af) =>
+  //   actions.find((a) => a.id === af.id),
+  // );
+
+  if (!actions || actions.length === 0) {
     return null;
   }
-  const { actions: actionsFull } = data as {
-    actions: Action[];
-  };
 
-  if (!actionsFull) return null;
-
-  const lateActions = actionsFull.filter((af) =>
-    actions.find((a) => a.id === af.id),
-  );
-
-  return actions ? (
+  return (
     <Popover>
       <PopoverTrigger>
         <Badge value={actions.length} isDynamic size="sm" />
       </PopoverTrigger>
       <PopoverContent className="scrollbars-v max-h-[50vh] min-w-80">
-        <ActionsContainer actions={lateActions} orderBy="date" />
+        <ActionsContainer actions={actions} orderBy="date" />
       </PopoverContent>
     </Popover>
-  ) : null;
+  );
 }

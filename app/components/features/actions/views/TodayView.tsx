@@ -247,24 +247,33 @@ export function TodayView({
                     states,
                   ) || []
                 ).map((action) => {
-                  const partner = partners.filter(
-                    (p) => p.slug === action.partners[0],
-                  )[0];
+                  const partner = partners.find((p) =>
+                    action.partners?.includes(p.slug),
+                  );
+
                   return (
                     <div className="flex flex-col gap-4" key={action.id}>
                       <div className="flex justify-between gap-4">
                         <div className="flex items-center gap-1 overflow-hidden">
-                          <Avatar
-                            item={{
-                              short: partner.short,
-                              bg: partner.colors[0],
-                              fg: partner.colors[1],
-                            }}
-                            size="xs"
-                          />
-                          <div className="overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
-                            {partner.title}
-                          </div>
+                          {partner ? (
+                            <>
+                              <Avatar
+                                item={{
+                                  short: partner.short,
+                                  bg: partner.colors[0],
+                                  fg: partner.colors[1],
+                                }}
+                                size="xs"
+                              />
+                              <div className="overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
+                                {partner.title}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap text-muted-foreground">
+                              Parceiro indisponível
+                            </div>
+                          )}
                         </div>
                         <Icons
                           id={action.category}

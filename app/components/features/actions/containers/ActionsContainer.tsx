@@ -123,6 +123,15 @@ export function ActionsContainer({
     return null;
   }
 
+  let finalActionsHours: Action[][] = [];
+  if (finalActions.length > 6) {
+    for (let i = 0; i < Math.ceil(finalActions.length / 6); i++) {
+      finalActionsHours.push(finalActions.slice(i * 6, i * 6 + 6));
+    }
+  } else {
+    finalActionsHours = [finalActions];
+  }
+
   return (
     <div
       className={

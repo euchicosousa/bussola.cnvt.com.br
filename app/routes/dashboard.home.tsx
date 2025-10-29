@@ -35,6 +35,7 @@ import { ActionItem, ActionsContainer } from "~/components/features/actions";
 import { CalendarView } from "~/components/features/actions/views/CalendarView";
 import { DelayedView } from "~/components/features/actions/views/DelayedView";
 import { TodayView } from "~/components/features/actions/views/TodayView";
+import { Button } from "~/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -402,13 +403,19 @@ function Sprint({ actions }: { actions?: Action[] }) {
             value={order}
             onValueChange={(value) => setOrder(value as ORDER)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-transparent">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-content">
-              <SelectItem value="state">Status</SelectItem>
-              <SelectItem value="priority">Prioridade</SelectItem>
-              <SelectItem value="time">Data</SelectItem>
+              <SelectItem className="bg-select-item" value="state">
+                Status
+              </SelectItem>
+              <SelectItem className="bg-select-item" value="priority">
+                Prioridade
+              </SelectItem>
+              <SelectItem className="bg-select-item" value="time">
+                Data
+              </SelectItem>
             </SelectContent>
           </Select>
           <Toggle
@@ -461,6 +468,10 @@ function Sprint({ actions }: { actions?: Action[] }) {
 const ProgressBar = ({ actions }: { actions: ActionChart[] }) => {
   const matches = useMatches();
   const { states } = matches[1].data as DashboardRootType;
+
+  if (actions.length === 0) {
+    return <div className="bg-border/40 h-1 w-full rounded" />;
+  }
 
   return (
     <div className="flex h-1 w-full">

@@ -152,6 +152,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         .is("archived", false)
         .contains("responsibles", person?.admin ? [] : [user_id])
         .contains("partners", [params["partner"]!]),
+
       supabase.from("partners").select().match({ slug: params["partner"]! }),
     ]);
   invariant(partners);
@@ -520,12 +521,13 @@ export default function Partner() {
       <div className={`flex h-full w-full flex-col overflow-hidden`}>
         {/* Calendário Header */}
 
-        <div className="flex items-center justify-between border-b py-2 pr-4 md:px-8">
+        <div className="flex items-center justify-between border-b px-4 py-2">
           {/* Mês */}
-          <div className="flex items-center gap-1">
-            <Button
+          <div className="flex items-center">
+            {/* <Button
               size="icon"
               variant="ghost"
+              className="-mr-2 rounded-r-none"
               onClick={() => {
                 const date = format(subMonths(currentDate, 1), "yyyy-MM-'15'");
                 setCurrentDate(date);
@@ -535,14 +537,11 @@ export default function Partner() {
               }}
             >
               <ChevronLeftIcon />
-            </Button>
+            </Button> */}
 
             <DropdownMenu>
               <DropdownMenuTrigger className="outline-hidden" asChild>
-                <Button
-                  variant={"ghost"}
-                  className={`cursor-pointer text-xl font-medium`}
-                >
+                <Button variant={"ghost"} className={`cursor-pointer text-lg`}>
                   <span className="shrink-0 capitalize">
                     {format(currentDate, "MMMM", {
                       locale: ptBR,
@@ -582,7 +581,7 @@ export default function Partner() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button
+            {/* <Button
               size="icon"
               variant="ghost"
               onClick={() => {
@@ -594,7 +593,7 @@ export default function Partner() {
               }}
             >
               <ChevronRightIcon />
-            </Button>
+            </Button> */}
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
             {/* Procurar ação */}
@@ -1089,7 +1088,7 @@ export default function Partner() {
                     stateFilter.title
                   ) : (
                     <>
-                      <span className="-mr-1 hidden font-normal md:inline">
+                      <span className="-mr-1 hidden font-normal xl:inline">
                         Filtrar pelo
                       </span>
                       Status
@@ -1142,7 +1141,7 @@ export default function Partner() {
                     </>
                   ) : (
                     <>
-                      <span className="-mr-1 hidden font-normal md:inline">
+                      <span className="-mr-1 hidden font-normal xl:inline">
                         Filtrar pela
                       </span>
                       Categoria
@@ -1344,7 +1343,7 @@ export default function Partner() {
           id="instagram-grid"
         >
           {/* Instagram Grid Header */}
-          <div className="flex items-center justify-between border-b px-4 py-2.5 leading-none">
+          <div className="flex items-center justify-between border-b border-l px-4 py-2.5 leading-none">
             <div className="flex items-center gap-2">
               <div>
                 <Avatar

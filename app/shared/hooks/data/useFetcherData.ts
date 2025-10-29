@@ -68,7 +68,6 @@ export function usePendingData(): { actions: Action[] } {
 
       return { ...action };
     });
-  console.log({ actions });
 
   return { actions };
 }

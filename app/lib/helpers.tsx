@@ -951,14 +951,17 @@ export function getTotalPayment(actions: Action[]): string {
   const total = actions.reduce((sum, action) => {
     if (!action.description) return sum;
 
-    // Remove tags HTML
-    const cleanText = action.description.replace(/<[^>]*>/g, "").trim();
+    const cleanText = action.description.replace(/<[^>]*>/g, " ");
+    const matches = cleanText.match(/-?\d[\d.,-]*/g);
 
-    // Converte diretamente para número
-    const numValue = Number(cleanText);
+    if (!matches) return sum;
 
-    // Só adiciona se for um número válido e positivo
-    return sum + (isNaN(numValue) ? 0 : numValue);
+    const actionTotal = matches.reduce((acc, match) => {
+      const parsed = parseLocalizedNumber(match);
+      return parsed !== null ? acc + parsed : acc;
+    }, 0);
+
+    return sum + actionTotal;
   }, 0);
 
   // Formata como moeda brasileira
@@ -966,4 +969,28 @@ export function getTotalPayment(actions: Action[]): string {
     style: "currency",
     currency: "BRL",
   }).format(total);
+}
+
+function parseLocalizedNumber(rawValue: string): number | null {
+  const sanitized = rawValue.replace(/[^\d,.\-]/g, "");
+
+  if (!sanitized || sanitized === "-" || sanitized === "," || sanitized === ".") {
+    return null;
+  }
+
+  const lastComma = sanitized.lastIndexOf(",");
+  const lastDot = sanitized.lastIndexOf(".");
+
+  let normalized = sanitized;
+
+  if (lastComma > lastDot) {
+    normalized = sanitized.replace(/\./g, "").replace(",", ".");
+  } else if (lastDot > lastComma && lastComma !== -1) {
+    normalized = sanitized.replace(/,/g, "");
+  } else {
+    normalized = sanitized.replace(/,/g, "");
+  }
+
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
 }
