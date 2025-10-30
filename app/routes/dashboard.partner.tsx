@@ -524,21 +524,6 @@ export default function Partner() {
         <div className="flex items-center justify-between border-b px-4 py-2">
           {/* Mês */}
           <div className="flex items-center">
-            {/* <Button
-              size="icon"
-              variant="ghost"
-              className="-mr-2 rounded-r-none"
-              onClick={() => {
-                const date = format(subMonths(currentDate, 1), "yyyy-MM-'15'");
-                setCurrentDate(date);
-                params.set("date", date);
-
-                setSearchParams(params);
-              }}
-            >
-              <ChevronLeftIcon />
-            </Button> */}
-
             <DropdownMenu>
               <DropdownMenuTrigger className="outline-hidden" asChild>
                 <Button variant={"ghost"} className={`cursor-pointer text-lg`}>
@@ -580,10 +565,24 @@ export default function Partner() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* <Button
+            <Button
               size="icon"
               variant="ghost"
+              className="rounded-r-none"
+              onClick={() => {
+                const date = format(subMonths(currentDate, 1), "yyyy-MM-'15'");
+                setCurrentDate(date);
+                params.set("date", date);
+
+                setSearchParams(params);
+              }}
+            >
+              <ChevronLeftIcon />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="rounded-l-none"
               onClick={() => {
                 const date = format(addMonths(currentDate, 1), "yyyy-MM-'15'");
                 setCurrentDate(date);
@@ -593,7 +592,7 @@ export default function Partner() {
               }}
             >
               <ChevronRightIcon />
-            </Button> */}
+            </Button>
           </div>
           <div className="flex items-center gap-1 lg:gap-2">
             {/* Procurar ação */}

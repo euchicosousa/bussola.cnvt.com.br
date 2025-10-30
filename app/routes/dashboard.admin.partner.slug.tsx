@@ -66,6 +66,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     context: String(formData.get("context")),
     sow: formData.get("sow") as "marketing" | "socialmedia" | "demand",
     users_ids: String(formData.getAll("users_ids")).split(","),
+    instagram_caption_tail: String(formData.get("instagram_caption_tail")),
   } as any;
 
   // Parse topics from JSON string
@@ -447,6 +448,21 @@ export default function AdminPartners() {
               </div>
             </div>
           </div>
+        </div>
+        <div className="mb-4">
+          <Label className="mb-2 block">Rodapé da Legenda</Label>
+          <Textarea
+            name="instagram_caption_tail"
+            defaultValue={currentPartner.instagram_caption_tail || ""}
+            onChange={(e) =>
+              setPartner({
+                ...currentPartner,
+                instagram_caption_tail: e.target.value,
+              })
+            }
+            // @ts-ignore
+            style={{ fieldSizing: "content" }}
+          />
         </div>
         {/* Button */}
         <div className="border-t pt-8 pb-8 text-right">

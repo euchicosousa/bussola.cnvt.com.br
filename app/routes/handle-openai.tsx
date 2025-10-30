@@ -16,6 +16,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     mission,
     tactic,
     intensity,
+    instagram_caption_tail,
   } = Object.fromEntries(formData.entries()) as Record<string, string>;
 
   if (!intent) {
@@ -388,44 +389,69 @@ Lembre-se: Especificidade gera identificação. Genericidade gera esquecimento.
         break;
       }
       case "instagram_caption": {
-        content = `Sua missão é transformar o seguinte conteúdo em um post para Instagram, utilizando o modelo narrativo definido em ${storytellingModels.legenda[model as keyof typeof storytellingModels.legenda].title}.
+        system = `Você é um redator editorial especializado em criar legendas humanas, fluidas e coerentes para publicações no Instagram.`;
 
-    Siga a estrutura abaixo:
-${storytellingModels.legenda[model as keyof typeof storytellingModels.legenda].description}
+        content = `
+        Tema a ser desenvolvido: ${title} - ${description}
+        Siga as orientações de marca desse contexto: ${context}
 
-O objetivo principal é gerar ${storytellingModels.legenda[model as keyof typeof storytellingModels.legenda].effect.toLowerCase()}.
+        Adapte o tom de voz automaticamente com base no tema e nas orientações de marca — buscando equilíbrio entre naturalidade, empatia e clareza editorial.
 
+        Objetivo:
+        Gerar uma legenda curta, natural e coerente com o tema, no formato de 2 parágrafos curtos + rodapé institucional.
 
-Importante:
-- Utilize linguagem acessível e humana, adaptada para Instagram.
-- Não use expressões genéricos.
-- O texto deve ter ${length} palavras. Nunca mais do que isso.
-- Cada parágrafo deve ter no máximo 40 palavras.
-- Finalize com um CTA alinhado à intenção do modelo.
-- Não use tags, aspas, bullet points, markdown ou comentários adicionais.
-- O resultado deve conter somente o texto solicitado.
-- Inclua pelo menos um emoji por parágrafo
+        ---
 
-REGRAS ANTI-VÍCIOS DE IA
-PROIBIÇÕES ABSOLUTAS: - 
-Frases curtas demais com ponto final a cada 3-4 palavra
-Estrutura "Não é X. É Y.
-Perguntas artificiais ("O resultado?", "O insight?"
-Bullet points com emojis desnecessário
-Repetição de ideias com palavras diferente
-Tom sensacionalista/dramático/forçad
-Excesso de adjetivos genérico
-Texto impessoal sem voz autora
-Abstrações vazias tentando parecer profundo
-OBRIGATÓRIO APLICAR: Fluidez natural na leitura 
-Voz autêntica e consistente 
-Informações concretas e úteis 
-Transições suaves entre ideias 
+        ESTRUTURA FIXA:
+        Bloco 1 — Contexto / Explicação (informativo)
+        - Reconta o tema principal de forma clara e natural.
+        - Pode explicar o que é, onde acontece ou o que representa.
+        - Deve soar como fala humana, nunca como IA.
+        - Evite repetir frases do conteúdo principal, mas mantenha coerência.
 
-Tema a ser desenvolvido: ${title} - ${description}
+        Bloco 2 — Conexão / Reflexão / Encerramento
+        - Traduza o tema em sentimento, reflexão ou convite leve à continuidade.
+        - O tom e vocabulário devem se adaptar automaticamente ao nicho e contexto.
+        - Feche com uma frase curta e memorável, sem clichê.
 
-Siga as orientações de marca desse contexto: ${context}
-`;
+        Bloco 3 — Rodapé da marca (institucional)
+        - Deve conter a linha fornecida em ${instagram_caption_tail}
+        - Essa linha é fixa e sempre vem no final, sem emojis.
+
+        ---
+
+        ESTILO E REGRAS:
+        - Linguagem acessível, natural e humana.
+        - Adapte o tom automaticamente ao nicho informado (saúde, gastronomia, moda, negócios, cultura, educação etc.).
+        - A legenda deve ter entre ${Math.round((Number(length) / 2) * 1.5)} e ${length} palavras.
+        - Cada parágrafo deve ter no máximo 40 palavras.
+        - Inclua emojis apenas se o tema permitir leveza (ex: gastronomia, moda, lifestyle, bem-estar).
+        - Encerramento deve soar natural, não publicitário.
+        - Mantenha fluidez, clareza e transições suaves entre ideias.
+        - Não use tags, aspas, bullet points, markdown, hashtags ou comentários adicionais.
+        - O resultado deve conter apenas o texto final da legenda.
+
+        ---
+
+        REGRAS ANTI-VÍCIOS DE IA:
+        PROIBIDO:
+        - Frases curtas demais com ponto a cada 3–4 palavras.
+        - Estrutura “Não é X. É Y.”
+        - Perguntas artificiais (“O resultado?”, “O insight?”)
+        - Repetição de ideias com palavras diferentes.
+        - Tom sensacionalista, dramático ou publicitário.
+        - Excesso de adjetivos genéricos.
+        - Texto impessoal ou abstrato.
+        - Rimas, trocadilhos ou slogans.
+
+        OBRIGATÓRIO:
+        - Fluidez natural na leitura.
+        - Voz autêntica e consistente com o nicho.
+        - Informações concretas e úteis.
+        - Transições suaves entre frases.
+        - Encerramento leve e coerente.
+        - Rodapé institucional obrigatório com a linha fornecida em ${instagram_caption_tail}.
+        `;
 
         break;
       }
@@ -468,24 +494,15 @@ Tema a ser desenvolvido: ${title} - ${description}
   const startDate = new Date();
 
   const chatCompletion = await openai.chat.completions.create({
-    messages: [
-      {
-        role: "system",
-        content: system,
-      },
-      {
-        role: "user",
-        content,
-      },
-    ],
-
     model: "gpt-4o",
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content },
+    ],
   });
 
   const endDate = new Date();
-  // console.log(endDate.getTime() - startDate.getTime());
-
-  // gpt-5-2025-08-07
+  console.log(endDate.getTime() - startDate.getTime(), "ms");
 
   return { message: chatCompletion.choices[0].message.content };
 };

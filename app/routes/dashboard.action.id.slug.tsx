@@ -278,6 +278,7 @@ export default function ActionPage() {
           <FileUploadSection
             action={action}
             setAction={setAction}
+            //@ts-ignore
             saveField={saveField}
             partner={partner}
           />
@@ -296,6 +297,7 @@ export default function ActionPage() {
         setAction={setAction}
         isWorking={isWorking}
         partner={partner}
+        //@ts-ignore
         saveField={saveField}
       />
     </div>
@@ -718,7 +720,35 @@ function RightSide({
 
           <span className="block w-8 text-center text-xs">{length}</span>
 
-          {action.category === "stories" ? (
+          <Button
+            size={"sm"}
+            className={` ${
+              isWorking &&
+              "instagram_caption" === fetcher.formData?.get("intent") &&
+              "animate-colors"
+            }`}
+            variant="ghost"
+            onClick={async () => {
+              fetcher.submit(
+                {
+                  title: action.title,
+                  description: action.description,
+                  context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
+                  instagram_caption_tail: partner.instagram_caption_tail || "",
+                  intent: AI_INTENTS.generateCaption,
+                  length: length.toString(),
+                },
+                {
+                  action: "/handle-openai",
+                  method: "post",
+                },
+              );
+            }}
+          >
+            <SparklesIcon className="size-4" />
+          </Button>
+
+          {/* {action.category === "stories" ? (
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -858,7 +888,7 @@ function RightSide({
                 </Command>
               </PopoverContent>
             </Popover>
-          )}
+          )} */}
         </div>
       </div>
 
