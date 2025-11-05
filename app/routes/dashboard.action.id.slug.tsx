@@ -49,7 +49,7 @@ import {
   CommandEmpty,
   CommandInput,
   CommandItem,
-  CommandList
+  CommandList,
 } from "~/components/ui/command";
 import {
   DropdownMenu,
@@ -89,7 +89,6 @@ import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
 import { isVideo } from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
-import { SintagmaHooks } from "./handle-openai";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
@@ -421,70 +420,16 @@ export function Title({
       />
 
       <div className="pr-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              className={`h-7 w-7 p-1 ${
-                isWorking &&
-                fetcher.formData?.get("intent") === "carousel" &&
-                "animate-colors"
-              }`}
-              variant="ghost"
-            >
-              <SparklesIcon />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="bg-content">
-            {SintagmaHooks.map((tense) => (
-              <DropdownMenuSub key={tense.id}>
-                <DropdownMenuSubTrigger className="bg-item">
-                  {tense.title}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuSubContent className="bg-content flex max-h-[50vh] flex-col overflow-hidden">
-                    <div className="border-b px-4 py-2 text-sm whitespace-break-spaces">
-                      {tense.description}
-                    </div>
-                    <div className="scrollbars-v overflow-y-auto">
-                      {tense.missions.map((mission) => (
-                        <DropdownMenuGroup key={mission.id}>
-                          <DropdownMenuLabel className="bg-label-small">
-                            {mission.title}
-                          </DropdownMenuLabel>
-                          {mission.tactics.map((tactic) => (
-                            <DropdownMenuItem
-                              key={tactic.id}
-                              className="bg-item"
-                              onClick={async () => {
-                                fetcher.submit(
-                                  {
-                                    title: action.title,
-                                    description: action.description,
-                                    context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
-                                    intent: AI_INTENTS.generateTitle,
-                                    tense: tense.id,
-                                    tactic: tactic.id,
-                                    mission: mission.id,
-                                  },
-                                  {
-                                    action: "/handle-openai",
-                                    method: "post",
-                                  },
-                                );
-                              }}
-                            >
-                              {tactic.title}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuGroup>
-                      ))}
-                    </div>
-                  </DropdownMenuSubContent>
-                </DropdownMenuPortal>
-              </DropdownMenuSub>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          className={`h-7 w-7 p-1 ${
+            isWorking &&
+            fetcher.formData?.get("intent") === "carousel" &&
+            "animate-colors"
+          }`}
+          variant="ghost"
+        >
+          <SparklesIcon />
+        </Button>
       </div>
     </div>
   );
@@ -505,49 +450,6 @@ export function Description({
 }) {
   const fetcher = useFetcher({ key: "action-page" });
   const promptRef = useRef<HTMLTextAreaElement>(null);
-
-  // // Hook para salvar
-  // const { saveMultipleFields, saveField } = useFieldSaver({
-  //   entity: action,
-  //   entityType: "action",
-  // });
-
-  // Estado otimista - nunca re-renderiza o editor
-  const [localDescription, setLocalDescription] = useState(action.description);
-  const lastSavedDescription = useRef(action.description);
-
-  // Sync inicial quando action muda (navegação) ou quando description é atualizada pela IA
-  useEffect(() => {
-    // Só atualiza se realmente mudou (evita loops)
-    if (action.description !== localDescription) {
-      setLocalDescription(action.description);
-      lastSavedDescription.current = action.description;
-    }
-  }, [action.id, action.description]); // Quando muda de action OU quando description é atualizada
-
-  // Background auto-save a cada 3s
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     if (editorRef.current) {
-  //       const currentContent = editorRef.current.getHTML();
-
-  //       if (currentContent !== lastSavedDescription.current) {
-  //         // Salva SEM atualizar estado local (não perde cursor)
-  //         const updates = {
-  //           description: currentContent,
-  //           updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
-  //         };
-
-  //         saveMultipleFields(updates);
-  //         lastSavedDescription.current = currentContent;
-  //       }
-  //     }
-  //   }, 5000);
-
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [action]);
 
   async function askBia(prompt?: string) {
     if (prompt) {
@@ -584,7 +486,12 @@ export function Description({
                 className="disabled:opacity-50"
               >
                 <div className="mb-2 text-sm font-medium">Peça algo à βia</div>
-                <div className="bg-input relative rounded-sm border p-2 pb-10">
+                <div
+                  className="bg-input debug-1 relative rounded-sm border p-2 pb-10"
+                  onClick={() => {
+                    promptRef.current?.focus();
+                  }}
+                >
                   <textarea
                     rows={2}
                     className="field-sizing-content max-h-[50vh] w-full resize-none outline-none"
@@ -646,26 +553,19 @@ export function Description({
               <LightbulbIcon />
             </Button>
           )}
-
-          <PopoverParameters action={action} partner={partner} />
         </div>
       </div>
 
       <Tiptap
-        content={localDescription}
+        content={action.description}
         editorRef={editorRef}
         onBlur={(text: string | null) => {
-          // Salva no servidor
-          // saveField("description", text);
-
           // Sync com estado principal no onBlur (sem problemas de cursor)
           setAction({
             ...action,
             description: text,
             updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
           });
-          // setLocalDescription(text);
-          // lastSavedDescription.current = text;
         }}
       />
     </div>
@@ -746,148 +646,6 @@ function RightSide({
           >
             <SparklesIcon className="size-4" />
           </Button>
-
-          {/* {action.category === "stories" ? (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  size={"sm"}
-                  className={` ${
-                    isWorking &&
-                    "stories" === fetcher.formData?.get("intent") &&
-                    "animate-colors"
-                  }`}
-                  variant="ghost"
-                >
-                  <SparklesIcon className="size-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 md:w-90">
-                <Command>
-                  <CommandInput placeholder="Como são os Stories você quer gerar?" />
-                  <CommandList>
-                    <CommandEmpty>Nenhuma Stories foi encontrado</CommandEmpty>
-
-                    <CommandGroup>
-                      {Object.keys(storytellingModels.stories).map((k) => {
-                        const model =
-                          storytellingModels.stories[
-                            k as keyof typeof storytellingModels.stories
-                          ];
-
-                        return (
-                          <CommandItem
-                            value={[
-                              model.title,
-                              model.effect,
-                              model.useWhen,
-                            ].join(" - ")}
-                            key={k}
-                            className="bg-item"
-                            onSelect={async () => {
-                              fetcher.submit(
-                                {
-                                  title: action.title,
-                                  description: action.description,
-                                  context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
-                                  intent: AI_INTENTS.generateStories,
-                                  model: k,
-                                },
-                                {
-                                  action: "/handle-openai",
-                                  method: "post",
-                                },
-                              );
-                            }}
-                            title={model.useWhen}
-                          >
-                            <p className="py-2">
-                              <p className="mb-1 text-base leading-tight font-medium">
-                                {model.title}
-                              </p>
-                              <p className="text-xs leading-none opacity-50">
-                                {model.useWhen}
-                              </p>
-                            </p>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          ) : (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  size={"sm"}
-                  className={` ${
-                    isWorking &&
-                    "instagram_caption" === fetcher.formData?.get("intent") &&
-                    "animate-colors"
-                  }`}
-                  variant="ghost"
-                >
-                  <SparklesIcon className="size-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="bg-content p-0 md:w-90">
-                <Command>
-                  <CommandInput placeholder="Qual legenda você quer gerar?" />
-                  <CommandList>
-                    <CommandEmpty>Nenhuma legenda foi encontrada</CommandEmpty>
-
-                    <CommandGroup>
-                      {Object.keys(storytellingModels.legenda).map((k) => {
-                        const model =
-                          storytellingModels.legenda[
-                            k as keyof typeof storytellingModels.legenda
-                          ];
-
-                        return (
-                          <CommandItem
-                            value={[
-                              model.title,
-                              model.description,
-                              model.effect,
-                              model.useWhen,
-                            ].join(" - ")}
-                            key={k}
-                            className="bg-item"
-                            onSelect={async () => {
-                              fetcher.submit(
-                                {
-                                  title: action.title,
-                                  description: action.description,
-                                  context: `EMPRESA: ${partner.title} - DESCRIÇÃO: ${partner.context}`,
-                                  intent: AI_INTENTS.generateCaption,
-                                  model: k,
-                                  length: length.toString(),
-                                },
-                                {
-                                  action: "/handle-openai",
-                                  method: "post",
-                                },
-                              );
-                            }}
-                            title={model.description}
-                          >
-                            <p className="py-2 leading-none">
-                              <p className="mb-1">{model.title}</p>
-                              <p className="text-xs opacity-50">
-                                {model.description}
-                              </p>
-                            </p>
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          )} */}
         </div>
       </div>
 
@@ -905,7 +663,7 @@ function RightSide({
         className={`field-sizing-content min-h-screen w-full text-base font-normal outline-hidden transition lg:min-h-auto lg:text-sm ${
           isInstagramFeed(action.category) ? "border-0 focus-within:ring-0" : ""
         }`}
-        defaultValue={action.instagram_caption || ""}
+        value={action.instagram_caption || ""}
       ></textarea>
     </div>
   ) : null;
@@ -1254,195 +1012,6 @@ function getCleanTitle(title: string) {
   return title.indexOf(" | ") >= 0
     ? title.substring(0, title.indexOf(" | "))
     : title;
-}
-
-function PopoverParameters({
-  action,
-  partner,
-}: {
-  action: Action;
-  partner: Partner;
-}) {
-  const fetcher = useFetcher({ key: "action-page" });
-  const isWorking = fetcher.state !== "idle";
-  const [intensity, setIntensity] = useState([1, 1, 1, 1, 1, 1]);
-  const [length, setLength] = useState(5);
-  const [suggestion, setSuggestion] = useState<{
-    title: string;
-    values: number[];
-  }>();
-  const [query, setQuery] = useState<string>("");
-
-  useEffect(() => {
-    if (suggestion) {
-      setIntensity(suggestion.values);
-    }
-  }, [suggestion]);
-
-  return (
-    <Popover>
-      <PopoverTrigger className="button-trigger">
-        <SlidersIcon />
-      </PopoverTrigger>
-      <PopoverContent className="bg-content w-[80vw] divide-y overflow-hidden lg:w-3xl">
-        <div className="flex items-center justify-between gap-4 pb-3">
-          <div>Criar Conteúdo</div>
-
-          <div className="flex items-center gap-2">
-            {action.category === "carousel" ? (
-              <>
-                <input
-                  type="range"
-                  min={2}
-                  max={20}
-                  value={length}
-                  step={1}
-                  onChange={(e) => setLength(Number(e.target.value))}
-                />
-                <div className="w-8 text-center">{length}</div>
-              </>
-            ) : null}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 overflow-hidden">
-          {parametersOptimized.map((parametro, index) => (
-            <div
-              className="col-span-1 flex flex-col items-center justify-between overflow-hidden py-4"
-              key={parametro.id}
-            >
-              <div className="text-xs font-medium">{parametro.title}</div>
-              <IntensityRange
-                intensity={intensity[index]}
-                intensities={parametro.values}
-                onChange={(value) => {
-                  setIntensity((prev) => {
-                    let i = [...prev];
-                    i.splice(index, 1, value);
-                    return i;
-                  });
-                }}
-              />
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-between pt-4">
-          <div>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost">
-                  {suggestion?.title || "Padrões úteis"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverPortal>
-                <PopoverContent className="bg-content overflow-hidden p-0">
-                  <Command className="p-0">
-                    <CommandInput value={query} onValueChange={setQuery} />
-                    <CommandList className="p-2">
-                      <CommandEmpty>Nenhuma sugestão</CommandEmpty>
-                      {suggestionsParameters.map((parametro) => (
-                        <CommandItem
-                          key={parametro.title}
-                          value={parametro.title}
-                          onSelect={() => {
-                            setSuggestion({
-                              title: parametro.title,
-                              values: parametro.values,
-                            });
-                          }}
-                        >
-                          {parametro.title}
-                        </CommandItem>
-                      ))}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </PopoverPortal>
-            </Popover>
-          </div>
-          <Button
-            disabled={isWorking}
-            onClick={async (event) => {
-              event.preventDefault();
-              await fetcher.submit(
-                {
-                  intent: AI_INTENTS.generateCarousel,
-                  length,
-                  title: action.title,
-                  description: action.description,
-                  context: partner.context,
-                  intensity: intensity.join("-"),
-                },
-                {
-                  method: "post",
-                  action: "/handle-openai",
-                },
-              );
-            }}
-          >
-            {isWorking ? (
-              <div className="border-primary-foreground size-4 animate-spin rounded-full border-2 border-b-transparent"></div>
-            ) : (
-              <>
-                Gerar <SparklesIcon />
-              </>
-            )}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-type ParametroValue = {
-  id: number;
-  value: string;
-};
-
-function IntensityRange({
-  intensity,
-  intensities,
-  onChange,
-}: {
-  intensity: number;
-  intensities: ParametroValue[];
-  onChange: (value: number) => void;
-}) {
-  const [value, setValue] = useState(
-    intensities.find((value) => value.id === intensity) as ParametroValue,
-  );
-
-  useEffect(() => {
-    onChange(value.id);
-  }, [value]);
-
-  useEffect(() => {
-    setValue(
-      intensities.find((value) => value.id === intensity) as ParametroValue,
-    );
-  }, [intensity]);
-
-  return (
-    <div className="flex w-full flex-col items-center gap-2">
-      <div className="w-full overflow-hidden text-center text-ellipsis whitespace-nowrap">
-        {value?.value}
-      </div>
-      <input
-        type="range"
-        step={1}
-        min={1}
-        max={5}
-        value={value.id}
-        onChange={(e) =>
-          setValue(
-            intensities.find(
-              (value) => value.id === e.target.valueAsNumber,
-            ) as ParametroValue,
-          )
-        }
-      />
-    </div>
-  );
 }
 
 function FileUploadSection({

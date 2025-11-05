@@ -78,7 +78,7 @@
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.536.0",
     "motion": "^12.23.12",
-    "openai": "^5.11.0",
+    "openai": "^6.8.1",
     "react": "^19.1.1",
     "react-day-picker": "^9.8.1",
     "react-dom": "^19.1.1",
@@ -110,5 +110,4 @@
     "vite": "6.3.3",
     "vite-tsconfig-paths": "^5.1.4"
   }
-  
 }
