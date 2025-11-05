@@ -118,7 +118,10 @@ export const ActionItem = React.memo(function ActionItem({
     (partner) => partner.slug === action.partners[0],
   ) as Partner;
   const actionPartners = getPartners(action.partners, partners);
-  const mainPartner = actionPartners[0];
+  const mainPartner =
+    variant === VARIANTS.FINANCE
+      ? actionPartners.filter((p) => p.slug != "agenciacnvt")[0]
+      : actionPartners[0];
   const responsibles = useMemo(
     () => getResponsibles(people, action.responsibles),
     [people, action.responsibles],

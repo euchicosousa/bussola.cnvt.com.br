@@ -2,8 +2,10 @@ import {
   addDays,
   format,
   formatRelative,
+  isSameDay,
   isThisWeek,
   isToday,
+  parseISO,
   subDays,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -47,6 +49,7 @@ import {
   sortActions,
 } from "~/lib/helpers";
 import { cn } from "~/lib/ui/utils";
+import { CelebrationContainer } from "../../content/CelebrationContainer";
 
 export function TodayView({
   actions,
@@ -77,91 +80,106 @@ export function TodayView({
   const params = new URLSearchParams(searchParams);
 
   const matches = useMatches();
-  const { states, partners } = matches[1].data as DashboardRootType;
+  const { states, partners, celebrations } = matches[1]
+    .data as DashboardRootType;
 
   return (
     <>
       {/* Ações de Hoje */}
       <div className={cn(className)}>
-        <div className="flex justify-between pb-8">
-          <div className="flex">
-            <div className="relative flex items-center gap-2">
-              <h2 className="text-3xl font-semibold tracking-tight capitalize">
-                {isToday(currentDay)
-                  ? "hoje"
-                  : isThisWeek(currentDay)
-                    ? formatRelative(currentDay, new Date(), {
-                        locale: ptBR,
-                      }).split("às")[0]
-                    : format(currentDay, "EEEEEE, d 'de' MMMM", {
-                        locale: ptBR,
-                      })}
-              </h2>
-              <Badge
-                value={currentActions?.length}
-                isDynamic={todayView !== "hours"}
-              />
-
-              <CreateAction
-                date={format(currentDay, "yyyy-MM-dd")}
-                mode="day"
-              />
-            </div>
-            <Button
-              onClick={() => {
-                params.set(
-                  "date",
-                  format(subDays(currentDay, 1), "yyyy-MM-dd"),
-                );
-                setCurrentDay(subDays(currentDay, 1));
-                setSearchParams(params);
-              }}
-              size={"icon"}
-              variant={"ghost"}
-              className="ml-12"
-            >
-              <ChevronLeftIcon className="size-4" />
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant={"ghost"}>
-                  <CalendarIcon />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="bg-content">
-                <Calendar
-                  locale={ptBR}
-                  mode="single"
-                  selected={currentDay}
-                  onSelect={(date) => {
-                    if (date) {
-                      setCurrentDay(date);
-                      params.set("date", format(date, "yyyy-MM-dd"));
-                      setSearchParams(params);
-                    }
-                  }}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2">
+              <div className="relative flex items-center gap-2">
+                <h2 className="text-3xl font-semibold tracking-tight capitalize">
+                  {isToday(currentDay)
+                    ? "hoje"
+                    : isThisWeek(currentDay)
+                      ? formatRelative(currentDay, new Date(), {
+                          locale: ptBR,
+                        }).split("às")[0]
+                      : format(currentDay, "EEEEEE, d 'de' MMMM", {
+                          locale: ptBR,
+                        })}
+                </h2>
+                <Badge
+                  value={currentActions?.length}
+                  isDynamic={todayView !== "hours"}
                 />
-              </PopoverContent>
-            </Popover>
-            <Button
-              onClick={() => {
-                params.set(
-                  "date",
-                  format(addDays(currentDay, 1), "yyyy-MM-dd"),
-                );
-                setCurrentDay(addDays(currentDay, 1));
-                setSearchParams(params);
-              }}
-              size={"icon"}
-              variant={"ghost"}
-              className=""
-            >
-              <ChevronRightIcon className="size-4" />
-            </Button>
+
+                <CreateAction
+                  date={format(currentDay, "yyyy-MM-dd")}
+                  mode="day"
+                />
+              </div>
+
+              {celebrations.filter((celebration) =>
+                isSameDay(currentDay, parseISO(celebration.date)),
+              ).length > 0 && (
+                <CelebrationContainer
+                  celebrations={celebrations.filter((celebration) =>
+                    isSameDay(currentDay, parseISO(celebration.date)),
+                  )}
+                />
+              )}
+            </div>
+            <div className="flex items-center">
+              <Button
+                onClick={() => {
+                  params.set(
+                    "date",
+                    format(subDays(currentDay, 1), "yyyy-MM-dd"),
+                  );
+                  setCurrentDay(subDays(currentDay, 1));
+                  setSearchParams(params);
+                }}
+                size={"icon"}
+                variant={"secondary"}
+                className="rounded-r-none"
+              >
+                <ChevronLeftIcon className="size-4" />
+              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant={"secondary"} className="rounded-none">
+                    <CalendarIcon />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="bg-content">
+                  <Calendar
+                    locale={ptBR}
+                    mode="single"
+                    selected={currentDay}
+                    onSelect={(date) => {
+                      if (date) {
+                        setCurrentDay(date);
+                        params.set("date", format(date, "yyyy-MM-dd"));
+                        setSearchParams(params);
+                      }
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+              <Button
+                onClick={() => {
+                  params.set(
+                    "date",
+                    format(addDays(currentDay, 1), "yyyy-MM-dd"),
+                  );
+                  setCurrentDay(addDays(currentDay, 1));
+                  setSearchParams(params);
+                }}
+                size={"icon"}
+                variant={"secondary"}
+                className="rounded-l-none"
+              >
+                <ChevronRightIcon className="size-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            {todayView === "kanban" && (
+          <div className="flex items-center gap-2">
+            {/* {todayView === "kanban" && (
               <div>
                 <Toggle
                   variant={"default"}
@@ -182,7 +200,7 @@ export function TodayView({
                   )}
                 </Toggle>
               </div>
-            )}
+            )} */}
             {[
               // {
               //   id: "kanban",
@@ -190,6 +208,12 @@ export function TodayView({
               //   description: "Ver o Kanban de progresso",
               //   Icon: <KanbanIcon className="w-6" />,
               // },
+              {
+                id: "hours",
+                title: "Horas",
+                description: "Ver por horas do dia",
+                Icon: <CalendarClock className="w-6" />,
+              },
               {
                 id: "feed",
                 title: "Feed",
@@ -201,12 +225,6 @@ export function TodayView({
                 title: "Categorias",
                 description: "Ver por categorias",
                 Icon: <ComponentIcon className="w-6" />,
-              },
-              {
-                id: "hours",
-                title: "Horas",
-                description: "Ver por horas do dia",
-                Icon: <CalendarClock className="w-6" />,
               },
             ].map((button) => (
               <Button
@@ -270,7 +288,7 @@ export function TodayView({
                               </div>
                             </>
                           ) : (
-                            <div className="overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap text-muted-foreground">
+                            <div className="text-muted-foreground overflow-hidden text-xs font-medium text-ellipsis whitespace-nowrap">
                               Parceiro indisponível
                             </div>
                           )}

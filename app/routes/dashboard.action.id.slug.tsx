@@ -47,10 +47,9 @@ import { Button } from "~/components/ui/button";
 import {
   Command,
   CommandEmpty,
-  CommandGroup,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from "~/components/ui/command";
 import {
   DropdownMenu,
@@ -90,7 +89,7 @@ import { useFieldSaver } from "~/lib/hooks/useFieldSaver";
 import { cn } from "~/lib/ui/utils";
 import { isVideo } from "~/shared/utils/validation/contentValidation";
 import { validateAndAdjustActionDates } from "~/shared/utils/validation/dateValidation";
-import { SintagmaHooks, storytellingModels } from "./handle-openai";
+import { SintagmaHooks } from "./handle-openai";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
@@ -507,11 +506,11 @@ export function Description({
   const fetcher = useFetcher({ key: "action-page" });
   const promptRef = useRef<HTMLTextAreaElement>(null);
 
-  // Hook para salvar
-  const { saveMultipleFields, saveField } = useFieldSaver({
-    entity: action,
-    entityType: "action",
-  });
+  // // Hook para salvar
+  // const { saveMultipleFields, saveField } = useFieldSaver({
+  //   entity: action,
+  //   entityType: "action",
+  // });
 
   // Estado otimista - nunca re-renderiza o editor
   const [localDescription, setLocalDescription] = useState(action.description);
@@ -657,7 +656,7 @@ export function Description({
         editorRef={editorRef}
         onBlur={(text: string | null) => {
           // Salva no servidor
-          saveField("description", text);
+          // saveField("description", text);
 
           // Sync com estado principal no onBlur (sem problemas de cursor)
           setAction({
@@ -665,8 +664,8 @@ export function Description({
             description: text,
             updated_at: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
           });
-          setLocalDescription(text);
-          lastSavedDescription.current = text;
+          // setLocalDescription(text);
+          // lastSavedDescription.current = text;
         }}
       />
     </div>
@@ -686,7 +685,7 @@ function RightSide({
 }) {
   const instagramCaptionRef = useRef<HTMLTextAreaElement>(null);
 
-  const [length, setLength] = useState(120);
+  const [length, setLength] = useState(60);
 
   const fetcher = useFetcher({ key: "action-page" });
 
@@ -710,9 +709,9 @@ function RightSide({
         <div className="flex items-center gap-2 overflow-x-hidden p-1">
           <input
             type="range"
-            min={60}
-            max={300}
-            step={30}
+            min={20}
+            max={200}
+            step={20}
             value={length}
             onChange={(e) => setLength(e.target.valueAsNumber)}
             className="bg-accent h-2 w-20 cursor-pointer appearance-none rounded-full"

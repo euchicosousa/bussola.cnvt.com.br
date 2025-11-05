@@ -31,11 +31,10 @@ import invariant from "tiny-invariant";
 
 import Badge from "~/components/common/forms/Badge";
 import { Heading } from "~/components/common/forms/Headings";
-import { ActionItem, ActionsContainer } from "~/components/features/actions";
+import { ActionsContainer } from "~/components/features/actions";
 import { CalendarView } from "~/components/features/actions/views/CalendarView";
 import { DelayedView } from "~/components/features/actions/views/DelayedView";
 import { TodayView } from "~/components/features/actions/views/TodayView";
-import { Button } from "~/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -45,10 +44,10 @@ import {
 } from "~/components/ui/select";
 import { Toggle } from "~/components/ui/toggle";
 import {
-  VARIANTS,
   DATE_FORMAT,
   ORDER_ACTIONS_BY,
   STATE,
+  VARIANTS,
 } from "~/lib/constants";
 import { createClient } from "~/lib/database/supabase";
 import {
@@ -82,13 +81,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const user_id = data.claims.sub;
 
-  const [{ data: people }, { data: partners }] = await Promise.all([
-    supabase.from("people").select("*").match({ user_id: user_id }),
-    supabase.from("partners").select("slug").match({ archived: false }),
-  ]);
+  const [{ data: people }, { data: partners }, { data: archivedPartners }] =
+    await Promise.all([
+      supabase.from("people").select("*").match({ user_id: user_id }),
+      supabase.from("partners").select("slug").match({ archived: false }),
+      supabase.from("partners").select("slug").match({ archived: true }),
+    ]);
 
   invariant(people);
   invariant(partners);
+  invariant(archivedPartners);
 
   const person = people[0];
 
@@ -102,6 +104,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .is("archived", false)
       .contains("responsibles", person.admin ? [] : [user_id])
       .containedBy("partners", partners.map((p) => p.slug)!)
+      // .not("partners", "overlaps", archivedPartners.map((p) => p.slug)!)
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
       .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
       .order("title", { ascending: true }),
@@ -110,9 +113,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .select("id, category, state, date, partners, instagram_date")
       .is("archived", false)
       .contains("responsibles", person?.admin ? [] : [user_id])
-      .containedBy("partners", partners.map((p) => p.slug)!)
-      .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),
+      .containedBy("partners", partners.map((p) => p.slug)!),
   ]);
 
   return { actions, actionsChart };
@@ -184,13 +185,6 @@ export default function DashboardIndex() {
         {/* Sprint */}
         <Sprint actions={actions} />
 
-        {/* Parceiros */}
-        <Partners actions={actions as Action[]} />
-
-        {/* Ações em Atraso */}
-
-        <DelayedView actions={lateActions} />
-
         {/* Hoje */}
         <div className="before:bg-border relative before:absolute before:-left-[100vw] before:h-px before:w-[200vw]"></div>
         <div className="overflow-x-hidden">
@@ -199,6 +193,13 @@ export default function DashboardIndex() {
             className="px-2 py-8 md:px-8 lg:py-24"
           />
         </div>
+
+        {/* Parceiros */}
+        <Partners actions={actions as Action[]} />
+
+        {/* Ações em Atraso */}
+
+        <DelayedView actions={lateActions} />
 
         {/* Mês */}
 
@@ -255,8 +256,9 @@ function NextActions({ actions }: { actions: Action[] }) {
 function Partners({ actions }: { actions?: Action[] }) {
   const matches = useMatches();
   const { partners } = matches[1].data as DashboardRootType;
+  const { actionsChart } = matches[2].data as DashboardIndexType;
   const lateActions = getDelayedActions({
-    actions: actions,
+    actions: actionsChart as Action[],
   });
 
   actions = actions || [];

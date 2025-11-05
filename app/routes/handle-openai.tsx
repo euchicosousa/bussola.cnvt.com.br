@@ -423,7 +423,7 @@ Lembre-se: Especificidade gera identificação. Genericidade gera esquecimento.
         ESTILO E REGRAS:
         - Linguagem acessível, natural e humana.
         - Adapte o tom automaticamente ao nicho informado (saúde, gastronomia, moda, negócios, cultura, educação etc.).
-        - A legenda deve ter entre ${Math.round((Number(length) / 2) * 1.5)} e ${length} palavras.
+        - A legenda deve ter entre ${Math.round((Number(length) / 2) * 1.5)} e ${length} palavras NUNCA ULTRAPASSE ESSA QUANTIDADE DE PALAVRAS.
         - Cada parágrafo deve ter no máximo 40 palavras.
         - Inclua emojis apenas se o tema permitir leveza (ex: gastronomia, moda, lifestyle, bem-estar).
         - Encerramento deve soar natural, não publicitário.
