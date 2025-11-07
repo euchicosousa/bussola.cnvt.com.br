@@ -258,7 +258,7 @@ function Partners({ actions }: { actions?: Action[] }) {
   const { partners } = matches[1].data as DashboardRootType;
   const { actionsChart } = matches[2].data as DashboardIndexType;
   const lateActions = getDelayedActions({
-    actions: actionsChart as Action[],
+    actions,
   });
 
   actions = actions || [];
