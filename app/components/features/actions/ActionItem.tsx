@@ -725,6 +725,7 @@ export const ActionItem = React.memo(function ActionItem({
               >
                 {getPartners(action.partners, partners).length === 1 ? (
                   <Avatar
+                    size="xs"
                     item={{
                       short: actionPartner.short,
                       bg: actionPartner.colors[0],
@@ -733,6 +734,7 @@ export const ActionItem = React.memo(function ActionItem({
                   />
                 ) : (
                   <AvatarGroup
+                    size="xs"
                     avatars={getPartners(action.partners, partners).map(
                       (partner) => ({
                         item: {

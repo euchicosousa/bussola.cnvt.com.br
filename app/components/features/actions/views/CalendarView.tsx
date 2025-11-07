@@ -205,7 +205,9 @@ export function CalendarView({ actions }: { actions: Action[] | null }) {
                     actions={actions}
                     variant={variant}
                     isCollapsible
-                    dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
+                    // dateDisplay={{ timeFormat: TIME_FORMAT.WITH_TIME }}
+                    showPartner
+                    showResponsibles={false}
                   />
                 </div>
               );

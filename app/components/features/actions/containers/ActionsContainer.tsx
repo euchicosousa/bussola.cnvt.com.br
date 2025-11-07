@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useMatches } from "react-router";
-import { ExpandIcon, ShrinkIcon } from "lucide-react";
+import {
+  ArrowBigDown,
+  ChevronDown,
+  ChevronUp,
+  ExpandIcon,
+  ShrinkIcon,
+} from "lucide-react";
 import { Toggle } from "~/components/ui/toggle";
 import { sortActions } from "~/lib/helpers";
 import { ActionItem } from "../ActionItem";
@@ -134,11 +140,11 @@ export function ActionsContainer({
 
   return (
     <div
-      className={
+      className={`${
         variant === VARIANTS.BLOCK
           ? "@container -mx-1 h-full overflow-hidden"
           : "group"
-      }
+      }`}
     >
       <div
         className={` ${getContainerClasses()} ${scrollClass} ${gapClass} ${paddingClass} @container h-full`}
@@ -171,22 +177,20 @@ export function ActionsContainer({
       isCollapsible &&
       actions.length > foldCount &&
       variant !== VARIANTS.BLOCK ? (
-        <div className="p-4 text-center opacity-0 group-hover:opacity-100">
+        <div className="relative -mt-2 text-center">
+          {/* <div className="p-4 text-center opacity-0 group-hover:opacity-100"> */}
           <Toggle
             size="sm"
+            className="bg-background z-10 size-6 rounded-full border p-1"
             pressed={fold === undefined}
             onPressedChange={(pressed) => {
               setFold(pressed ? undefined : foldCount);
             }}
           >
             {fold === undefined ? (
-              <>
-                <ShrinkIcon className="size-3" />
-              </>
+              <ChevronUp className="size-4" />
             ) : (
-              <>
-                <ExpandIcon className="size-3" />
-              </>
+              <ChevronDown className="size-4" />
             )}
           </Toggle>
         </div>

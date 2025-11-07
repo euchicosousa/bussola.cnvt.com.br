@@ -166,34 +166,6 @@ export default function ActionPage() {
     entityType: "action",
   });
 
-  // Auto-save apenas para campos de texto (Title e Caption)
-  // const lastSavedTextValues = useRef({
-  //   title: action.title,
-  //   instagram_caption: action.instagram_caption,
-  // });
-
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     // Verificar title
-  //     if (action.title !== lastSavedTextValues.current.title) {
-  //       saveField("title", action.title);
-  //       lastSavedTextValues.current.title = action.title;
-  //     }
-
-  //     // Verificar instagram_caption
-  //     if (
-  //       action.instagram_caption !==
-  //       lastSavedTextValues.current.instagram_caption
-  //     ) {
-  //       saveField("instagram_caption", action.instagram_caption);
-  //       lastSavedTextValues.current.instagram_caption =
-  //         action.instagram_caption;
-  //     }
-  //   }, 5000);
-
-  //   return () => clearInterval(interval);
-  // }, [action.title, action.instagram_caption, saveField]);
-
   // Refs para acessar conteúdo atual dos editors
   const editorRef = useRef<any>(null);
 
@@ -584,6 +556,11 @@ function RightSide({
   partner: Partner;
 }) {
   const instagramCaptionRef = useRef<HTMLTextAreaElement>(null);
+  const [instagramCaption, setInstagramCaption] = useState("");
+
+  useEffect(() => {
+    setInstagramCaption(action.instagram_caption || "");
+  }, [action.instagram_caption]);
 
   const [length, setLength] = useState(60);
 
@@ -654,6 +631,9 @@ function RightSide({
         placeholder="Escreva sua legenda aqui ou peça à βIA para criar no botão superior direito."
         key={`instagram_caption-${action.id}`}
         name="instagram_caption"
+        onChange={(event) => {
+          setInstagramCaption(event.target.value);
+        }}
         onBlur={(event) => {
           setAction({
             ...action,
@@ -663,7 +643,7 @@ function RightSide({
         className={`field-sizing-content min-h-screen w-full text-base font-normal outline-hidden transition lg:min-h-auto lg:text-sm ${
           isInstagramFeed(action.category) ? "border-0 focus-within:ring-0" : ""
         }`}
-        value={action.instagram_caption || ""}
+        value={instagramCaption}
       ></textarea>
     </div>
   ) : null;
