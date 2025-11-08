@@ -532,7 +532,6 @@ export function Description({
         content={action.description}
         editorRef={editorRef}
         onBlur={(text: string | null) => {
-          // Sync com estado principal no onBlur (sem problemas de cursor)
           setAction({
             ...action,
             description: text,

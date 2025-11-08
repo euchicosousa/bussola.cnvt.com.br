@@ -181,13 +181,11 @@ const MobileToolbarContent = ({
 export function SimpleEditor({
   content,
   onBlur,
-  onChange,
   editorRef,
 }: {
   content: string | undefined | null;
   onBlur: (text: string) => void;
-  onChange?: (text: string) => void;
-  editorRef?: React.MutableRefObject<any>;
+  editorRef?: React.RefObject<any>;
 }) {
   const isMobile = useMobile();
   const windowSize = useWindowSize();
@@ -237,11 +235,6 @@ export function SimpleEditor({
     content,
     onBlur: ({ editor }) => {
       onBlur(editor.getHTML());
-    },
-    onUpdate: ({ editor }) => {
-      if (onChange) {
-        onChange(editor.getHTML());
-      }
     },
   });
 
