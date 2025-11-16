@@ -88,6 +88,7 @@ import { SiInstagram } from "@icons-pack/react-simple-icons";
 import EditAction from "~/components/features/actions/EditAction";
 import { DateTimePicker } from "~/components/features/actions/shared/ActionContextMenu";
 import { DraggableItem } from "~/components/features/actions/shared/DraggableItem";
+import { CelebrationContainer } from "~/components/features/content/CelebrationContainer";
 import { Input } from "~/components/ui/input";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { IMAGE_SIZES, INTENTS, TIME_FORMAT, VARIANTS } from "~/lib/constants";
@@ -103,7 +104,6 @@ import {
 } from "~/lib/helpers";
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
-import { CelebrationContainer } from "~/components/features/content/CelebrationContainer";
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   let _date = new URL(request.url).searchParams.get("date");
@@ -129,36 +129,40 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   const user_id = data.claims.sub;
 
-  let { data: people } = await supabase
-    .from("people")
-    .select("*")
-    .match({ user_id: user_id });
+  let [{ data: people }, { data: archivedPartners }] = await Promise.all([
+    supabase.from("people").select("*").match({ user_id: user_id }),
+    supabase.from("partners").select("slug").match({ archived: true }),
+  ]);
 
   invariant(people);
+  invariant(archivedPartners);
+
+  const activePartnerSlugs = [params["partner"]!];
+  const archivedPartnerSlugs = archivedPartners.map((p) => p.slug);
+  const archivedPgArray = `{${archivedPartnerSlugs.join(",")}}`;
 
   let person = people[0];
 
-  const [{ data: actions }, { data: actionsChart }, { data: partners }] =
-    await Promise.all([
-      supabase
-        .from("actions")
-        .select("*")
-        .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .contains("partners", [params["partner"]!])
-        .order("title", { ascending: true }),
-      supabase
-        .from("actions")
-        .select("id, category, state, date, partners, instagram_date")
-        .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .contains("partners", [params["partner"]!]),
+  let q = supabase
+    .from("actions")
+    .select("*")
+    .is("archived", false)
+    .contains("responsibles", person.admin ? [] : [user_id])
+    .overlaps("partners", activePartnerSlugs) // pelo menos 1 ativo
+    .order("title", { ascending: true });
 
-      supabase.from("partners").select().match({ slug: params["partner"]! }),
-    ]);
+  if (archivedPartnerSlugs.length > 0) {
+    q = q.not("partners", "ov", archivedPgArray);
+  }
+
+  let [{ data: actions }, { data: partners }] = await Promise.all([
+    q,
+
+    supabase.from("partners").select().match({ slug: params["partner"]! }),
+  ]);
   invariant(partners);
 
-  return { actions, actionsChart, partner: partners[0], person, date };
+  return { actions, partner: partners[0], person, date };
 };
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {

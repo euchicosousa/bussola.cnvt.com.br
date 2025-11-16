@@ -32,7 +32,7 @@ export function sortActions(
       return _sorted.flat();
 
     case "priority":
-      const PRIORITIES = { low: "low", mid: "mid", high: "high" };
+      const PRIORITIES = { low: "low", medium: "medium", high: "high" };
       let sortedPriorities =
         order === "desc"
           ? Object.values(PRIORITIES).reverse()
@@ -78,15 +78,14 @@ export function getDelayedActions({
   priority,
 }: {
   actions?: Action[] | null;
-  priority?: "low" | "mid" | "high" | null;
+  priority?: "low" | "medium" | "high" | null;
 }) {
   return actions
     ? actions.filter(
         (action) =>
           (priority ? action.priority === priority : true) &&
           isAfter(new Date(), parseISO(action.date)) &&
-          action.state !== "finished" &&
-          action.state !== "archived",
+          action.state !== "finished",
       )
     : [];
 }

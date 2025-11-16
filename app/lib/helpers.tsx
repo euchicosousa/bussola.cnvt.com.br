@@ -293,7 +293,7 @@ const iconsList: { [key: string]: LucideIcon } = {
   all: ComponentIcon,
   //Category
   capture: CameraIcon,
-  todo: ListChecksIcon,
+  task: ListChecksIcon,
   post: ImageIcon,
   carousel: GalleryHorizontal,
   reels: ClapperboardIcon,
@@ -308,7 +308,7 @@ const iconsList: { [key: string]: LucideIcon } = {
   dev: Code2Icon,
   //Priority
   low: SignalLowIcon,
-  mid: SignalMediumIcon,
+  medium: SignalMediumIcon,
   high: SignalIcon,
   base: SignalIcon,
 };
@@ -336,7 +336,7 @@ export const Icons = ({
           "isolate",
           id === "low"
             ? "text-lime-500"
-            : id === "mid"
+            : id === "medium"
               ? "text-amber-500"
               : "text-rose-600",
           className,
@@ -974,7 +974,12 @@ export function getTotalPayment(actions: Action[]): string {
 function parseLocalizedNumber(rawValue: string): number | null {
   const sanitized = rawValue.replace(/[^\d,.\-]/g, "");
 
-  if (!sanitized || sanitized === "-" || sanitized === "," || sanitized === ".") {
+  if (
+    !sanitized ||
+    sanitized === "-" ||
+    sanitized === "," ||
+    sanitized === "."
+  ) {
     return null;
   }
 

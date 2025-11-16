@@ -1,6 +1,6 @@
 export const PRIORITIES = {
   low: "low",
-  medium: "mid",
+  medium: "medium",
   high: "high",
 };
 

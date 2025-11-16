@@ -1,4 +1,3 @@
-import { useGSAP } from "@gsap/react";
 import {
   addMonths,
   endOfDay,
@@ -10,7 +9,6 @@ import {
   startOfWeek,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { gsap } from "gsap";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -62,16 +60,8 @@ import {
 import { useIDsToRemoveSafe } from "~/lib/hooks/data/useIDsToRemoveSafe";
 import { usePendingDataSafe } from "~/lib/hooks/data/usePendingDataSafe";
 
-gsap.registerPlugin(useGSAP);
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
-
-  // const result = await fetch("https://br.storage.bunnycdn.com/agencia-cnvt/", {
-  //   method: "GET",
-  //   headers: { AccessKey: ACCESS_KEY!, accept: "application/json" },
-  // });
-  // const folders = await result.json() as [];
 
   const { data } = await supabase.auth.getClaims();
 
@@ -92,29 +82,41 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   invariant(partners);
   invariant(archivedPartners);
 
-  const person = people[0];
+  let person = people[0];
 
   let start = startOfWeek(startOfMonth(new Date()));
   let end = endOfDay(endOfWeek(endOfMonth(addMonths(new Date(), 1))));
+  let activePartnerSlugs = [partners.map((p) => p.slug)];
+  let archivedPartnerSlugs = archivedPartners.map((p) => p.slug);
+  let archivedPgArray = `{${archivedPartnerSlugs.join(",")}}`;
 
-  const [{ data: actions }, { data: actionsChart }] = await Promise.all([
-    supabase
-      .from("actions")
-      .select("*")
-      .is("archived", false)
-      .contains("responsibles", person.admin ? [] : [user_id])
-      .containedBy("partners", partners.map((p) => p.slug)!)
-      // .not("partners", "overlaps", archivedPartners.map((p) => p.slug)!)
+  let q = supabase
+    .from("actions")
+    .select("*")
+    .is("archived", false)
+    .contains("responsibles", person.admin ? [] : [user_id])
+    .overlaps("partners", activePartnerSlugs)
+    .order("title", { ascending: true });
+
+  if (archivedPartnerSlugs.length > 0) {
+    q = q.not("partners", "ov", archivedPgArray);
+  }
+
+  let [{ data: actions }, { data: actionsChart }] = await Promise.all([
+    q
       .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
-      .order("title", { ascending: true }),
-    supabase
-      .from("actions")
-      .select("id, category, state, date, partners, instagram_date")
-      .is("archived", false)
-      .contains("responsibles", person?.admin ? [] : [user_id])
-      .containedBy("partners", partners.map((p) => p.slug)!),
+      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),
+    q.lte("date", format(endOfDay(new Date()), "yyyy-MM-dd HH:mm:ss")),
+    ,
   ]);
+
+  actions =
+    actions?.filter(
+      (action) =>
+        !action.partners.find((p) =>
+          archivedPartners.find((ap) => ap.slug === p),
+        ),
+    ) || null;
 
   return { actions, actionsChart };
 };
@@ -131,7 +133,7 @@ export const meta: MetaFunction = () => {
 };
 
 export default function DashboardIndex() {
-  let { actions } = useLoaderData<typeof loader>();
+  let { actions, actionsChart } = useLoaderData<typeof loader>();
   const matches = useMatches();
 
   const { setTransitioning } = useOutletContext() as ContextType;
@@ -177,6 +179,37 @@ export default function DashboardIndex() {
       <div className="border-r"></div>
       <div className="w-full min-w-0">
         {/* Progresso  */}
+
+        {/* <div className="w-full">
+          <table>
+            <thead>
+              <tr className="[&>th]:p-4">
+                <th>ID</th>
+                <th>Title</th>
+                <th>Partners</th>
+                <th>Date</th>
+                <th>Instagram Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {getDelayedActions({ actions: actionsChart as Action[] })?.map(
+                (action, i) => (
+                  <tr key={action.id} className="border-t [&>td]:p-4">
+                    <td>{i + 1}</td>
+                    <td>{action.title}</td>
+                    <td>{action.partners.join(", ")}</td>
+                    <td className="w-48">
+                      {format(action.date, "dd/MM/yyyy HH:mm")}
+                    </td>
+                    <td className="w-48">
+                      {format(action.instagram_date, "dd/MM/yyyy HH:mm")}
+                    </td>
+                  </tr>
+                ),
+              )}
+            </tbody>
+          </table>
+        </div> */}
 
         <div suppressHydrationWarning>
           {person.admin && <ActionsProgress />}

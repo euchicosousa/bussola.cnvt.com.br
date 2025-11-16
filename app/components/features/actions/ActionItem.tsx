@@ -695,139 +695,140 @@ export const ActionItem = React.memo(function ActionItem({
               }}
               className={`relative flex w-full shrink overflow-hidden md:text-sm`}
             />
-
-            {/* Categoria */}
-            {showCategory && (
-              <div
-                title={
-                  categories.find(
-                    (category) => category.slug === action.category,
-                  )?.title
-                }
-              >
-                <Icons
-                  id={
-                    categories.find(
-                      (category) => category.slug === action.category,
-                    )?.slug
-                  }
-                  className={`hidden size-4 shrink-0 opacity-25 @[200px]:block`}
-                />
-              </div>
-            )}
-
-            {/* parceiro */}
-            {actionPartner && showPartner ? (
-              <div
-                title={getPartners(action.partners, partners)
-                  .map((partner) => partner.title)
-                  .join(" • ")}
-              >
-                {getPartners(action.partners, partners).length === 1 ? (
-                  <Avatar
-                    size="xs"
-                    item={{
-                      short: actionPartner.short,
-                      bg: actionPartner.colors[0],
-                      fg: actionPartner.colors[1],
-                    }}
-                  />
-                ) : (
-                  <AvatarGroup
-                    size="xs"
-                    avatars={getPartners(action.partners, partners).map(
-                      (partner) => ({
-                        item: {
-                          short: partner.short,
-                          bg: partner.colors[0],
-                          fg: partner.colors[1],
-                          title: partner.title,
-                        },
-                      }),
-                    )}
-                  />
-                )}
-              </div>
-            ) : (
-              action.partners.length > 1 && (
-                <div
-                  className="opacity-25"
-                  title={getPartners(action.partners, partners)
-                    .map((partner) => partner.title)
-                    .join(" • ")}
-                >
-                  <HeartHandshakeIcon />
-                </div>
-              )
-            )}
-
-            {/* priority */}
-            {action.priority === PRIORITIES.high && (
-              <Icons id="high" className={`size-5 shrink-0 text-red-500`} />
-            )}
-
-            {/* Responsibles */}
-            {showResponsibles ? (
-              <div className={`flex shrink-0 justify-center`}>
-                <AvatarGroup
-                  avatars={people
-                    .filter(
-                      (person) =>
-                        action.responsibles.filter(
-                          (responsible_id: string) =>
-                            responsible_id === person.user_id,
-                        ).length > 0,
-                    )
-                    .map((person) => ({
-                      item: {
-                        image: person.image,
-                        short: person.initials!,
-                        title: person.name,
-                      },
-                    }))}
-                  size={"xs"}
-                  ringColor="ring-card"
-                />
-              </div>
-            ) : (
-              <div
-                title={
-                  isHydrated &&
-                  amIResponsible(action.responsibles, person.user_id)
-                    ? `${person.name} é a pessoa responsável pela ação`
-                    : undefined
-                }
-                suppressHydrationWarning
-              >
-                {isHydrated &&
-                  amIResponsible(action.responsibles, person.user_id) && (
-                    <Avatar
-                      item={{
-                        image: person.image,
-                        short: person.initials!,
-                      }}
-                      size="xs"
+            {!edit && (
+              <>
+                {/* Categoria */}
+                {showCategory && (
+                  <div
+                    title={
+                      categories.find(
+                        (category) => category.slug === action.category,
+                      )?.title
+                    }
+                  >
+                    <Icons
+                      id={
+                        categories.find(
+                          (category) => category.slug === action.category,
+                        )?.slug
+                      }
+                      className={`hidden size-4 shrink-0 opacity-25 @[200px]:block`}
                     />
-                  )}
-              </div>
-            )}
+                  </div>
+                )}
 
-            {dateDisplay && (
-              <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
-                <span
-                // className={cn(
-                //   isInstagramFeed(action.category) &&
-                //     "group-hover/action:hidden",
-                // )}
-                >
-                  {formatActionDatetime({
-                    date: shouldUseInstagramDate
-                      ? action.instagram_date
-                      : action.date,
-                    timeFormat: 1,
-                  })}
-                </span>
-                {/* {isInstagramFeed(action.category) && (
+                {/* parceiro */}
+                {actionPartner && showPartner ? (
+                  <div
+                    title={getPartners(action.partners, partners)
+                      .map((partner) => partner.title)
+                      .join(" • ")}
+                  >
+                    {getPartners(action.partners, partners).length === 1 ? (
+                      <Avatar
+                        size="xs"
+                        item={{
+                          short: actionPartner.short,
+                          bg: actionPartner.colors[0],
+                          fg: actionPartner.colors[1],
+                        }}
+                      />
+                    ) : (
+                      <AvatarGroup
+                        size="xs"
+                        avatars={getPartners(action.partners, partners).map(
+                          (partner) => ({
+                            item: {
+                              short: partner.short,
+                              bg: partner.colors[0],
+                              fg: partner.colors[1],
+                              title: partner.title,
+                            },
+                          }),
+                        )}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  action.partners.length > 1 && (
+                    <div
+                      className="opacity-25"
+                      title={getPartners(action.partners, partners)
+                        .map((partner) => partner.title)
+                        .join(" • ")}
+                    >
+                      <HeartHandshakeIcon />
+                    </div>
+                  )
+                )}
+
+                {/* priority */}
+                {action.priority === PRIORITIES.high && (
+                  <Icons id="high" className={`size-5 shrink-0 text-red-500`} />
+                )}
+
+                {/* Responsibles */}
+                {showResponsibles ? (
+                  <div className={`flex shrink-0 justify-center`}>
+                    <AvatarGroup
+                      avatars={people
+                        .filter(
+                          (person) =>
+                            action.responsibles.filter(
+                              (responsible_id: string) =>
+                                responsible_id === person.user_id,
+                            ).length > 0,
+                        )
+                        .map((person) => ({
+                          item: {
+                            image: person.image,
+                            short: person.initials!,
+                            title: person.name,
+                          },
+                        }))}
+                      size={"xs"}
+                      ringColor="ring-card"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    title={
+                      isHydrated &&
+                      amIResponsible(action.responsibles, person.user_id)
+                        ? `${person.name} é a pessoa responsável pela ação`
+                        : undefined
+                    }
+                    suppressHydrationWarning
+                  >
+                    {isHydrated &&
+                      amIResponsible(action.responsibles, person.user_id) && (
+                        <Avatar
+                          item={{
+                            image: person.image,
+                            short: person.initials!,
+                          }}
+                          size="xs"
+                        />
+                      )}
+                  </div>
+                )}
+
+                {dateDisplay && (
+                  <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
+                    <span
+                    // className={cn(
+                    //   isInstagramFeed(action.category) &&
+                    //     "group-hover/action:hidden",
+                    // )}
+                    >
+                      {formatActionDatetime({
+                        date: shouldUseInstagramDate
+                          ? action.instagram_date
+                          : action.date,
+                        timeFormat: 1,
+                      })}
+                    </span>
+                    {/* {isInstagramFeed(action.category) && (
                   <span className="hidden items-center gap-1 group-hover/action:flex">
                     <SiInstagram className="size-3" />
                     {formatActionDatetime({
@@ -839,7 +840,9 @@ export const ActionItem = React.memo(function ActionItem({
                     })}
                   </span>
                 )} */}
-              </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         );

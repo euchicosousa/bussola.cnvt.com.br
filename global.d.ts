@@ -101,7 +101,7 @@ declare global {
   };
 
   type ORDER = "state" | "priority" | "time";
-  type PRIORITIES = "low" | "mid" | "high";
+  type PRIORITIES = "low" | "medium" | "high";
 
   type THEME = "dark" | "light";
 

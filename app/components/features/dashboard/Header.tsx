@@ -108,7 +108,9 @@ export default function Header({
       ? (matches[2].data as { partner: Partner }).partner
       : partner;
 
-  let lateActions = getDelayedActions({ actions });
+  let lateActions = getDelayedActions({
+    actions: (actionsChart as Action[]) || actions,
+  });
 
   const date = searchParams.get("date")
     ? parseISO(searchParams.get("date") as string)
@@ -494,6 +496,8 @@ function PopoverLateActions({
   if (!actions || actions.length === 0) {
     return null;
   }
+
+  console.log(actions);
 
   return (
     <Popover>
