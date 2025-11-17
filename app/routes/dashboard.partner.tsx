@@ -116,9 +116,6 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   date = date?.replace(/\-01$/, "-02");
 
-  // let start = startOfWeek(startOfMonth(date));
-  // let end = endOfDay(endOfWeek(endOfMonth(date)));
-
   const { supabase } = createClient(request);
 
   const { data } = await supabase.auth.getClaims();

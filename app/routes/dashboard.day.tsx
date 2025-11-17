@@ -24,12 +24,6 @@ import { TodayView } from "~/components/features/actions/views/TodayView";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
 
-  // const result = await fetch("https://br.storage.bunnycdn.com/agencia-cnvt/", {
-  //   method: "GET",
-  //   headers: { AccessKey: ACCESS_KEY!, accept: "application/json" },
-  // });
-  // const folders = await result.json() as [];
-
   const { data } = await supabase.auth.getClaims();
 
   if (!data?.claims) {
@@ -51,27 +45,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let start = startOfWeek(startOfMonth(new Date()));
   let end = endOfDay(endOfWeek(endOfMonth(addMonths(new Date(), 1))));
 
-  const [{ data: actions }, { data: actionsChart }] = await Promise.all([
-    supabase
-      .from("actions")
-      .select("*")
-      .is("archived", false)
-      .contains("responsibles", person.admin ? [] : [user_id])
-      .containedBy("partners", partners.map((p) => p.slug)!)
-      .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
-      .order("title", { ascending: true }),
-    supabase
-      .from("actions")
-      .select("id, category, state, date, partners, instagram_date")
-      .is("archived", false)
-      .contains("responsibles", person?.admin ? [] : [user_id])
-      .containedBy("partners", partners.map((p) => p.slug)!)
-      .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),
-  ]);
+  const { data: actions } = await supabase
+    .from("actions")
+    .select("*")
+    .is("archived", false)
+    .contains("responsibles", person.admin ? [] : [user_id])
+    .containedBy("partners", partners.map((p) => p.slug)!)
+    .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
+    .lte("date", format(end, "yyyy-MM-dd HH:mm:ss"))
+    .order("title", { ascending: true });
 
-  return { actions, actionsChart };
+  return { actions };
 };
 
 export const meta: MetaFunction = () => {

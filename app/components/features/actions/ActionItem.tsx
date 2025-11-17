@@ -815,12 +815,7 @@ export const ActionItem = React.memo(function ActionItem({
 
                 {dateDisplay && (
                   <div className="hidden shrink grow-0 text-right text-xs whitespace-nowrap opacity-50 md:text-[10px] @[130px]:block">
-                    <span
-                    // className={cn(
-                    //   isInstagramFeed(action.category) &&
-                    //     "group-hover/action:hidden",
-                    // )}
-                    >
+                    <span>
                       {formatActionDatetime({
                         date: shouldUseInstagramDate
                           ? action.instagram_date
@@ -828,18 +823,6 @@ export const ActionItem = React.memo(function ActionItem({
                         timeFormat: 1,
                       })}
                     </span>
-                    {/* {isInstagramFeed(action.category) && (
-                  <span className="hidden items-center gap-1 group-hover/action:flex">
-                    <SiInstagram className="size-3" />
-                    {formatActionDatetime({
-                      date: shouldUseInstagramDate
-                        ? action.instagram_date
-                        : action.date,
-                      dateFormat: 2,
-                      timeFormat: 1,
-                    })}
-                  </span>
-                )} */}
                   </div>
                 )}
               </>

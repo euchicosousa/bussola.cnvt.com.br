@@ -479,25 +479,9 @@ function PopoverLateActions({
   link: string;
   actions: Action[];
 }) {
-  // const data = useMatches()[2].data;
-  // if (!data) {
-  //   return null;
-  // }
-  // const { actions: actionsFull } = data as {
-  //   actions: Action[];
-  // };
-
-  // if (!actionsFull || actionsFull.length === 0) return null;
-
-  // const lateActions = actionsFull.filter((af) =>
-  //   actions.find((a) => a.id === af.id),
-  // );
-
   if (!actions || actions.length === 0) {
     return null;
   }
-
-  console.log(actions);
 
   return (
     <Popover>

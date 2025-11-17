@@ -85,38 +85,46 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let person = people[0];
 
   let start = startOfWeek(startOfMonth(new Date()));
-  let end = endOfDay(endOfWeek(endOfMonth(addMonths(new Date(), 1))));
-  let activePartnerSlugs = [partners.map((p) => p.slug)];
+  let end = endOfDay(endOfWeek(endOfMonth(new Date())));
+  let activePartnerSlugs = partners.map((p) => p.slug);
   let archivedPartnerSlugs = archivedPartners.map((p) => p.slug);
-  let archivedPgArray = `{${archivedPartnerSlugs.join(",")}}`;
 
-  let q = supabase
-    .from("actions")
-    .select("*")
-    .is("archived", false)
-    .contains("responsibles", person.admin ? [] : [user_id])
-    .overlaps("partners", activePartnerSlugs)
-    .order("title", { ascending: true });
+  function buildActionsQuery() {
+    return supabase
+      .from("actions")
+      .select("*")
+      .is("archived", false)
+      .contains("responsibles", person.admin ? [] : [user_id])
+      .overlaps("partners", activePartnerSlugs)
+      .order("title", { ascending: true });
+  }
+
+  let query_for_actions = buildActionsQuery()
+    .gte("date", format(start, "yyyy-MM-dd'T'HH:mm:ss"))
+    .lte("date", format(end, "yyyy-MM-dd'T'HH:mm:ss"));
+
+  let query_for_actions_chart = buildActionsQuery()
+    .lte("date", format(endOfDay(new Date()), "yyyy-MM-dd HH:mm:ss"))
+    .not("state", "eq", "finished");
 
   if (archivedPartnerSlugs.length > 0) {
-    q = q.not("partners", "ov", archivedPgArray);
+    let archivedPgArray = `{${archivedPartnerSlugs.join(",")}}`;
+    query_for_actions = query_for_actions.not(
+      "partners",
+      "ov",
+      archivedPgArray,
+    );
+    query_for_actions_chart = query_for_actions_chart.not(
+      "partners",
+      "ov",
+      archivedPgArray,
+    );
   }
 
   let [{ data: actions }, { data: actionsChart }] = await Promise.all([
-    q
-      .gte("date", format(start, "yyyy-MM-dd HH:mm:ss"))
-      .lte("date", format(end, "yyyy-MM-dd HH:mm:ss")),
-    q.lte("date", format(endOfDay(new Date()), "yyyy-MM-dd HH:mm:ss")),
-    ,
+    query_for_actions,
+    query_for_actions_chart,
   ]);
-
-  actions =
-    actions?.filter(
-      (action) =>
-        !action.partners.find((p) =>
-          archivedPartners.find((ap) => ap.slug === p),
-        ),
-    ) || null;
 
   return { actions, actionsChart };
 };
@@ -179,37 +187,6 @@ export default function DashboardIndex() {
       <div className="border-r"></div>
       <div className="w-full min-w-0">
         {/* Progresso  */}
-
-        {/* <div className="w-full">
-          <table>
-            <thead>
-              <tr className="[&>th]:p-4">
-                <th>ID</th>
-                <th>Title</th>
-                <th>Partners</th>
-                <th>Date</th>
-                <th>Instagram Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {getDelayedActions({ actions: actionsChart as Action[] })?.map(
-                (action, i) => (
-                  <tr key={action.id} className="border-t [&>td]:p-4">
-                    <td>{i + 1}</td>
-                    <td>{action.title}</td>
-                    <td>{action.partners.join(", ")}</td>
-                    <td className="w-48">
-                      {format(action.date, "dd/MM/yyyy HH:mm")}
-                    </td>
-                    <td className="w-48">
-                      {format(action.instagram_date, "dd/MM/yyyy HH:mm")}
-                    </td>
-                  </tr>
-                ),
-              )}
-            </tbody>
-          </table>
-        </div> */}
 
         <div suppressHydrationWarning>
           {person.admin && <ActionsProgress />}

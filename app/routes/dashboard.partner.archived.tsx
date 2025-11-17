@@ -29,34 +29,21 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     .eq("user_id", user_id)
     .single();
 
-  const [{ data: actions }, { data: actionsChart }, { data: partner }] =
-    await Promise.all([
-      supabase
-        .from("actions")
-        .select("*")
-        .is("archived", true)
-        .like("partner", partner_slug || "%")
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .order("title", { ascending: true }),
+  const [{ data: actions }, { data: partner }] = await Promise.all([
+    supabase
+      .from("actions")
+      .select("*")
+      .is("archived", true)
+      .like("partner", partner_slug || "%")
+      .contains("responsibles", person?.admin ? [] : [user_id])
+      .neq("state", "finished")
+      .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
+      .order("title", { ascending: true }),
 
-      supabase
-        .from("actions")
-        .select("id, category, state, date, partners, instagram_date")
-        .is("archived", false)
-        .like("partner", partner_slug || "%")
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss")),
-      supabase
-        .from("partners")
-        .select()
-        .eq("slug", params["partner"]!)
-        .single(),
-    ]);
+    supabase.from("partners").select().eq("slug", params["partner"]!).single(),
+  ]);
 
-  return { actions, actionsChart, partner };
+  return { actions, partner };
 };
 
 export const meta: MetaFunction = () => {

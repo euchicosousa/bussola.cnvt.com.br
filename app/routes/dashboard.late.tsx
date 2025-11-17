@@ -11,7 +11,7 @@ import { DATE_FORMAT, TIME_FORMAT } from "~/lib/constants";
 import { Heading } from "~/components/common/forms/Headings";
 import { createClient } from "~/lib/database/supabase";
 
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabase } = createClient(request);
 
   const partner_slug = new URL(request.url).searchParams.get("partner_slug");
@@ -41,36 +41,22 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   invariant(person);
   invariant(partners);
 
-  const [{ data: actions }, { data: actionsChart }, { data: partner }] =
-    await Promise.all([
-      supabase
-        .from("actions")
-        .select("*")
-        .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .contains("partners", partners.map((p) => p.slug)!)
-        //@ts-ignore
-        .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
-        .order("title", { ascending: true }),
+  const [{ data: actions }, { data: partner }] = await Promise.all([
+    supabase
+      .from("actions")
+      .select("*")
+      .is("archived", false)
+      .contains("responsibles", person?.admin ? [] : [user_id])
+      .contains("partners", partners.map((p) => p.slug)!)
+      //@ts-ignore
+      .neq("state", "finished")
+      .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss"))
+      .order("title", { ascending: true }),
 
-      supabase
-        .from("actions")
-        .select("id, category, state, date, partners, instagram_date")
-        .is("archived", false)
-        .contains("responsibles", person?.admin ? [] : [user_id])
-        .contains("partners", [partner_slug])
-        //@ts-ignore
-        .neq("state", "finished")
-        .lte("date", format(new Date(), "yyyy-MM-dd HH:mm:ss")),
-      supabase
-        .from("partners")
-        .select()
-        .match({ slug: partner_slug! })
-        .single(),
-    ]);
+    supabase.from("partners").select().match({ slug: partner_slug! }).single(),
+  ]);
 
-  return { actions, actionsChart, partner };
+  return { actions, partner };
 };
 
 export const meta: MetaFunction = () => {
