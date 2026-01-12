@@ -17,28 +17,6 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Home() {
-  useGSAP(() => {
-    gsap.from(".header", {
-      y: -100,
-      opacity: 0,
-    });
-    gsap.from(".home-link", {
-      y: 100,
-      opacity: 0,
-      stagger: 0.1,
-      delay: 0.2,
-    });
-    gsap.from(".footer", {
-      opacity: 0,
-      delay: 0.5,
-    });
-    gsap.from(".line", {
-      scaleX: 0,
-      delay: 0.4,
-      stagger: 0.2,
-    });
-  }, []);
-
   function mouseOver(element: HTMLElement, reversed = false) {
     if (reversed) {
       gsap.to(element.querySelector(".home-link__info"), {
@@ -52,7 +30,10 @@ export default function Home() {
     }
     gsap.to(element.querySelector(".home-link__info"), {
       x: 40,
+    });
+    gsap.to(element.querySelector(".home-link__info"), {
       opacity: 1,
+      delay: 0.2,
     });
     gsap.to(element.querySelector(".home-link__name"), {
       right: 0,

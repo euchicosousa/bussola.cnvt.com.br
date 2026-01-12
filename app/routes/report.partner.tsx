@@ -16,6 +16,7 @@ import {
   Link,
   redirect,
   useLoaderData,
+  useNavigate,
   useRevalidator,
   type LoaderFunctionArgs,
   type MetaFunction,
@@ -141,20 +142,26 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 export const meta: MetaFunction = ({ data }) => {
   const partner = (data as { partner: Partner }).partner;
 
-  return [{ title: "Relatório de " + partner.title }];
+  return [{ title: "Planejamento de " + partner.title }];
 };
 
 export default function ReportPage() {
   let { action, partner, range, actions } = useLoaderData<loaderData>();
-  const revalidator = useRevalidator();
-  const [view, setView] = useState<
-    "instagram" | "feed" | "list" | "calendar" | "post"
-  >("instagram");
+
+  const searchParams = new URLSearchParams(window.location.search);
+
+  type ViewOptions = "instagram" | "feed" | "list" | "calendar" | "post";
+
+  const [view, setView] = useState<ViewOptions>(
+    (searchParams.get("view") as ViewOptions) || "calendar",
+  );
 
   invariant(partner, "partner");
   actions = actions || [];
 
-  let View = <ActionReport action={action as Action} partner={partner} />;
+  let View = (
+    <ActionReport action={action as Action} partner={partner} showDescription />
+  );
 
   // categories = categories || [];
   if (!action && range) {
@@ -179,6 +186,14 @@ export default function ReportPage() {
         break;
     }
   }
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (action) {
+      navigate(`/report/${partner.slug}?view=${view}`);
+    }
+  }, [view]);
 
   return (
     <div className="min-h-[100vh] bg-slate-100 font-sans text-gray-500 antialiased">
@@ -261,12 +276,21 @@ ${format(range[1], "d/MM", { locale: ptBR })}`}{" "}
         <div className="flex justify-between gap-2 px-8 text-center">
           <button
             className={`flex items-center justify-center border-b-2 border-gray-950 px-3 py-2 text-gray-950 ${
+              view !== "calendar" && "border-b-transparent opacity-25"
+            }`}
+            onClick={() => setView("calendar")}
+          >
+            <CalendarDaysIcon className="size-6 sm:size-4" />
+            <span className="ml-2 hidden sm:inline-block">Calendário</span>
+          </button>
+          <button
+            className={`flex items-center justify-center border-b-2 border-gray-950 px-3 py-2 text-gray-950 ${
               view !== "instagram" && "border-b-transparent opacity-25"
             }`}
             onClick={() => setView("instagram")}
           >
             <Grid3X3Icon className="size-6 sm:size-4" />
-            <span className="ml-2 hidden sm:inline-block">Home</span>
+            <span className="ml-2 hidden sm:inline-block">Instagram</span>
           </button>
           <button
             className={`flex items-center justify-center border-b-2 border-gray-950 px-3 py-2 text-gray-950 ${
@@ -286,15 +310,6 @@ ${format(range[1], "d/MM", { locale: ptBR })}`}{" "}
             <Rows3Icon className="size-6 sm:size-4" />
             <span className="ml-2 hidden sm:inline-block">Lista</span>
           </button>
-          <button
-            className={`flex items-center justify-center border-b-2 border-gray-950 px-3 py-2 text-gray-950 ${
-              view !== "calendar" && "border-b-transparent opacity-25"
-            }`}
-            onClick={() => setView("calendar")}
-          >
-            <CalendarDaysIcon className="size-6 sm:size-4" />
-            <span className="ml-2 hidden sm:inline-block">Calendário</span>
-          </button>
         </div>
       </div>
 
@@ -311,22 +326,26 @@ ${format(range[1], "d/MM", { locale: ptBR })}`}{" "}
 const ActionReport = ({
   action,
   partner,
+  showDescription,
 }: {
   action: Action;
   partner: Partner;
+  showDescription?: boolean;
 }) => {
   return (
     <div className="mx-auto rounded bg-white p-4 text-gray-950 lg:max-w-lg">
-      <div className="mb-4 flex items-center gap-2">
-        <Avatar
-          item={{
-            short: partner?.short!,
-            bg: partner?.colors[0],
-            fg: partner?.colors[1],
-          }}
-          size="md"
-        />
-        <div className="font-semibold">{partner?.slug}</div>
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Avatar
+            item={{
+              short: partner?.short!,
+              bg: partner?.colors[0],
+              fg: partner?.colors[1],
+            }}
+            size="md"
+          />
+          <div className="font-medium">{partner?.slug}</div>
+        </div>
         <div className="text-sm opacity-50">
           {format(
             action.date,
@@ -346,7 +365,17 @@ const ActionReport = ({
         />
       </div>
       {/* <LikeFooter /> */}
-      <div>
+      {showDescription &&
+      action.description &&
+      action.description.replace(/<[^>]*>/g, "") !== "" &&
+      action.description !== "null" ? (
+        <div className="border-b py-4">
+          <h5 className="font-medium">Sobre o Conteúdo:</h5>
+          <div dangerouslySetInnerHTML={{ __html: action.description }} />
+        </div>
+      ) : null}
+      <div className="mt-4">
+        <h5 className="font-medium">Legenda:</h5>
         {action.instagram_caption?.split("\n").map((line, index) => (
           <React.Fragment key={index}>
             {line}
@@ -514,7 +543,8 @@ const CalendarReportView = ({
 
               <div>
                 {day.actions?.map((action) => (
-                  <div
+                  <Link
+                    to={`/report/${partner.slug}?action=${action.id}&view=post`}
                     key={action.id}
                     className="mb-1 flex flex-col overflow-hidden rounded bg-white"
                   >
@@ -534,7 +564,7 @@ const CalendarReportView = ({
                         </div>
                       </div>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -561,7 +591,11 @@ const InstagramReportView = ({
     <div className="mx-auto px-4 lg:max-w-xl">
       <div className="grid grid-cols-3 gap-[1px] overflow-hidden rounded">
         {instagramActions?.map((action, i) => (
-          <div key={i} className="relative">
+          <Link
+            to={`/report/${partner.slug}?action=${action.id}&view=post`}
+            key={i}
+            className="relative"
+          >
             <Content
               action={action as Action}
               aspect="feed"
@@ -573,7 +607,7 @@ const InstagramReportView = ({
                 timeFormat: TIME_FORMAT.WITH_TIME,
               }}
             />
-          </div>
+          </Link>
         ))}
       </div>
     </div>

@@ -1460,7 +1460,7 @@ export const CalendarDay = ({
       className={`group/day hover:bg-secondary/20 relative flex h-full flex-col border-b py-2 transition ${
         Math.floor(Number(index) / 7) % 2 === 0 ? "item-even" : "item-odd"
       } ${isOver ? "dragover" : ""} ${today && "bg-secondary/50 border-t-foreground border-t"}`}
-      data-date={format(parseISO(day.date), "yyyy-MM-dd")}
+      // data-date={format(parseISO(day.date), "yyyy-MM-dd")}
     >
       {/* Date */}
       <div className="mb-4 flex items-center justify-between px-4">
