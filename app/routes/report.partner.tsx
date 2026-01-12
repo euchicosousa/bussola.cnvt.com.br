@@ -18,6 +18,7 @@ import {
   useLoaderData,
   useNavigate,
   useRevalidator,
+  useSearchParams,
   type LoaderFunctionArgs,
   type MetaFunction,
 } from "react-router";
@@ -148,7 +149,7 @@ export const meta: MetaFunction = ({ data }) => {
 export default function ReportPage() {
   let { action, partner, range, actions } = useLoaderData<loaderData>();
 
-  const searchParams = new URLSearchParams(window.location.search);
+  const [searchParams] = useSearchParams();
 
   type ViewOptions = "instagram" | "feed" | "list" | "calendar" | "post";
 
